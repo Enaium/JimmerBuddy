@@ -1,0 +1,32 @@
+<idea-plugin>
+    <id>cn.enaium.jimmer.buddy</id>
+    <name>Jimmer Buddy</name>
+    <vendor email="enaium@outlook.com" url="https://www.enaium.cn">Enaium</vendor>
+    <description>
+        <![CDATA[<h1>IntelliJ JimmerBuddy plugin</h1>
+        <p> A plugin that adds first-class support for Project Jimmer Features</p>]]>
+    </description>
+    <change-notes>
+        <![CDATA[Please see the project's GitHub releases page for release notes.]]>
+    </change-notes>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <java.elementFinder implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiElementFinder"/>
+        <java.shortNamesCache implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiShortNamesCache"/>
+        <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
+                                id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
+    </extensions>
+    <projectListeners>
+        <listener class="cn.enaium.jimmer.buddy.listener.FileChangeListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
+    <actions>
+        <action id="cn.enaium.jimmer.buddy.action.Initialize" class="cn.enaium.jimmer.buddy.action.Initialize"
+                text="Initialize" description="Clean all cache"/>
+    </actions>
+</idea-plugin>
+
+

@@ -1,0 +1,13 @@
+[versions]
+kotlin = "2.1.0"
+intellij = "2.2.1"
+jimmer = "0.9.55"
+
+[libraries]
+jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
+jimmer-apt = { module = "org.babyfish.jimmer:jimmer-apt", version.ref = "jimmer" }
+jimmer-dto-compiler = { module = "org.babyfish.jimmer:jimmer-dto-compiler", version.ref = "jimmer" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+intellij = { id = "org.jetbrains.intellij.platform", version.ref = "intellij" }
