@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
@@ -27,16 +28,25 @@ import com.intellij.util.Processor
 /**
  * @author Enaium
  */
-class JimmerPsiShortNamesCache : PsiShortNamesCache() {
+class JimmerPsiShortNamesCache(val project: Project) : PsiShortNamesCache() {
     override fun getClassesByName(
         name: String,
         scope: GlobalSearchScope
     ): Array<PsiClass> {
+        if (!JimmerBuddy.isJimmerProject(project)) {
+            return emptyArray()
+        }
+
         JimmerBuddy.init()
         return JimmerBuddy.allPsiClassCache.filter { it.key.substringAfterLast(".") == name }.values.toTypedArray()
     }
 
     override fun getAllClassNames(): Array<String> {
+
+        if (!JimmerBuddy.isJimmerProject(project)) {
+            return emptyArray()
+        }
+
         JimmerBuddy.init()
         return JimmerBuddy.allPsiClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
     }

@@ -57,6 +57,8 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
     }
 
     override fun isEnabledForFile(file: VirtualFile?): Boolean {
-        return JimmerBuddy.isJimmerProject(project) && (file?.extension == "java" || file?.extension == "dto")
+        return (JimmerBuddy.isJimmerProject(project) && file?.extension == "dto")
+                || (JimmerBuddy.isJavaProject(project) && file?.extension == "java")
+                || (JimmerBuddy.isKotlinProject(project) && file?.extension == "kt")
     }
 }

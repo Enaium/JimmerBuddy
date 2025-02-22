@@ -18,18 +18,13 @@ package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.findProjects
 import cn.enaium.jimmer.buddy.utility.psiClassesToApt
-import com.intellij.compiler.CompilerConfiguration
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.progress.EmptyProgressIndicator
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
@@ -48,7 +43,6 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.Embeddable
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.MappedSuperclass
-import java.io.File
 import java.io.Reader
 import java.nio.file.Path
 import javax.annotation.processing.RoundEnvironment
@@ -204,24 +198,35 @@ object JimmerBuddy {
     }
 
     fun isJimmerProject(project: Project): Boolean {
+        return isJavaProject(project) || isKotlinProject(project)
+    }
 
+    fun isJavaProject(project: Project): Boolean {
         if (project.isDisposed) {
             return false
         }
 
-        ModuleManager.getInstance(project).modules.forEach { module ->
-            val processorPath =
-                CompilerConfiguration.getInstance(project).getAnnotationProcessingConfiguration(module).processorPath
-
-            processorPath.split(File.pathSeparator).forEach { path ->
-                if (path.contains("jimmer-apt")) {
-                    return true
-                }
+        OrderEnumerator.orderEntries(project).runtimeOnly().classesRoots.forEach {
+            if (it.name.startsWith("jimmer-core")) {
+                return true
             }
         }
-
         return false
     }
+
+    fun isKotlinProject(project: Project): Boolean {
+        if (project.isDisposed) {
+            return false
+        }
+
+        OrderEnumerator.orderEntries(project).runtimeOnly().classesRoots.forEach {
+            if (it.name.startsWith("jimmer-core-kotlin")) {
+                return true
+            }
+        }
+        return false
+    }
+
 
     private fun createRoundEnvironment(
         rootElements: Set<Element?>,

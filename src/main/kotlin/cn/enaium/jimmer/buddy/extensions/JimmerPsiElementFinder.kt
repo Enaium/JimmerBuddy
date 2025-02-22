@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.search.GlobalSearchScope
@@ -24,11 +25,15 @@ import com.intellij.psi.search.GlobalSearchScope
 /**
  * @author Enaium
  */
-class JimmerPsiElementFinder : PsiElementFinder() {
+class JimmerPsiElementFinder(val project: Project) : PsiElementFinder() {
     override fun findClass(
         qualifiedName: String,
         scope: GlobalSearchScope
     ): PsiClass? {
+        if (!JimmerBuddy.isJimmerProject(project)) {
+            return null
+        }
+
         JimmerBuddy.init()
         return JimmerBuddy.allPsiClassCache[qualifiedName]
     }
