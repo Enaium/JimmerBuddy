@@ -4,7 +4,7 @@
     <vendor email="enaium@outlook.com" url="https://www.enaium.cn">Enaium</vendor>
     <description>
         <![CDATA[<h1>IntelliJ JimmerBuddy plugin</h1>
-        <p> A plugin that adds first-class support for Project Jimmer Features</p>]]>
+        <p>A plugin that adds first-class support for Project Jimmer Features</p>]]>
     </description>
     <change-notes>
         <![CDATA[Please see the project's GitHub releases page for release notes.]]>
