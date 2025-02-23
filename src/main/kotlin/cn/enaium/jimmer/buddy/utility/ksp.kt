@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KClass
 
 /**
@@ -39,14 +40,7 @@ data class Ksp(
     val sources: List<Source>,
 )
 
-data class Source(
-    val packageName: String,
-    val fileName: String,
-    val extensionName: String,
-    val content: String,
-)
-
-fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
+fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
@@ -65,22 +59,7 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
                 createKSType(
                     declaration = { ksClassDeclarationCaches[fqName]!! }
                 )
-            }
-        )
-    }
-
-    ktClasses.forEach { ktClass ->
-        val fqName = ktClass.fqName!!.asString()
-        val ksClassDeclarationCache = ksClassDeclarationCaches[fqName]!!
-
-        ksClassDeclarationCaches[fqName] = createKSClassDeclaration(
-            classKind = { ksClassDeclarationCache.classKind },
-            qualifiedName = { ksClassDeclarationCache.qualifiedName },
-            simpleName = { ksClassDeclarationCache.simpleName },
-            packageName = { ksClassDeclarationCache.packageName },
-            parentDeclaration = { ksClassDeclarationCache.parentDeclaration },
-            annotations = { ksClassDeclarationCache.annotations },
-            asStarProjectedType = { ksClassDeclarationCache.asStarProjectedType() },
+            },
             superTypes = {
                 ktClass.superTypeListEntries.map {
                     createKSTypeReference(
@@ -94,23 +73,7 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
                         }
                     )
                 }.asSequence()
-            }
-        )
-    }
-
-    ktClasses.forEach { ktClass ->
-        val fqName = ktClass.fqName!!.asString()
-        val ksClassDeclarationCache = ksClassDeclarationCaches[fqName]!!
-
-        ksClassDeclarationCaches[fqName] = createKSClassDeclaration(
-            classKind = { ksClassDeclarationCache.classKind },
-            qualifiedName = { ksClassDeclarationCache.qualifiedName },
-            simpleName = { ksClassDeclarationCache.simpleName },
-            packageName = { ksClassDeclarationCache.packageName },
-            parentDeclaration = { ksClassDeclarationCache.parentDeclaration },
-            annotations = { ksClassDeclarationCache.annotations },
-            asStarProjectedType = { ksClassDeclarationCache.asStarProjectedType() },
-            superTypes = { ksClassDeclarationCache.superTypes },
+            },
             declarations = {
                 ktClass.getProperties().mapNotNull { property ->
                     val typeReference = property.typeReference?.type() ?: return@mapNotNull null

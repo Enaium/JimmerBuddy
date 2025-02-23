@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
@@ -47,111 +48,21 @@ import kotlin.reflect.KClass
 data class Apt(
     val processingEnvironment: ProcessingEnvironment,
     val typeElements: Set<TypeElement>,
-    val sources: List<String>,
+    val sources: List<Source>,
 )
 
-fun psiClassesToApt(psiClasses: List<PsiClass>): Apt {
+fun psiClassesToApt(psiClasses: CopyOnWriteArrayList<PsiClass>): Apt {
     val typeElementCaches = mutableMapOf<String, TypeElement>()
-
     psiClasses.forEach { psiClass ->
         typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(
-            getQualifiedName = { createName(psiClass.qualifiedName!!) },
-            getSimpleName = { createName(psiClass.name!!) },
-            getKind = {
-                if (psiClass.isInterface) {
-                    ElementKind.INTERFACE
-                } else if (psiClass.isEnum) {
-                    ElementKind.ENUM
-                } else {
-                    ElementKind.CLASS
-                }
-            },
-            getModifiers = { setOf(Modifier.PUBLIC) },
-            getAnnotation = { anno ->
-                if (psiClass.modifierList?.annotations?.any { it.hasQualifiedName(anno.name) } == true) {
-                    getAnnotation(
-                        anno
-                    )
-                } else {
-                    null
-                }
-            },
-            getEnclosingElement = {
-                createPackageElement(getQualifiedName = {
-                    createName(
-                        psiClass.qualifiedName!!.substringBeforeLast(".")
-                    )
-                })
-            },
-            asType = {
-                createDeclaredType(
-                    getQualifiedName = { psiClass.qualifiedName!! },
-                    asElement = {
-                        typeElementCaches[psiClass.qualifiedName!!]!!
-                    },
-                    getTypeArguments = { emptyList() }
-                )
-            },
-            getSuperclass = { null }
-        )
-    }
-
-    psiClasses.forEach { psiClass ->
-        val typeElementCache = typeElementCaches[psiClass.qualifiedName!!] ?: return@forEach
-
-        typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(
-            getQualifiedName = { typeElementCache.qualifiedName },
-            getSimpleName = { typeElementCache.simpleName },
-            getKind = { typeElementCache.kind },
-            getModifiers = { typeElementCache.modifiers },
-            getAnnotation = { typeElementCache.getAnnotation(it) },
-            getEnclosingElement = { typeElementCache.enclosingElement },
-            getInterfaces = {
-                psiClass.interfaces.mapNotNull { element ->
-                    if (element is PsiClass) {
-                        createDeclaredType(
-                            getQualifiedName = { element.qualifiedName!! },
-                            asElement = {
-                                typeElementCaches[element.qualifiedName]
-                                    ?: throw IllegalArgumentException("Unknown type: ${element.qualifiedName}")
-                            },
-                            getTypeArguments = { emptyList() }
-                        )
-                    } else {
-                        null
-                    }
-                }
-            },
-            asType = {
-                createDeclaredType(
-                    getQualifiedName = { psiClass.qualifiedName!! },
-                    asElement = { typeElementCaches[psiClass.qualifiedName!!]!! },
-                    getTypeArguments = { emptyList() }
-                )
-            },
-            getSuperclass = { typeElementCache.superclass }
-        )
-    }
-
-    psiClasses.forEach { psiClass ->
-        val typeElementCache = typeElementCaches[psiClass.qualifiedName!!] ?: return@forEach
-
-        typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(
-            getQualifiedName = { typeElementCache.qualifiedName },
-            getSimpleName = { typeElementCache.simpleName },
-            getKind = { typeElementCache.kind },
-            getModifiers = { typeElementCache.modifiers },
-            getAnnotation = { typeElementCache.getAnnotation(it) },
-            getEnclosingElement = { typeElementCache.enclosingElement },
-            getInterfaces = { typeElementCache.interfaces },
             getEnclosedElements = {
-                if (typeElementCache.kind == ElementKind.INTERFACE) {
+                if (psiClass.isInterface) {
                     psiClass.methods.map { method ->
                         createExecutableElement(
                             getKind = { ElementKind.METHOD },
                             getSimpleName = { createName(method.name) },
                             getModifiers = { setOf(Modifier.PUBLIC) },
-                            getEnclosingElement = { typeElementCache },
+                            getEnclosingElement = { typeElementCaches[psiClass.qualifiedName]!! },
                             getParameters = { emptyList() },
                             getReturnType = {
                                 val canonicalText = method.returnType?.canonicalText
@@ -290,7 +201,7 @@ fun psiClassesToApt(psiClasses: List<PsiClass>): Apt {
                             isDefault = { false }
                         )
                     }
-                } else if (typeElementCache.kind == ElementKind.ENUM) {
+                } else if (psiClass.isEnum) {
                     psiClass.children.filter { it is PsiEnumConstant }.map { it as PsiEnumConstant }
                         .map {
                             val enumConstant = createTypeElement(
@@ -310,18 +221,64 @@ fun psiClassesToApt(psiClasses: List<PsiClass>): Apt {
                     emptyList()
                 }
             },
+            getQualifiedName = { createName(psiClass.qualifiedName!!) },
+            getSimpleName = { createName(psiClass.name!!) },
+            getKind = {
+                if (psiClass.isInterface) {
+                    ElementKind.INTERFACE
+                } else if (psiClass.isEnum) {
+                    ElementKind.ENUM
+                } else {
+                    ElementKind.CLASS
+                }
+            },
+            getModifiers = { setOf(Modifier.PUBLIC) },
+            getAnnotation = { anno ->
+                if (psiClass.modifierList?.annotations?.any { it.hasQualifiedName(anno.name) } == true) {
+                    getAnnotation(
+                        anno
+                    )
+                } else {
+                    null
+                }
+            },
+            getEnclosingElement = {
+                createPackageElement(getQualifiedName = {
+                    createName(
+                        psiClass.qualifiedName!!.substringBeforeLast(".")
+                    )
+                })
+            },
             asType = {
                 createDeclaredType(
                     getQualifiedName = { psiClass.qualifiedName!! },
-                    asElement = { typeElementCaches[psiClass.qualifiedName!!]!! },
+                    asElement = {
+                        typeElementCaches[psiClass.qualifiedName!!]!!
+                    },
                     getTypeArguments = { emptyList() }
                 )
             },
-            getSuperclass = { typeElementCache.superclass }
+            getInterfaces = {
+                psiClass.interfaces.mapNotNull { element ->
+                    if (element is PsiClass) {
+                        createDeclaredType(
+                            getQualifiedName = { element.qualifiedName!! },
+                            asElement = {
+                                typeElementCaches[element.qualifiedName]
+                                    ?: throw IllegalArgumentException("Unknown type: ${element.qualifiedName}")
+                            },
+                            getTypeArguments = { emptyList() }
+                        )
+                    } else {
+                        null
+                    }
+                }
+            },
+            getSuperclass = { null }
         )
     }
 
-    val sources = mutableListOf<String>()
+    val sources = mutableListOf<Source>()
 
     return Apt(
         object : ProcessingEnvironment {
@@ -377,7 +334,14 @@ fun psiClassesToApt(psiClasses: List<PsiClass>): Apt {
                             override fun openOutputStream(): OutputStream {
                                 return object : ByteArrayOutputStream() {
                                     override fun close() {
-                                        sources.add(toString())
+                                        sources.add(
+                                            Source(
+                                                packageName = name.toString().substringBeforeLast("."),
+                                                fileName = name.toString().substringAfterLast("."),
+                                                extensionName = "java",
+                                                content = toString()
+                                            )
+                                        )
                                     }
                                 }
                             }

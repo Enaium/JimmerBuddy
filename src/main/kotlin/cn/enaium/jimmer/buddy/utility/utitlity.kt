@@ -23,6 +23,13 @@ import kotlin.io.path.isDirectory
 /**
  * @author Enaium
  */
+data class Source(
+    val packageName: String,
+    val fileName: String,
+    val extensionName: String,
+    val content: String,
+)
+
 fun findProjectDir(file: Path): Path? {
     var current: Path? = file.parent
     while (current != null) {
@@ -36,6 +43,14 @@ fun findProjectDir(file: Path): Path? {
 
 fun isProject(path: Path): Boolean {
     return listOf("build.gradle.kts", "build.gradle", "pom.xml", ".git").any { path.resolve(it).exists() }
+}
+
+fun isMavenProject(path: Path): Boolean {
+    return path.resolve("pom.xml").exists()
+}
+
+fun isGradleProject(path: Path): Boolean {
+    return path.resolve("build.gradle.kts").exists() || path.resolve("build.gradle").exists()
 }
 
 fun findProjects(rootProject: Path): Set<Path> {

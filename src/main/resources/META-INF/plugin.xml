@@ -20,8 +20,8 @@
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
     </extensions>
     <projectListeners>
-        <listener class="cn.enaium.jimmer.buddy.listener.FileChangeListener"
-                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+        <listener class="cn.enaium.jimmer.buddy.listeners.JimmerFileEditorManagerListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
     <actions>
         <action id="cn.enaium.jimmer.buddy.action.Initialize" class="cn.enaium.jimmer.buddy.action.Initialize"
