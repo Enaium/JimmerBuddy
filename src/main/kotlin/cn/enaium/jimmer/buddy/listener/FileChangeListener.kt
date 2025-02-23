@@ -26,6 +26,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
  */
 class FileChangeListener(val project: Project) : BulkFileListener {
     override fun after(events: List<VFileEvent>) {
+        events.isEmpty() && return
         if (JimmerBuddy.isJavaProject(project)) {
             JimmerBuddy.init()
             JimmerBuddy.sourcesProcessJava(

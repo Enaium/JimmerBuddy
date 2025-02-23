@@ -23,6 +23,17 @@ import kotlin.io.path.isDirectory
 /**
  * @author Enaium
  */
+fun findProjectDir(file: Path): Path? {
+    var current: Path? = file.parent
+    while (current != null) {
+        if (isProject(current)) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
+}
+
 fun isProject(path: Path): Boolean {
     return listOf("build.gradle.kts", "build.gradle", "pom.xml", ".git").any { path.resolve(it).exists() }
 }

@@ -34,26 +34,12 @@ class JimmerPsiShortNamesCache(val project: Project) : PsiShortNamesCache() {
         name: String,
         scope: GlobalSearchScope
     ): Array<PsiClass> {
-        if (JimmerBuddy.isJavaProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.javaAllPsiClassCache.filter { it.key.substringAfterLast(".") == name }.values.toTypedArray()
-        } else if (JimmerBuddy.isKotlinProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.kotlinAllKtClassCache.filter { it.key.substringAfterLast(".") == name }.values.mapNotNull {
-                it.toFakeLightClass()
-            }.toTypedArray()
-        }
+        JimmerBuddy.init()
         return emptyArray()
     }
 
     override fun getAllClassNames(): Array<String> {
-        if (JimmerBuddy.isJavaProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.javaAllPsiClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
-        } else if (JimmerBuddy.isKotlinProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.kotlinAllKtClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
-        }
+        JimmerBuddy.init()
         return emptyArray()
     }
 

@@ -36,7 +36,14 @@ import kotlin.reflect.KClass
 data class Ksp(
     val resolver: Resolver,
     val environment: SymbolProcessorEnvironment,
-    val sources: List<String>,
+    val sources: List<Source>,
+)
+
+data class Source(
+    val packageName: String,
+    val fileName: String,
+    val extensionName: String,
+    val content: String,
 )
 
 fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
@@ -151,7 +158,11 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
                                                             typeReference.fqName!!.shortName().asString()
                                                         )
                                                     },
-                                                    packageName = { createKSName("") },
+                                                    packageName = {
+                                                        createKSName(
+                                                            typeReference.fqName!!.asString().substringBeforeLast(".")
+                                                        )
+                                                    },
                                                     asStarProjectedType = {
                                                         createKSType()
                                                     },
@@ -162,7 +173,8 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
                                     )
                                 }
                             )
-                        }
+                        },
+                        parentDeclaration = { createKSClassDeclaration(qualifiedName = { createKSName("") }) }
                     )
                 }.asSequence()
             }
@@ -178,9 +190,9 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
             )
         )
     }
-    val sources = mutableListOf<String>()
+    val sources = mutableListOf<Source>()
     return Ksp(
-        resolver = createResolver(newFiles = ksFiles.asSequence()),
+        resolver = createResolver(caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence()),
         environment = SymbolProcessorEnvironment(
             emptyMap<String, String>(),
             KotlinVersion.CURRENT,
@@ -222,7 +234,14 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
                 ): OutputStream {
                     return object : ByteArrayOutputStream() {
                         override fun close() {
-                            sources.add(toString())
+                            sources.add(
+                                Source(
+                                    packageName = packageName,
+                                    fileName = fileName,
+                                    extensionName = extensionName,
+                                    content = toString(Charsets.UTF_8)
+                                )
+                            )
                         }
                     }
                 }
@@ -257,7 +276,7 @@ fun ktClassToKsp(ktClasses: List<KtClass>): Ksp {
 }
 
 private fun createResolver(
-    allFiles: Sequence<KSFile> = emptySequence(),
+    caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
 ): Resolver {
 
@@ -353,7 +372,7 @@ private fun createResolver(
         }
 
         override fun getAllFiles(): Sequence<KSFile> {
-            return allFiles
+            return emptySequence()
         }
 
         override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
@@ -361,7 +380,7 @@ private fun createResolver(
                 "kotlin.collections.Collection" -> collection
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
-                else -> null
+                else -> caches[name.asString()]
             }
         }
 
@@ -680,7 +699,7 @@ private fun createKSClassDeclaration(
     getAllProperties: () -> Sequence<KSPropertyDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
     getSealedSubclasses: () -> Sequence<KSClassDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
     containingFile: () -> KSFile? = { TODO("${qualifiedName()} Not yet implemented") },
-    docString: () -> String? = { TODO("${qualifiedName()} Not yet implemented") },
+    docString: () -> String? = { null },
     packageName: () -> KSName = { TODO("${qualifiedName()} Not yet implemented") },
     parentDeclaration: () -> KSDeclaration? = { null },
     simpleName: () -> KSName = { TODO("${qualifiedName()} Not yet implemented") },
@@ -791,18 +810,18 @@ fun createKSPropertyDeclaration(
     containingFile: () -> KSFile? = { TODO("${qualifiedName()} Not yet implemented") },
     docString: () -> String? = { null },
     packageName: () -> KSName = { TODO("${qualifiedName()} Not yet implemented") },
-    parentDeclaration: () -> KSDeclaration? = { TODO("${qualifiedName()} Not yet implemented") },
+    parentDeclaration: () -> KSDeclaration? = { null },
     simpleName: () -> KSName = { TODO("${qualifiedName()} Not yet implemented") },
     typeParameters: () -> List<KSTypeParameter> = { TODO("${qualifiedName()} Not yet implemented") },
     modifiers: () -> Set<Modifier> = { TODO("${qualifiedName()} Not yet implemented") },
     location: () -> Location = { TODO("${qualifiedName()} Not yet implemented") },
     origin: () -> Origin = { TODO("${qualifiedName()} Not yet implemented") },
-    parent: () -> KSNode? = { TODO("${qualifiedName()} Not yet implemented") },
+    parent: () -> KSNode? = { null },
     annotations: () -> Sequence<KSAnnotation> = { TODO("${qualifiedName()} Not yet implemented") },
-    isActual: () -> Boolean = { TODO("${qualifiedName()} Not yet implemented") },
-    isExpect: () -> Boolean = { TODO("${qualifiedName()} Not yet implemented") },
-    findActuals: () -> Sequence<KSDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
-    findExpects: () -> Sequence<KSDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
+    isActual: () -> Boolean = { false },
+    isExpect: () -> Boolean = { false },
+    findActuals: () -> Sequence<KSDeclaration> = { emptySequence() },
+    findExpects: () -> Sequence<KSDeclaration> = { emptySequence() },
 ): KSPropertyDeclaration {
     return object : KSPropertyDeclaration {
         override val extensionReceiver: KSTypeReference?

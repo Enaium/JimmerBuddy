@@ -31,13 +31,7 @@ class JimmerPsiElementFinder(val project: Project) : PsiElementFinder() {
         qualifiedName: String,
         scope: GlobalSearchScope
     ): PsiClass? {
-        if (JimmerBuddy.isJavaProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.javaAllPsiClassCache[qualifiedName]
-        } else if (JimmerBuddy.isKotlinProject(project)) {
-            JimmerBuddy.init()
-            return JimmerBuddy.kotlinAllKtClassCache[qualifiedName]?.toFakeLightClass()
-        }
+        JimmerBuddy.init()
         return null
     }
 

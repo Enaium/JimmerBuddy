@@ -16,18 +16,14 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.utility.annotations
-import cn.enaium.jimmer.buddy.utility.findProjects
-import cn.enaium.jimmer.buddy.utility.ktClassToKsp
-import cn.enaium.jimmer.buddy.utility.psiClassesToApt
+import cn.enaium.jimmer.buddy.utility.*
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.DumbService
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.project.*
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
@@ -44,12 +40,12 @@ import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.dto.compiler.OsFile
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.ksp.Context
+import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.babyfish.jimmer.sql.Embeddable
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.MappedSuperclass
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtPsiFactory
 import java.io.Reader
 import java.nio.file.Path
 import javax.annotation.processing.RoundEnvironment
@@ -76,6 +72,7 @@ object JimmerBuddy {
 
     fun init() {
         if (isInit) return
+        isInit = true
         val project = ProjectManager.getInstance().openProjects.takeIf { it.isNotEmpty() }?.first() ?: return
         val projects =
             findProjects(project.guessProjectDir()?.toNioPath()!!)
@@ -87,14 +84,15 @@ object JimmerBuddy {
                 it.resolve("src").resolve("main").resolve("dto").walk().filter { it.extension == "dto" }.toList()
             }.flatten())
         } else if (isKotlinProject(project)) {
-            sourceProcessKotlin(project, projects.map {
-                it.resolve("src").resolve("main").resolve("kotlin").walk().filter { it.extension == "kt" }.toList()
-            }.flatten())
-            dtoProcessKotlin(project, projects.map {
-                it.resolve("src").resolve("main").resolve("dto").walk().filter { it.extension == "dto" }.toList()
-            }.flatten())
+            for (module in project.modules) {
+                val sourceDir = module.guessModuleDir()?.toNioPath()?.resolve("src/main/kotlin") ?: return
+                sourceProcessKotlin(project, sourceDir.walk().filter { it.extension == "kt" }.toList())
+                dtoProcessKotlin(
+                    project,
+                    sourceDir.parent.resolve("dto").walk().filter { it.extension == "dto" }.toList()
+                )
+            }
         }
-        isInit = true
     }
 
     fun initialize() {
@@ -190,7 +188,7 @@ object JimmerBuddy {
                             override fun openReader(): Reader {
                                 return it.readText().reader()
                             }
-                        }, "", "", emptyList(), it.name)
+                        }, findProjectDir(it)?.absolutePathString() ?: "", "", emptyList(), it.name)
                         val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
                         val typeElement: TypeElement =
                             elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
@@ -216,8 +214,12 @@ object JimmerBuddy {
         ApplicationManager.getApplication().executeOnPooledThread {
             ApplicationManager.getApplication().runReadAction {
                 DumbService.getInstance(project).runWhenSmart {
+
+                    var projectDir: Path? = null
+
                     sourceFiles.forEach {
-                        val psiFile = VirtualFileManager.getInstance().findFileByNioPath(it)!!.toPsiFile(project)!!
+                        val psiFile =
+                            VirtualFileManager.getInstance().findFileByNioPath(it)!!.toPsiFile(project)!!
 
                         kotlinImmutableKtClassCache.addAll(psiFile.children.mapNotNull { psi ->
                             return@mapNotNull if (psi is KtClass) {
@@ -229,22 +231,31 @@ object JimmerBuddy {
                                                 || fqName == Embeddable::class.qualifiedName!!
                                                 || fqName == ErrorFamily::class.qualifiedName!!
                                     } == false) return@mapNotNull null
+
+                                if (projectDir == null) {
+                                    projectDir = findProjectDir(it)
+                                }
                                 psi
                             } else {
                                 null
                             }
                         })
                     }
+
+                    projectDir ?: return@runWhenSmart
+                    val generatedDir = projectDir.resolve("build/generated/ksp/main/kotlin")
+                    generatedDir.createDirectories()
+
                     val (resolver, environment, sources) = ktClassToKsp(kotlinImmutableKtClassCache)
                     val context = Context(resolver, environment)
                     org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(context, false).process()
                     org.babyfish.jimmer.ksp.error.ErrorProcessor(context, true).process()
-                    sources.forEach {
-
-                        val ktFile = KtPsiFactory(project).createFile(it)
-                        ktFile.children.find { it is KtClass }?.also {
-                            kotlinAllKtClassCache[(it as KtClass).fqName!!.asString()] = it
-                        }
+                    sources.forEach { source ->
+                        val path = generatedDir.resolve(source.packageName.replace(".", "/"))
+                            .resolve("${source.fileName}.${source.extensionName}")
+                        path.parent.createDirectories()
+                        path.writeText(source.content)
+                        LocalFileSystem.getInstance().refreshAndFindFileByIoFile(path.toFile())
                     }
                 }
             }
@@ -252,7 +263,48 @@ object JimmerBuddy {
     }
 
     fun dtoProcessKotlin(project: Project, dtoFiles: List<Path>) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            ApplicationManager.getApplication().runReadAction {
+                DumbService.getInstance(project).runWhenSmart {
+                    val (resolver, environment, sources) = ktClassToKsp(kotlinImmutableKtClassCache)
+                    val context = Context(resolver, environment)
+                    dtoFiles.forEach {
+                        val dtoFile = DtoFile(object : OsFile {
+                            override fun getAbsolutePath(): String {
+                                return it.absolutePathString()
+                            }
 
+                            override fun openReader(): Reader {
+                                return it.readText().reader()
+                            }
+                        }, findProjectDir(it)?.absolutePathString() ?: "", "", emptyList(), it.name)
+                        val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
+                        val classDeclarationByName =
+                            resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
+                        val compile = compiler.compile(context.typeOf(classDeclarationByName))
+                        compile.forEach {
+                            org.babyfish.jimmer.ksp.dto.DtoGenerator(
+                                context,
+                                org.babyfish.jimmer.ksp.client.DocMetadata(context),
+                                false,
+                                it,
+                                context.environment.codeGenerator
+                            ).generate(emptyList())
+                        }
+                        var projectDir = findProjectDir(it) ?: return@forEach
+                        val generatedDir = projectDir.resolve("build/generated/ksp/main/kotlin")
+                        generatedDir.createDirectories()
+                        sources.forEach { source ->
+                            val path = generatedDir.resolve(source.packageName.replace(".", "/"))
+                                .resolve("${source.fileName}.${source.extensionName}")
+                            path.parent.createDirectories()
+                            path.writeText(source.content)
+                            LocalFileSystem.getInstance().refreshAndFindFileByIoFile(path.toFile())
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
