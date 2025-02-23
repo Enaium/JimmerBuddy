@@ -26,15 +26,22 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
  */
 class FileChangeListener(val project: Project) : BulkFileListener {
     override fun after(events: List<VFileEvent>) {
-
-        if (!JimmerBuddy.isJimmerProject(project)) {
-            return
+        if (JimmerBuddy.isJavaProject(project)) {
+            JimmerBuddy.init()
+            JimmerBuddy.sourcesProcessJava(
+                project,
+                events.filter { it.file?.extension == "java" }.map { it.file!!.toNioPath() })
+            JimmerBuddy.dtoProcessJava(
+                project,
+                events.filter { it.file?.extension == "dto" }.map { it.file!!.toNioPath() })
+        } else if (JimmerBuddy.isKotlinProject(project)) {
+            JimmerBuddy.init()
+            JimmerBuddy.sourceProcessKotlin(
+                project,
+                events.filter { it.file?.extension == "kt" }.map { it.file!!.toNioPath() })
+            JimmerBuddy.dtoProcessKotlin(
+                project,
+                events.filter { it.file?.extension == "dto" }.map { it.file!!.toNioPath() })
         }
-
-        JimmerBuddy.init()
-        JimmerBuddy.sourcesProcess(
-            project,
-            events.filter { it.file?.extension == "java" }.map { it.file!!.toNioPath() })
-        JimmerBuddy.dtoProcess(project, events.filter { it.file?.extension == "dto" }.map { it.file!!.toNioPath() })
     }
 }

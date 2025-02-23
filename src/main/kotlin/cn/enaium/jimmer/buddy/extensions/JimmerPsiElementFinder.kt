@@ -21,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.asJava.toFakeLightClass
 
 /**
  * @author Enaium
@@ -30,12 +31,14 @@ class JimmerPsiElementFinder(val project: Project) : PsiElementFinder() {
         qualifiedName: String,
         scope: GlobalSearchScope
     ): PsiClass? {
-        if (!JimmerBuddy.isJimmerProject(project)) {
-            return null
+        if (JimmerBuddy.isJavaProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.javaAllPsiClassCache[qualifiedName]
+        } else if (JimmerBuddy.isKotlinProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.kotlinAllKtClassCache[qualifiedName]?.toFakeLightClass()
         }
-
-        JimmerBuddy.init()
-        return JimmerBuddy.allPsiClassCache[qualifiedName]
+        return null
     }
 
     override fun findClasses(

@@ -16,8 +16,6 @@
 
 package cn.enaium.jimmer.buddy.utility
 
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifierList
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory

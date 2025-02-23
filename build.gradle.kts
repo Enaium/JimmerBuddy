@@ -24,7 +24,9 @@ dependencies {
 
     implementation(libs.jimmer.core)
     implementation(libs.jimmer.apt)
+    implementation(libs.jimmer.ksp)
     implementation(libs.jimmer.dto.compiler)
+    implementation(libs.symbol.processing.api)
 }
 
 tasks {

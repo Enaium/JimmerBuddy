@@ -24,6 +24,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiShortNamesCache
 import com.intellij.util.Processor
+import org.jetbrains.kotlin.asJava.toFakeLightClass
 
 /**
  * @author Enaium
@@ -33,22 +34,27 @@ class JimmerPsiShortNamesCache(val project: Project) : PsiShortNamesCache() {
         name: String,
         scope: GlobalSearchScope
     ): Array<PsiClass> {
-        if (!JimmerBuddy.isJimmerProject(project)) {
-            return emptyArray()
+        if (JimmerBuddy.isJavaProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.javaAllPsiClassCache.filter { it.key.substringAfterLast(".") == name }.values.toTypedArray()
+        } else if (JimmerBuddy.isKotlinProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.kotlinAllKtClassCache.filter { it.key.substringAfterLast(".") == name }.values.mapNotNull {
+                it.toFakeLightClass()
+            }.toTypedArray()
         }
-
-        JimmerBuddy.init()
-        return JimmerBuddy.allPsiClassCache.filter { it.key.substringAfterLast(".") == name }.values.toTypedArray()
+        return emptyArray()
     }
 
     override fun getAllClassNames(): Array<String> {
-
-        if (!JimmerBuddy.isJimmerProject(project)) {
-            return emptyArray()
+        if (JimmerBuddy.isJavaProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.javaAllPsiClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
+        } else if (JimmerBuddy.isKotlinProject(project)) {
+            JimmerBuddy.init()
+            return JimmerBuddy.kotlinAllKtClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
         }
-
-        JimmerBuddy.init()
-        return JimmerBuddy.allPsiClassCache.keys.map { it.substringAfterLast(".") }.toTypedArray()
+        return emptyArray()
     }
 
     override fun getMethodsByName(
