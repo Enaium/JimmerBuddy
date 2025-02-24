@@ -23,8 +23,8 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import io.ktor.util.*
 import java.nio.file.Path
+import kotlin.io.path.extension
 
 /**
  * @author Enaium

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.utility
+package cn.enaium.jimmer.buddy
 
+import cn.enaium.jimmer.buddy.utility.PsiShared
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -23,18 +24,28 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.types.KotlinType
 
 /**
  * @author Enaium
  */
-fun KtAnnotationEntry.annotation(): AnnotationDescriptor? =
-    this.analyze()[BindingContext.ANNOTATION, this]
+class PsiShared232 : PsiShared {
+    override fun annotations(ktClass: KtClass): List<PsiShared.Annotation> {
+        return ktClass.annotationEntries.map { PsiShared.Annotation(it.annotation()?.fqName!!.asString()) }
+    }
 
-fun KtClass.annotations(): List<AnnotationDescriptor?> =
-    this.annotationEntries.map { it.annotation() }
+    override fun annotations(ktProperty: KtProperty): List<PsiShared.Annotation> {
+        return ktProperty.annotationEntries.map { PsiShared.Annotation(it.annotation()?.fqName!!.asString()) }
+    }
 
-fun KtProperty.annotations(): List<AnnotationDescriptor?> =
-    this.annotationEntries.map { it.annotation() }
+    override fun type(ktTypeReference: KtTypeReference): PsiShared.Type {
+        return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
+            PsiShared.Type(
+                it.toString(),
+                it.isMarkedNullable
+            )
+        }
+    }
 
-fun KtTypeReference.type(): KotlinType? = this.analyze()[BindingContext.TYPE, this]
+    fun KtAnnotationEntry.annotation(): AnnotationDescriptor? =
+        this.analyze()[BindingContext.ANNOTATION, this]
+}

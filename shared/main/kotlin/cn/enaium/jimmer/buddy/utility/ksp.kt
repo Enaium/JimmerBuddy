@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -23,7 +24,6 @@ import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
-import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.psi.KtClass
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -53,7 +53,7 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
             packageName = { createKSName(fqName.substringBeforeLast(".")) },
             parentDeclaration = { null },
             annotations = {
-                ktClass.annotations().mapNotNull { getAnnotation(it?.fqName?.asString()!!) }.asSequence()
+                PSI_SHARED.annotations(ktClass).mapNotNull { getAnnotation(it.fqName) }.asSequence()
             },
             asStarProjectedType = {
                 createKSType(
@@ -66,8 +66,16 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
                         resolve = {
                             createKSType(
                                 declaration = {
-                                    ksClassDeclarationCaches[it.typeReference?.type()?.fqName?.asString()]
-                                        ?: throw IllegalArgumentException("Unknown super type ${it.typeReference?.type()?.fqName?.asString()}")
+                                    ksClassDeclarationCaches[it.typeReference?.let { PSI_SHARED.type(it) }?.fqName]
+                                        ?: throw IllegalArgumentException(
+                                            "Unknown super type ${
+                                                it.typeReference?.let {
+                                                    PSI_SHARED.type(
+                                                        it
+                                                    )
+                                                }?.fqName
+                                            }"
+                                        )
                                 }
                             )
                         }
@@ -76,7 +84,7 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
             },
             declarations = {
                 ktClass.getProperties().mapNotNull { property ->
-                    val typeReference = property.typeReference?.type() ?: return@mapNotNull null
+                    val typeReference = property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
                     val typeParameters = property.typeParameters
 
                     createKSPropertyDeclaration(
@@ -87,8 +95,8 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
                             createKSName(property.name!!)
                         },
                         annotations = {
-                            property.annotations().mapNotNull { annotation ->
-                                getAnnotation(annotation?.fqName?.asString()!!)
+                            PSI_SHARED.annotations(property).mapNotNull { annotation ->
+                                getAnnotation(annotation.fqName)
                             }.asSequence()
                         },
                         modifiers = { setOf(Modifier.ABSTRACT) },
@@ -112,18 +120,19 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
                                             }
                                         },
                                         declaration = {
-                                            ksClassDeclarationCaches[typeReference.fqName!!.asString()]
+                                            ksClassDeclarationCaches[typeReference.fqName]
                                                 ?: createKSClassDeclaration(
                                                     classKind = { ClassKind.CLASS },
-                                                    qualifiedName = { createKSName(typeReference.fqName!!.asString()) },
+                                                    qualifiedName = { createKSName(typeReference.fqName) },
                                                     simpleName = {
                                                         createKSName(
-                                                            typeReference.fqName!!.shortName().asString()
+                                                            typeReference.fqName
                                                         )
                                                     },
                                                     packageName = {
                                                         createKSName(
-                                                            typeReference.fqName!!.asString().substringBeforeLast(".")
+                                                            typeReference.fqName
+                                                                .substringBeforeLast(".")
                                                         )
                                                     },
                                                     asStarProjectedType = {
@@ -132,7 +141,7 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
                                                     annotations = { sequenceOf() }
                                                 )
                                         },
-                                        isMarkedNullable = { typeReference.isMarkedNullable },
+                                        isMarkedNullable = { typeReference.nullable },
                                     )
                                 }
                             )

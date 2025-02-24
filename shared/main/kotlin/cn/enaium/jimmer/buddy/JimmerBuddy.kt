@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import java.io.Reader
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
@@ -70,6 +71,8 @@ object JimmerBuddy {
     val kotlinImmutableKtClassCache = CopyOnWriteArrayList<KtClass>()
 
     var isInit = false
+
+    val PSI_SHARED: PsiShared = ServiceLoader.load(PsiShared::class.java, JimmerBuddy::class.java.classLoader).first()
 
     fun init() {
         if (isInit) return
@@ -236,8 +239,8 @@ object JimmerBuddy {
                                 VirtualFileManager.getInstance().findFileByNioPath(it)!!.toPsiFile(project)!!
                             ktClassCaches.addAll(psiFile.children.mapNotNull { psi ->
                                 return@mapNotNull if (psi is KtClass) {
-                                    if (psi.annotations().any { annotation ->
-                                            val fqName = annotation?.fqName?.asString()
+                                    if (PSI_SHARED.annotations(psi).any { annotation ->
+                                            val fqName = annotation.fqName
                                             fqName == Immutable::class.qualifiedName!!
                                                     || fqName == Entity::class.qualifiedName!!
                                                     || fqName == MappedSuperclass::class.qualifiedName!!
