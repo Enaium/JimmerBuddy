@@ -127,6 +127,7 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
                                                     simpleName = {
                                                         createKSName(
                                                             typeReference.fqName
+                                                                .substringAfterLast(".")
                                                         )
                                                     },
                                                     packageName = {

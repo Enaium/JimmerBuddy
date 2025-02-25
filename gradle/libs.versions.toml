@@ -2,7 +2,7 @@
 kotlin = "2.1.0"
 ksp = "2.1.0+"
 intellij = "2.2.1"
-jimmer = "0.9.55"
+jimmer = "0.9.59"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }

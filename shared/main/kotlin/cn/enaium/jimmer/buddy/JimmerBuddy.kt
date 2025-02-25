@@ -26,10 +26,9 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
-import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
-import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.apt.client.DocMetadata
 import org.babyfish.jimmer.apt.createContext
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
@@ -40,12 +39,8 @@ import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.dto.compiler.DtoFile
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.dto.compiler.OsFile
-import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
-import org.babyfish.jimmer.sql.Embeddable
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.MappedSuperclass
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import java.io.Reader
@@ -64,7 +59,12 @@ import kotlin.io.path.*
 object JimmerBuddy {
 
     const val NAME = "JimmerBuddy"
-    val ICON = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
+
+    object Icons {
+        val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
+        val IMMUTABLE = IconLoader.getIcon("/icons/immutable.svg", JimmerBuddy::class.java)
+        val DTO = IconLoader.getIcon("/icons/dto.svg", JimmerBuddy::class.java)
+    }
 
     val javaImmutablePsiClassCache = CopyOnWriteArrayList<PsiClass>()
 
@@ -122,13 +122,7 @@ object JimmerBuddy {
                                 .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
                             psiCaches.addAll(psiFile.children.mapNotNull { psi ->
                                 return@mapNotNull if (psi is PsiClass) {
-                                    if (psi.modifierList?.annotations?.any { annotation ->
-                                            annotation.hasQualifiedName(Immutable::class.qualifiedName!!)
-                                                    || annotation.hasQualifiedName(Entity::class.qualifiedName!!)
-                                                    || annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
-                                                    || annotation.hasQualifiedName(Embeddable::class.qualifiedName!!)
-                                                    || annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
-                                        } == false) return@mapNotNull null
+                                    if (psi.isJimmerImmutableType().not()) return@mapNotNull null
                                     psi
                                 } else {
                                     null
@@ -159,13 +153,13 @@ object JimmerBuddy {
                             val immutableTypeElements = ImmutableProcessor(context, pe.messager).process(roundEnv).keys
                             EntryProcessor(context, immutableTypeElements).process()
                             ErrorProcessor(context, false).process(roundEnv)
-                            sources.forEach {
+                            asyncRefresh(sources.map {
                                 val path = generatedDir.resolve(it.packageName.replace(".", "/"))
                                     .resolve("${it.fileName}.${it.extensionName}")
                                 path.parent.createDirectories()
                                 path.writeText(it.content)
-                                VirtualFileManager.getInstance().asyncRefresh()
-                            }
+                                path
+                            })
                         } catch (e: Throwable) {
                             e.printStackTrace()
                         }
@@ -214,13 +208,13 @@ object JimmerBuddy {
                         }
                         val projectDir = findProjectDir(it) ?: return@forEach
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                        sources.forEach {
+                        asyncRefresh(sources.map {
                             val path = generatedDir.resolve(it.packageName.replace(".", "/"))
                                 .resolve("${it.fileName}.${it.extensionName}")
                             path.parent.createDirectories()
                             path.writeText(it.content)
-                            VirtualFileManager.getInstance().asyncRefresh()
-                        }
+                            path
+                        })
                     }
                 }
             }
@@ -235,18 +229,10 @@ object JimmerBuddy {
                         val ktClassCaches =
                             if (projects.size == 1) kotlinImmutableKtClassCache else CopyOnWriteArrayList()
                         sourceFiles.forEach {
-                            val psiFile =
-                                VirtualFileManager.getInstance().findFileByNioPath(it)!!.toPsiFile(project)!!
+                            val psiFile = it.toFile().toPsiFile(project)!!
                             ktClassCaches.addAll(psiFile.children.mapNotNull { psi ->
                                 return@mapNotNull if (psi is KtClass) {
-                                    if (PSI_SHARED.annotations(psi).any { annotation ->
-                                            val fqName = annotation.fqName
-                                            fqName == Immutable::class.qualifiedName!!
-                                                    || fqName == Entity::class.qualifiedName!!
-                                                    || fqName == MappedSuperclass::class.qualifiedName!!
-                                                    || fqName == Embeddable::class.qualifiedName!!
-                                                    || fqName == ErrorFamily::class.qualifiedName!!
-                                        } == false) return@mapNotNull null
+                                    if (psi.isJimmerImmutableType().not()) return@mapNotNull null
                                     psi
                                 } else {
                                     null
@@ -262,13 +248,13 @@ object JimmerBuddy {
                             val context = Context(resolver, environment)
                             org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(context, false).process()
                             org.babyfish.jimmer.ksp.error.ErrorProcessor(context, true).process()
-                            sources.forEach { source ->
+                            asyncRefresh(files = sources.map { source ->
                                 val path = generatedDir.resolve(source.packageName.replace(".", "/"))
                                     .resolve("${source.fileName}.${source.extensionName}")
                                 path.parent.createDirectories()
                                 path.writeText(source.content)
-                                VirtualFileManager.getInstance().asyncRefresh()
-                            }
+                                path
+                            })
                         } catch (e: Throwable) {
                             e.printStackTrace()
                         }
@@ -311,13 +297,13 @@ object JimmerBuddy {
                         val projectDir = findProjectDir(it) ?: return@forEach
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()
-                        sources.forEach { source ->
+                        asyncRefresh(sources.map { source ->
                             val path = generatedDir.resolve(source.packageName.replace(".", "/"))
                                 .resolve("${source.fileName}.${source.extensionName}")
                             path.parent.createDirectories()
                             path.writeText(source.content)
-                            VirtualFileManager.getInstance().asyncRefresh()
-                        }
+                            path
+                        })
                     }
                 }
             }
@@ -397,6 +383,14 @@ object JimmerBuddy {
             }
         } else {
             return null
+        }
+    }
+
+    fun asyncRefresh(files: List<Path>) {
+        ApplicationManager.getApplication().invokeLater {
+            files.forEach {
+                LocalFileSystem.getInstance().refreshAndFindFileByIoFile(it.toFile())
+            }
         }
     }
 }

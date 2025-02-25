@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
@@ -40,7 +41,7 @@ class PsiShared232 : PsiShared {
     override fun type(ktTypeReference: KtTypeReference): PsiShared.Type {
         return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
             PsiShared.Type(
-                it.toString(),
+                it.fqName!!.asString(),
                 it.isMarkedNullable
             )
         }

@@ -18,9 +18,10 @@
         <java.shortNamesCache implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiShortNamesCache"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
+        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.JimmerToolWindow" id="JimmerBuddy" anchor="right" icon="/icons/logo.svg"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
-        <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}" />
+        <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
     </extensions>
     <projectListeners>
         <listener class="cn.enaium.jimmer.buddy.listeners.JimmerFileEditorManagerListener"

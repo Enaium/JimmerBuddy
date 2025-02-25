@@ -52,7 +52,7 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
 
     override fun getWidgetState(file: VirtualFile?): WidgetState {
         return WidgetState(JimmerBuddy.NAME, null, true).apply {
-            icon = JimmerBuddy.ICON
+            icon = JimmerBuddy.Icons.LOGO
         }
     }
 

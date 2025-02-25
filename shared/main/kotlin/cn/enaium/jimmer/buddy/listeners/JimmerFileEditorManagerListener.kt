@@ -38,13 +38,6 @@ class JimmerFileEditorManagerListener(val project: Project) : FileEditorManagerL
         }
     }
 
-    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-        try {
-            fileChange(file.toNioPath())
-        } catch (_: Throwable) {
-
-        }
-    }
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
         event.oldFile?.also {
@@ -56,7 +49,17 @@ class JimmerFileEditorManagerListener(val project: Project) : FileEditorManagerL
         }
     }
 
+    private val caches = mutableMapOf<Path, Long>()
+
     private fun fileChange(file: Path) {
+        caches[file]?.let {
+            if (System.currentTimeMillis() - it < 5000) {
+                return
+            }
+        }
+
+        caches[file] = System.currentTimeMillis()
+
         if (JimmerBuddy.isJavaProject(project)) {
             JimmerBuddy.init()
             JimmerBuddy.sourcesProcessJava(
