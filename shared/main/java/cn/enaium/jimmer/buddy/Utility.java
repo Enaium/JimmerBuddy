@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy;
 import org.babyfish.jimmer.Formula;
 import org.babyfish.jimmer.Immutable;
 import org.babyfish.jimmer.error.ErrorFamily;
+import org.babyfish.jimmer.error.ErrorField;
 import org.babyfish.jimmer.sql.*;
 import org.babyfish.jimmer.sql.meta.LogicalDeletedValueGenerator;
 import org.babyfish.jimmer.sql.meta.UserIdGenerator;
@@ -90,6 +91,40 @@ public class Utility {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return ErrorFamily.class;
+            }
+        };
+    }
+
+    public static ErrorField errorField() {
+        return new ErrorField() {
+            @Override
+            public String name() {
+                return "";
+            }
+
+            @Override
+            public Class<?> type() {
+                return null;
+            }
+
+            @Override
+            public boolean list() {
+                return false;
+            }
+
+            @Override
+            public boolean nullable() {
+                return false;
+            }
+
+            @Override
+            public String doc() {
+                return "";
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return ErrorField.class;
             }
         };
     }

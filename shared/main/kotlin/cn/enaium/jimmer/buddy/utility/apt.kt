@@ -23,6 +23,7 @@ import com.jetbrains.rd.util.firstOrNull
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
+import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -695,6 +696,7 @@ private fun getAnnotation(type: Class<Annotation>): Annotation? = when (type) {
     MappedSuperclass::class.java -> Utility.mappedSuperclass()
     Embeddable::class.java -> Utility.embeddable()
     ErrorFamily::class.java -> Utility.errorFamily()
+    ErrorField::class.java -> Utility.errorField()
     Id::class.java -> Utility.id()
     IdView::class.java -> Utility.idView()
     Key::class.java -> Utility.key()

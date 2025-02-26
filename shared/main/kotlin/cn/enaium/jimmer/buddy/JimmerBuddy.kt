@@ -169,7 +169,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            error(e)
+                            LOG.error(e)
                         }
                         javaImmutablePsiClassCache.addAll(psiCaches)
                     }
@@ -226,7 +226,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            error(e)
+                            LOG.error(e)
                         }
                     }
                 }
@@ -272,7 +272,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            error(e)
+                            LOG.error(e)
                         }
                         kotlinImmutableKtClassCache.addAll(ktClassCaches)
                     }
@@ -323,7 +323,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            error(e)
+                            LOG.error(e)
                         }
                     }
                 }

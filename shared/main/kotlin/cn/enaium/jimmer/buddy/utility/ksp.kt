@@ -23,12 +23,16 @@ import com.google.devtools.ksp.symbol.*
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
+import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassBody
+import org.jetbrains.kotlin.psi.KtEnumEntry
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.reflect.KClass
 
@@ -48,7 +52,15 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
     ktClasses.forEach { ktClass ->
         val fqName = ktClass.fqName!!.asString()
         ksClassDeclarationCaches[fqName] = createKSClassDeclaration(
-            classKind = { ClassKind.INTERFACE },
+            classKind = {
+                if (ktClass.isInterface()) {
+                    ClassKind.INTERFACE
+                } else if (ktClass.isEnum()) {
+                    ClassKind.ENUM_CLASS
+                } else {
+                    ClassKind.CLASS
+                }
+            },
             qualifiedName = { createKSName(fqName) },
             simpleName = { createKSName(ktClass.name!!) },
             packageName = { createKSName(fqName.substringBeforeLast(".")) },
@@ -84,73 +96,87 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                 }.asSequence()
             },
             declarations = {
-                ktClass.getProperties().mapNotNull { property ->
-                    val typeReference = property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
-                    val typeParameters = property.typeParameters
+                if (ktClass.isInterface()) {
+                    ktClass.getProperties().mapNotNull { property ->
+                        val typeReference =
+                            property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
+                        val typeParameters = property.typeParameters
 
-                    createKSPropertyDeclaration(
-                        qualifiedName = {
-                            createKSName(property.fqName!!.asString())
-                        },
-                        simpleName = {
-                            createKSName(property.name!!)
-                        },
-                        annotations = {
-                            PSI_SHARED.annotations(property).mapNotNull { annotation ->
-                                getAnnotation(annotation.fqName)
-                            }.asSequence()
-                        },
-                        modifiers = { setOf(Modifier.ABSTRACT) },
-                        type = {
-                            createKSTypeReference(
-                                resolve = {
-                                    createKSType(
-                                        arguments = {
-                                            typeParameters.map { parameter ->
-                                                createKSTypeArgument(
-                                                    type = {
-                                                        createKSTypeReference(
-                                                            resolve = {
-                                                                ksClassDeclarationCaches[parameter.fqName!!.asString()]?.asStarProjectedType()
-                                                                    ?: throw IllegalArgumentException("Unknown type ${parameter.fqName!!.asString()}")
-                                                            }
-                                                        )
-                                                    },
-                                                    variance = { Variance.INVARIANT },
-                                                )
-                                            }
-                                        },
-                                        declaration = {
-                                            ksClassDeclarationCaches[typeReference.fqName]
-                                                ?: createKSClassDeclaration(
-                                                    classKind = { ClassKind.CLASS },
-                                                    qualifiedName = { createKSName(typeReference.fqName) },
-                                                    simpleName = {
-                                                        createKSName(
-                                                            typeReference.fqName
-                                                                .substringAfterLast(".")
-                                                        )
-                                                    },
-                                                    packageName = {
-                                                        createKSName(
-                                                            typeReference.fqName
-                                                                .substringBeforeLast(".")
-                                                        )
-                                                    },
-                                                    asStarProjectedType = {
-                                                        createKSType()
-                                                    },
-                                                    annotations = { sequenceOf() }
-                                                )
-                                        },
-                                        isMarkedNullable = { typeReference.nullable },
-                                    )
-                                }
-                            )
-                        },
-                        parentDeclaration = { createKSClassDeclaration(qualifiedName = { createKSName("") }) }
-                    )
-                }.asSequence()
+                        createKSPropertyDeclaration(
+                            qualifiedName = {
+                                createKSName(property.fqName!!.asString())
+                            },
+                            simpleName = {
+                                createKSName(property.name!!)
+                            },
+                            annotations = {
+                                PSI_SHARED.annotations(property).mapNotNull { annotation ->
+                                    getAnnotation(annotation.fqName)
+                                }.asSequence()
+                            },
+                            modifiers = { setOf(Modifier.ABSTRACT) },
+                            type = {
+                                createKSTypeReference(
+                                    resolve = {
+                                        createKSType(
+                                            arguments = {
+                                                typeParameters.map { parameter ->
+                                                    createKSTypeArgument(
+                                                        type = {
+                                                            createKSTypeReference(
+                                                                resolve = {
+                                                                    ksClassDeclarationCaches[parameter.fqName!!.asString()]?.asStarProjectedType()
+                                                                        ?: throw IllegalArgumentException("Unknown type ${parameter.fqName!!.asString()}")
+                                                                }
+                                                            )
+                                                        },
+                                                        variance = { Variance.INVARIANT },
+                                                    )
+                                                }
+                                            },
+                                            declaration = {
+                                                ksClassDeclarationCaches[typeReference.fqName]
+                                                    ?: createKSClassDeclaration(
+                                                        classKind = { ClassKind.CLASS },
+                                                        qualifiedName = { createKSName(typeReference.fqName) },
+                                                        simpleName = {
+                                                            createKSName(
+                                                                typeReference.fqName
+                                                                    .substringAfterLast(".")
+                                                            )
+                                                        },
+                                                        packageName = {
+                                                            createKSName(
+                                                                typeReference.fqName
+                                                                    .substringBeforeLast(".")
+                                                            )
+                                                        },
+                                                        asStarProjectedType = {
+                                                            createKSType()
+                                                        },
+                                                        annotations = { sequenceOf() }
+                                                    )
+                                            },
+                                            isMarkedNullable = { typeReference.nullable },
+                                        )
+                                    }
+                                )
+                            },
+                            parentDeclaration = { ksClassDeclarationCaches[fqName] },
+                        )
+                    }.asSequence()
+                } else if (ktClass.isEnum()) {
+                    ktClass.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.map {
+                        createKSClassDeclaration(
+                            qualifiedName = { createKSName(it.name!!) },
+                            classKind = { ClassKind.ENUM_ENTRY },
+                            simpleName = { createKSName(it.name!!) },
+                            parentDeclaration = { ksClassDeclarationCaches[fqName] },
+                        )
+                    }?.asSequence() ?: emptySequence()
+                } else {
+                    emptySequence()
+                }
             }
         )
 
@@ -498,6 +524,7 @@ private fun getAnnotation(fqName: String): KSAnnotation? {
         MappedSuperclass::class.qualifiedName -> createAnnotation(MappedSuperclass::class)
         Embeddable::class.qualifiedName -> createAnnotation(Embeddable::class)
         ErrorFamily::class.qualifiedName -> createAnnotation(ErrorFamily::class)
+        ErrorField::class.qualifiedName -> createAnnotation(ErrorField::class)
         Id::class.qualifiedName -> createAnnotation(Id::class)
         IdView::class.qualifiedName -> createAnnotation(IdView::class)
         Key::class.qualifiedName -> createAnnotation(Key::class)

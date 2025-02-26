@@ -33,11 +33,11 @@ class Log(project: Project) : ConsoleViewImpl(project, true) {
     }
 
     fun error(e: Throwable) {
-        e.printStackTrace(PrintWriter(object : ByteArrayOutputStream() {
-            override fun close() {
-                print(log(toString()), ConsoleViewContentType.ERROR_OUTPUT)
-            }
-        }))
+        val out = ByteArrayOutputStream()
+        val writer = PrintWriter(out)
+        e.printStackTrace(writer)
+        writer.flush()
+        print(log(out.toString()), ConsoleViewContentType.ERROR_OUTPUT)
     }
 
     fun warn(text: String) {

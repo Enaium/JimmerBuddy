@@ -29,7 +29,11 @@ class LogToolWindow : ToolWindowFactory {
         project: Project,
         toolWindow: ToolWindow
     ) {
-        toolWindow.component.add(JimmerBuddy.LOG.component)
+        try {
+            toolWindow.component.add(JimmerBuddy.LOG.component)
+        } catch (_: Throwable) {
+
+        }
     }
 
     override fun isApplicable(project: Project): Boolean {
