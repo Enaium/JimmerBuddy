@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.findProjectDir
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -38,6 +37,13 @@ class JimmerFileEditorManagerListener(val project: Project) : FileEditorManagerL
         }
     }
 
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+        try {
+            fileChange(file.toNioPath())
+        } catch (_: Throwable) {
+
+        }
+    }
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
         event.oldFile?.also {
@@ -49,31 +55,17 @@ class JimmerFileEditorManagerListener(val project: Project) : FileEditorManagerL
         }
     }
 
-    private val caches = mutableMapOf<Path, Long>()
-
     private fun fileChange(file: Path) {
-        caches[file]?.let {
-            if (System.currentTimeMillis() - it < 5000) {
-                return
+        val dtoFiles = listOf(file).filter { it.extension == "dto" }
+        dtoFiles.isEmpty() && return
+        JimmerBuddy.DEQ.schedule("EditorChange") {
+            if (JimmerBuddy.isJavaProject(project)) {
+                JimmerBuddy.init()
+                JimmerBuddy.dtoProcessJava(project, dtoFiles)
+            } else if (JimmerBuddy.isKotlinProject(project)) {
+                JimmerBuddy.init()
+                JimmerBuddy.dtoProcessKotlin(project, dtoFiles)
             }
-        }
-
-        caches[file] = System.currentTimeMillis()
-
-        if (JimmerBuddy.isJavaProject(project)) {
-            JimmerBuddy.init()
-            JimmerBuddy.sourcesProcessJava(
-                project,
-                mapOf((findProjectDir(file) ?: return) to listOf(file).filter { it.extension == "java" })
-            )
-            JimmerBuddy.dtoProcessJava(project, listOf(file).filter { it.extension == "dto" })
-        } else if (JimmerBuddy.isKotlinProject(project)) {
-            JimmerBuddy.init()
-            JimmerBuddy.sourceProcessKotlin(
-                project,
-                mapOf((findProjectDir(file) ?: return) to listOf(file).filter { it.extension == "kt" })
-            )
-            JimmerBuddy.dtoProcessKotlin(project, listOf(file).filter { it.extension == "dto" })
         }
     }
 }

@@ -29,6 +29,7 @@ import java.io.OutputStream
 import java.io.Writer
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
@@ -51,7 +52,7 @@ data class Apt(
     val sources: List<Source>,
 )
 
-fun psiClassesToApt(psiClasses: CopyOnWriteArrayList<PsiClass>): Apt {
+fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
     val typeElementCaches = mutableMapOf<String, TypeElement>()
     psiClasses.forEach { psiClass ->
         typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(

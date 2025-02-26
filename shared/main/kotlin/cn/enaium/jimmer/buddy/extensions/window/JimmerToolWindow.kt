@@ -29,7 +29,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindow
-import com.intellij.openapi.wm.ToolWindowAnchor
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
@@ -234,6 +233,10 @@ class JimmerToolWindow : ToolWindowFactory {
     }
 
     override fun isApplicable(project: Project): Boolean {
+        return JimmerBuddy.isJimmerProject(project)
+    }
+
+    override fun shouldBeAvailable(project: Project): Boolean {
         return JimmerBuddy.isJimmerProject(project)
     }
 }

@@ -46,7 +46,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import java.io.Reader
 import java.nio.file.Path
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
@@ -66,11 +66,15 @@ object JimmerBuddy {
         val DTO = IconLoader.getIcon("/icons/dto.svg", JimmerBuddy::class.java)
     }
 
-    val javaImmutablePsiClassCache = CopyOnWriteArrayList<PsiClass>()
+    private val javaImmutablePsiClassCache = CopyOnWriteArraySet<PsiClass>()
 
-    val kotlinImmutableKtClassCache = CopyOnWriteArrayList<KtClass>()
+    private val kotlinImmutableKtClassCache = CopyOnWriteArraySet<KtClass>()
 
     var isInit = false
+
+    val LOG = Log(ProjectManager.getInstance().defaultProject)
+
+    val DEQ = DelayedExecutionQueue(2000)
 
     val PSI_SHARED: PsiShared = ServiceLoader.load(PsiShared::class.java, JimmerBuddy::class.java.classLoader).first()
 
@@ -79,7 +83,7 @@ object JimmerBuddy {
         if (DumbService.isDumb(ProjectManager.getInstance().openProjects.firstOrNull() ?: return)) {
             return
         }
-
+        LOG.info("JimmerBuddy is initializing")
         isInit = true
         val project = ProjectManager.getInstance().openProjects.takeIf { it.isNotEmpty() }?.first() ?: return
         val projects =
@@ -102,6 +106,7 @@ object JimmerBuddy {
                 projects.map { it.resolve("src/main/dto").walk().filter { it.extension == "dto" }.toList() }.flatten()
             )
         }
+        LOG.info("JimmerBuddy is initialized")
     }
 
     fun initialize() {
@@ -115,8 +120,9 @@ object JimmerBuddy {
         ApplicationManager.getApplication().executeOnPooledThread {
             ApplicationManager.getApplication().runReadAction {
                 if (!DumbService.isDumb(project)) {
+                    LOG.info("SourcesProcessJava Project:${projects.map { it.key.name }}")
                     projects.forEach { (projectDir, sourceFiles) ->
-                        val psiCaches = if (projects.size == 1) javaImmutablePsiClassCache else CopyOnWriteArrayList()
+                        val psiCaches = if (projects.size == 1) javaImmutablePsiClassCache else CopyOnWriteArraySet()
                         sourceFiles.forEach {
                             val psiFile = PsiFileFactory.getInstance(project)
                                 .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
@@ -129,6 +135,8 @@ object JimmerBuddy {
                                 }
                             })
                         }
+
+                        LOG.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${psiCaches.size}")
 
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()
@@ -161,7 +169,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            e.printStackTrace()
+                            error(e)
                         }
                         javaImmutablePsiClassCache.addAll(psiCaches)
                     }
@@ -173,6 +181,7 @@ object JimmerBuddy {
     fun dtoProcessJava(project: Project, dtoFiles: List<Path>) {
         ApplicationManager.getApplication().executeOnPooledThread {
             ApplicationManager.getApplication().runReadAction {
+                LOG.info("DtoProcessJava Project:${dtoFiles.joinToString(", ") { it.name }}")
                 if (!DumbService.isDumb(project)) {
                     val (pe, rootElements, sources) = psiClassesToApt(javaImmutablePsiClassCache)
                     val context = createContext(
@@ -202,19 +211,23 @@ object JimmerBuddy {
                         val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
                         val typeElement: TypeElement =
                             elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
-                        val compile = compiler.compile(context.getImmutableType(typeElement))
-                        compile.forEach {
-                            DtoGenerator(context, DocMetadata(context), it).generate()
+                        try {
+                            val compile = compiler.compile(context.getImmutableType(typeElement))
+                            compile.forEach {
+                                DtoGenerator(context, DocMetadata(context), it).generate()
+                            }
+                            val projectDir = findProjectDir(it) ?: return@forEach
+                            val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
+                            asyncRefresh(sources.map {
+                                val path = generatedDir.resolve(it.packageName.replace(".", "/"))
+                                    .resolve("${it.fileName}.${it.extensionName}")
+                                path.parent.createDirectories()
+                                path.writeText(it.content)
+                                path
+                            })
+                        } catch (e: Throwable) {
+                            error(e)
                         }
-                        val projectDir = findProjectDir(it) ?: return@forEach
-                        val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                        asyncRefresh(sources.map {
-                            val path = generatedDir.resolve(it.packageName.replace(".", "/"))
-                                .resolve("${it.fileName}.${it.extensionName}")
-                            path.parent.createDirectories()
-                            path.writeText(it.content)
-                            path
-                        })
                     }
                 }
             }
@@ -225,9 +238,10 @@ object JimmerBuddy {
         ApplicationManager.getApplication().executeOnPooledThread {
             ApplicationManager.getApplication().runReadAction {
                 if (!DumbService.isDumb(project)) {
+                    LOG.info("SourceProcessKotlin Project:${projects.map { it.key.name }}")
                     projects.forEach { projectDir, sourceFiles ->
                         val ktClassCaches =
-                            if (projects.size == 1) kotlinImmutableKtClassCache else CopyOnWriteArrayList()
+                            if (projects.size == 1) kotlinImmutableKtClassCache else CopyOnWriteArraySet()
                         sourceFiles.forEach {
                             val psiFile = it.toFile().toPsiFile(project)!!
                             ktClassCaches.addAll(psiFile.children.mapNotNull { psi ->
@@ -239,6 +253,8 @@ object JimmerBuddy {
                                 }
                             })
                         }
+
+                        LOG.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${ktClassCaches.size}")
 
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()
@@ -256,7 +272,7 @@ object JimmerBuddy {
                                 path
                             })
                         } catch (e: Throwable) {
-                            e.printStackTrace()
+                            error(e)
                         }
                         kotlinImmutableKtClassCache.addAll(ktClassCaches)
                     }
@@ -268,7 +284,8 @@ object JimmerBuddy {
     fun dtoProcessKotlin(project: Project, dtoFiles: List<Path>) {
         ApplicationManager.getApplication().executeOnPooledThread {
             ApplicationManager.getApplication().runReadAction {
-                DumbService.getInstance(project).runWhenSmart {
+                if (!DumbService.isDumb(project)) {
+                    LOG.info("DtoProcessKotlin Project:${dtoFiles.joinToString(", ") { it.name }}")
                     val (resolver, environment, sources) = ktClassToKsp(kotlinImmutableKtClassCache)
                     val context = Context(resolver, environment)
                     dtoFiles.forEach {
@@ -284,26 +301,30 @@ object JimmerBuddy {
                         val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
                         val classDeclarationByName =
                             resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
-                        val compile = compiler.compile(context.typeOf(classDeclarationByName))
-                        compile.forEach {
-                            org.babyfish.jimmer.ksp.dto.DtoGenerator(
-                                context,
-                                org.babyfish.jimmer.ksp.client.DocMetadata(context),
-                                false,
-                                it,
-                                context.environment.codeGenerator
-                            ).generate(emptyList())
+                        try {
+                            val compile = compiler.compile(context.typeOf(classDeclarationByName))
+                            compile.forEach {
+                                org.babyfish.jimmer.ksp.dto.DtoGenerator(
+                                    context,
+                                    org.babyfish.jimmer.ksp.client.DocMetadata(context),
+                                    false,
+                                    it,
+                                    context.environment.codeGenerator
+                                ).generate(emptyList())
+                            }
+                            val projectDir = findProjectDir(it) ?: return@forEach
+                            val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
+                            generatedDir.createDirectories()
+                            asyncRefresh(sources.map { source ->
+                                val path = generatedDir.resolve(source.packageName.replace(".", "/"))
+                                    .resolve("${source.fileName}.${source.extensionName}")
+                                path.parent.createDirectories()
+                                path.writeText(source.content)
+                                path
+                            })
+                        } catch (e: Throwable) {
+                            error(e)
                         }
-                        val projectDir = findProjectDir(it) ?: return@forEach
-                        val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                        generatedDir.createDirectories()
-                        asyncRefresh(sources.map { source ->
-                            val path = generatedDir.resolve(source.packageName.replace(".", "/"))
-                                .resolve("${source.fileName}.${source.extensionName}")
-                            path.parent.createDirectories()
-                            path.writeText(source.content)
-                            path
-                        })
                     }
                 }
             }
@@ -388,8 +409,10 @@ object JimmerBuddy {
 
     fun asyncRefresh(files: List<Path>) {
         ApplicationManager.getApplication().invokeLater {
-            files.forEach {
-                LocalFileSystem.getInstance().refreshAndFindFileByIoFile(it.toFile())
+            try {
+                LocalFileSystem.getInstance().refreshNioFiles(files)
+                LOG.info("Refreshed ${files.joinToString(", ") { it.name }}")
+            } catch (_: Throwable) {
             }
         }
     }

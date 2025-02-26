@@ -16,9 +16,13 @@
     <extensions defaultExtensionNs="com.intellij">
         <java.elementFinder implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiElementFinder"/>
         <java.shortNamesCache implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiShortNamesCache"/>
+        <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.listeners.JimmerPsiTreeChange"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
-        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.JimmerToolWindow" id="JimmerBuddy" anchor="right" icon="/icons/logo.svg"/>
+        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.JimmerToolWindow" id="Jimmer Buddy"
+                    anchor="right" icon="/icons/logo.svg"/>
+        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.LogToolWindow" id="Jimmer Buddy Log"
+                    anchor="bottom" icon="/icons/log.svg"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

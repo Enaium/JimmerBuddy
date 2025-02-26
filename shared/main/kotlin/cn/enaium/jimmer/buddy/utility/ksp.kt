@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.reflect.KClass
 
 /**
@@ -40,7 +41,7 @@ data class Ksp(
     val sources: List<Source>,
 )
 
-fun ktClassToKsp(ktClasses: CopyOnWriteArrayList<KtClass>): Ksp {
+fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
