@@ -26,6 +26,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindow
@@ -36,7 +37,6 @@ import com.intellij.ui.components.JBList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
@@ -97,13 +97,14 @@ class JimmerToolWindow : ToolWindowFactory {
             }
 
             fun loadImmutables() {
-                CoroutineScope(Dispatchers.IO).launch {
+                ApplicationManager.getApplication().executeOnPooledThread {
                     val names = mutableListOf<ImmutableItem>()
-                    findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
-                        listOf("src/main/java", "src/main/kotlin").forEach { src ->
-                            it.resolve(src).toFile().walk().forEach { file ->
-                                if (file.extension == "java") {
-                                    withContext(Dispatchers.Main) {
+                    ApplicationManager.getApplication().runReadAction {
+                        if (DumbService.isDumb(project)) return@runReadAction
+                        findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
+                            listOf("src/main/java", "src/main/kotlin").forEach { src ->
+                                it.resolve(src).toFile().walk().forEach { file ->
+                                    if (file.extension == "java") {
                                         PsiFileFactory.getInstance(project).createFileFromText(
                                             file.name,
                                             JavaFileType.INSTANCE,
@@ -113,9 +114,7 @@ class JimmerToolWindow : ToolWindowFactory {
                                                 names.add(ImmutableItem(psiClass.name!!, file.toPath()))
                                             }
                                         }
-                                    }
-                                } else if (file.extension == "kt") {
-                                    withContext(Dispatchers.Main) {
+                                    } else if (file.extension == "kt") {
                                         file.toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
                                             if (ktClass.isJimmerImmutableType()) {
                                                 names.add(ImmutableItem(ktClass.name!!, file.toPath()))
@@ -126,12 +125,13 @@ class JimmerToolWindow : ToolWindowFactory {
                             }
                         }
                     }
-                    immutableList.setListData(names.toTypedArray())
+
+                    ApplicationManager.getApplication().invokeLater {
+                        immutableList.setListData(names.toTypedArray())
+                    }
                 }
             }
-            ApplicationManager.getApplication().runReadAction {
-                loadImmutables()
-            }
+            loadImmutables()
 
             add(JPanel(BorderLayout()).apply {
                 add(

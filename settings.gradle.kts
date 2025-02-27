@@ -1,5 +1,5 @@
 rootProject.name = "JimmerBuddy"
-when ("242") {
+when (gradle.startParameter.projectProperties["sinceBuild"]) {
     "242" -> include("242")
     else -> include("232")
 }

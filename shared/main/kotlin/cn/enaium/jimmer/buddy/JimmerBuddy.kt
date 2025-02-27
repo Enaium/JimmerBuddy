@@ -72,7 +72,7 @@ object JimmerBuddy {
 
     var isInit = false
 
-    val LOG = Log(ProjectManager.getInstance().defaultProject)
+    val LOG: Log by lazy { Log(ProjectManager.getInstance().defaultProject) }
 
     val DEQ = DelayedExecutionQueue(2000)
 
