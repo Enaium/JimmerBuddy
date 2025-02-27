@@ -17,9 +17,12 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.types.symbol
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.idea.base.psi.typeArguments
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -27,6 +30,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 /**
  * @author Enaium
@@ -64,19 +68,40 @@ class PsiShared242 : PsiShared {
         }
     }
 
+    @OptIn(KaExperimentalApi::class)
     override fun type(ktTypeReference: KtTypeReference): PsiShared.Type {
         if (isK2Enable()) {
             analyze(ktTypeReference) {
                 return PsiShared.Type(
                     ktTypeReference.type.symbol?.classId?.asFqNameString()!!.replace("/", "."),
-                    ktTypeReference.type.isMarkedNullable
+                    ktTypeReference.type.isMarkedNullable,
+                    ktTypeReference.type.symbol?.psi as? KtClass,
+                    ktTypeReference.typeArguments().mapNotNull {
+                        it.typeReference?.let { type(it) }
+                    }
                 )
             }
         } else {
             return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
                 PsiShared.Type(
                     it.fqName!!.asString(),
-                    it.isMarkedNullable
+                    it.isMarkedNullable,
+                    (it.constructor.declarationDescriptor as? ClassDescriptor)?.let {
+                        DescriptorToSourceUtils.getSourceFromDescriptor(
+                            it
+                        ) as? KtClass
+                    },
+                    it.arguments.map { arg ->
+                        PsiShared.Type(
+                            arg.type.fqName!!.asString(),
+                            arg.type.isMarkedNullable,
+                            (arg.type.constructor.declarationDescriptor as? ClassDescriptor)?.let {
+                                DescriptorToSourceUtils.getSourceFromDescriptor(
+                                    it
+                                ) as? KtClass
+                            },
+                        )
+                    }
                 )
             }
         }

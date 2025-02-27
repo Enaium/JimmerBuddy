@@ -100,7 +100,6 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                     ktClass.getProperties().mapNotNull { property ->
                         val typeReference =
                             property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
-                        val typeParameters = property.typeParameters
 
                         createKSPropertyDeclaration(
                             qualifiedName = {
@@ -120,13 +119,13 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                     resolve = {
                                         createKSType(
                                             arguments = {
-                                                typeParameters.map { parameter ->
+                                                typeReference.arguments.map { parameter ->
                                                     createKSTypeArgument(
                                                         type = {
                                                             createKSTypeReference(
                                                                 resolve = {
-                                                                    ksClassDeclarationCaches[parameter.fqName!!.asString()]?.asStarProjectedType()
-                                                                        ?: throw IllegalArgumentException("Unknown type ${parameter.fqName!!.asString()}")
+                                                                    ksClassDeclarationCaches[parameter.fqName]?.asStarProjectedType()
+                                                                        ?: throw IllegalArgumentException("Unknown type ${parameter.fqName}")
                                                                 }
                                                             )
                                                         },
@@ -152,7 +151,13 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                                             )
                                                         },
                                                         asStarProjectedType = {
-                                                            createKSType()
+                                                            createKSType(
+                                                                declaration = {
+                                                                    createKSClassDeclaration(
+                                                                        qualifiedName = { createKSName(typeReference.fqName) }
+                                                                    )
+                                                                }
+                                                            )
                                                         },
                                                         annotations = { sequenceOf() }
                                                     )
@@ -282,31 +287,23 @@ private fun createResolver(
 
     val collection = createKSClassDeclaration(asStarProjectedType = {
         createKSType(isAssignableFrom = {
-            try {
-                when (it.declaration.qualifiedName?.asString()?.substringBefore("<")) {
-                    Collection::class.simpleName -> true
-                    List::class.simpleName -> true
-                    Set::class.simpleName -> true
-                    MutableList::class.simpleName -> true
-                    MutableSet::class.simpleName -> true
-                    MutableCollection::class.simpleName -> true
-                    else -> false
-                }
-            } catch (_: Throwable) {
-                false
+            when (it.declaration.qualifiedName?.asString()?.substringBefore("<")) {
+                Collection::class.qualifiedName -> true
+                List::class.qualifiedName -> true
+                Set::class.qualifiedName -> true
+                MutableList::class.qualifiedName -> true
+                MutableSet::class.qualifiedName -> true
+                MutableCollection::class.qualifiedName -> true
+                else -> false
             }
         })
     })
     val list = createKSClassDeclaration(asStarProjectedType = {
         createKSType(isAssignableFrom = {
-            try {
-                when (it.declaration.qualifiedName?.asString()?.substringBefore("<")) {
-                    List::class.simpleName -> true
-                    MutableList::class.simpleName -> true
-                    else -> false
-                }
-            } catch (_: Throwable) {
-                false
+            when (it.declaration.qualifiedName?.asString()?.substringBefore("<")) {
+                List::class.qualifiedName -> true
+                MutableList::class.qualifiedName -> true
+                else -> false
             }
         })
     })
@@ -314,8 +311,8 @@ private fun createResolver(
         createKSType(isAssignableFrom = {
             try {
                 when (it.declaration.qualifiedName?.asString()?.substringBefore("<")) {
-                    Map::class.simpleName -> true
-                    MutableMap::class.simpleName -> true
+                    Map::class.qualifiedName -> true
+                    MutableMap::class.qualifiedName -> true
                     else -> false
                 }
             } catch (_: Throwable) {

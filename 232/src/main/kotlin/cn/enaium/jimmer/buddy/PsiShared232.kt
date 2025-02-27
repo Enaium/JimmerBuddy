@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
@@ -25,6 +26,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 /**
  * @author Enaium
@@ -42,7 +44,23 @@ class PsiShared232 : PsiShared {
         return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
             PsiShared.Type(
                 it.fqName!!.asString(),
-                it.isMarkedNullable
+                it.isMarkedNullable,
+                (it.constructor.declarationDescriptor as? ClassDescriptor)?.let {
+                    DescriptorToSourceUtils.getSourceFromDescriptor(
+                        it
+                    ) as? KtClass
+                },
+                it.arguments.map { arg ->
+                    PsiShared.Type(
+                        arg.type.fqName!!.asString(),
+                        arg.type.isMarkedNullable,
+                        (arg.type.constructor.declarationDescriptor as? ClassDescriptor)?.let {
+                            DescriptorToSourceUtils.getSourceFromDescriptor(
+                                it
+                            ) as? KtClass
+                        },
+                    )
+                }
             )
         }
     }

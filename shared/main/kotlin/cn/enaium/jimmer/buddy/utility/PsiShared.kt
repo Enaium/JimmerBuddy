@@ -25,7 +25,12 @@ import org.jetbrains.kotlin.psi.KtTypeReference
  */
 interface PsiShared {
     data class Annotation(val fqName: String)
-    data class Type(val fqName: String, val nullable: Boolean)
+    data class Type(
+        val fqName: String,
+        val nullable: Boolean,
+        val ktClass: KtClass?,
+        val arguments: List<Type> = emptyList()
+    )
 
     fun annotations(ktClass: KtClass): List<Annotation>
     fun annotations(ktProperty: KtProperty): List<Annotation>

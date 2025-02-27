@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
+
 plugins {
     java
     alias(libs.plugins.kotlin.jvm)
@@ -67,4 +69,10 @@ tasks.processResources {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.named<RunIdeTask>("runIde") {
+    jvmArgumentProviders += CommandLineArgumentProvider {
+        listOf("-Didea.kotlin.plugin.use.k2=true")
+    }
 }
