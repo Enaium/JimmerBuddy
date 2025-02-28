@@ -17,6 +17,9 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
+import org.jetbrains.kotlin.resolve.constants.ArrayValue
+import org.jetbrains.kotlin.resolve.constants.BooleanValue
+import org.jetbrains.kotlin.resolve.constants.StringValue
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
@@ -27,17 +30,38 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
+import org.jetbrains.kotlin.resolve.constants.ConstantValue
+import org.jetbrains.kotlin.resolve.constants.TypedArrayValue
 
 /**
  * @author Enaium
  */
 class PsiShared232 : PsiShared {
     override fun annotations(ktClass: KtClass): List<PsiShared.Annotation> {
-        return ktClass.annotationEntries.map { PsiShared.Annotation(it.annotation()?.fqName!!.asString()) }
+        return ktClass.annotationEntries.map {
+            PsiShared.Annotation(
+                it.annotation()?.fqName!!.asString(),
+                it.annotation()?.allValueArguments?.map { (name, value) ->
+                    PsiShared.Annotation.Argument(
+                        name.asString(),
+                        value.toAny()
+                    )
+                } ?: emptyList()
+            )
+        }
     }
 
     override fun annotations(ktProperty: KtProperty): List<PsiShared.Annotation> {
-        return ktProperty.annotationEntries.map { PsiShared.Annotation(it.annotation()?.fqName!!.asString()) }
+        return ktProperty.annotationEntries.map {
+            PsiShared.Annotation(
+                it.annotation()?.fqName!!.asString(),
+                it.annotation()?.allValueArguments?.map { (name, value) ->
+                    PsiShared.Annotation.Argument(
+                        name.asString(),
+                        value.toAny()
+                    )
+                } ?: emptyList())
+        }
     }
 
     override fun type(ktTypeReference: KtTypeReference): PsiShared.Type {
@@ -67,4 +91,16 @@ class PsiShared232 : PsiShared {
 
     fun KtAnnotationEntry.annotation(): AnnotationDescriptor? =
         this.analyze()[BindingContext.ANNOTATION, this]
+
+    fun ConstantValue<*>.toAny(): Any? {
+        return when (this::class) {
+            StringValue::class -> this.value.toString()
+            BooleanValue::class -> this.value.toString().toBoolean()
+            ArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
+            TypedArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
+            else -> {
+                null
+            }
+        }
+    }
 }

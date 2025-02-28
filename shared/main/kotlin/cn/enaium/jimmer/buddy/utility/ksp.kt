@@ -20,11 +20,6 @@ import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
-import org.babyfish.jimmer.Formula
-import org.babyfish.jimmer.Immutable
-import org.babyfish.jimmer.error.ErrorFamily
-import org.babyfish.jimmer.error.ErrorField
-import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -66,7 +61,36 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
             packageName = { createKSName(fqName.substringBeforeLast(".")) },
             parentDeclaration = { null },
             annotations = {
-                PSI_SHARED.annotations(ktClass).mapNotNull { getAnnotation(it.fqName) }.asSequence()
+                PSI_SHARED.annotations(ktClass).map { annotation ->
+                    createKSAnnotation(
+                        annotationType = createKSTypeReference(
+                            resolve = {
+                                createKSType(
+                                    declaration = {
+                                        createKSClassDeclaration(
+                                            classKind = { ClassKind.ANNOTATION_CLASS },
+                                            qualifiedName = { createKSName(annotation.fqName) },
+                                            simpleName = { createKSName(annotation.fqName.substringAfterLast(".")) },
+                                            packageName = { createKSName(annotation.fqName.substringBeforeLast(".")) },
+                                            annotations = { emptySequence() }
+                                        )
+                                    }
+                                )
+                            }
+                        ),
+                        shortName = {
+                            createKSName(annotation.fqName.substringAfterLast("."))
+                        },
+                        arguments = {
+                            annotation.arguments.map { argument ->
+                                createKSValueArgument(
+                                    name = { createKSName(argument.name) },
+                                    value = { argument.value }
+                                )
+                            }
+                        }
+                    )
+                }.asSequence()
             },
             asStarProjectedType = {
                 createKSType(
@@ -109,23 +133,102 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                 createKSName(property.name!!)
                             },
                             annotations = {
-                                PSI_SHARED.annotations(property).mapNotNull { annotation ->
-                                    getAnnotation(annotation.fqName)
+                                PSI_SHARED.annotations(property).map { annotation ->
+                                    createKSAnnotation(
+                                        annotationType = createKSTypeReference(
+                                            resolve = {
+                                                createKSType(
+                                                    declaration = {
+                                                        createKSClassDeclaration(
+                                                            classKind = { ClassKind.ANNOTATION_CLASS },
+                                                            qualifiedName = { createKSName(annotation.fqName) },
+                                                            simpleName = {
+                                                                createKSName(
+                                                                    annotation.fqName.substringAfterLast(".")
+                                                                )
+                                                            },
+                                                            packageName = {
+                                                                createKSName(
+                                                                    annotation.fqName.substringBeforeLast(".")
+                                                                )
+                                                            },
+                                                            annotations = { emptySequence() }
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                        ),
+                                        shortName = {
+                                            createKSName(annotation.fqName.substringAfterLast("."))
+                                        },
+                                        arguments = {
+                                            annotation.arguments.map { argument ->
+                                                createKSValueArgument(
+                                                    name = { createKSName(argument.name) },
+                                                    value = { argument.value }
+                                                )
+                                            }
+                                        }
+                                    )
                                 }.asSequence()
                             },
-                            modifiers = { setOf(Modifier.ABSTRACT) },
+                            modifiers = {
+                                if (property.getter == null && property.setter == null) {
+                                    setOf(Modifier.ABSTRACT)
+                                } else {
+                                    setOf()
+                                }
+                            },
                             type = {
                                 createKSTypeReference(
                                     resolve = {
                                         createKSType(
                                             arguments = {
-                                                typeReference.arguments.map { parameter ->
+                                                typeReference.arguments.map { argument ->
                                                     createKSTypeArgument(
                                                         type = {
                                                             createKSTypeReference(
                                                                 resolve = {
-                                                                    ksClassDeclarationCaches[parameter.fqName]?.asStarProjectedType()
-                                                                        ?: throw IllegalArgumentException("Unknown type ${parameter.fqName}")
+                                                                    ksClassDeclarationCaches[argument.fqName]?.asStarProjectedType()
+                                                                        ?: createKSType(
+                                                                            declaration = {
+                                                                                createKSClassDeclaration(
+                                                                                    qualifiedName = {
+                                                                                        createKSName(
+                                                                                            argument.fqName
+                                                                                        )
+                                                                                    },
+                                                                                    simpleName = {
+                                                                                        createKSName(
+                                                                                            argument.fqName.substringAfterLast(
+                                                                                                "."
+                                                                                            )
+                                                                                        )
+                                                                                    },
+                                                                                    classKind = {
+                                                                                        ClassKind.CLASS
+                                                                                    },
+                                                                                    packageName = {
+                                                                                        createKSName(
+                                                                                            argument.fqName.substringBeforeLast(
+                                                                                                "."
+                                                                                            )
+                                                                                        )
+                                                                                    },
+                                                                                    asStarProjectedType = {
+                                                                                        createKSType(
+                                                                                            declaration = {
+                                                                                                createKSClassDeclaration(
+                                                                                                    qualifiedName = {
+                                                                                                        createKSName(argument.fqName)
+                                                                                                    }
+                                                                                                )
+                                                                                            }
+                                                                                        )
+                                                                                    }
+                                                                                )
+                                                                            }
+                                                                        )
                                                                 }
                                                             )
                                                         },
@@ -154,7 +257,7 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                                             createKSType(
                                                                 declaration = {
                                                                     createKSClassDeclaration(
-                                                                        qualifiedName = { createKSName(typeReference.fqName) }
+                                                                        qualifiedName = { createKSName(typeReference.fqName) },
                                                                     )
                                                                 }
                                                             )
@@ -166,6 +269,13 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                         )
                                     }
                                 )
+                            },
+                            getter = {
+                                property.getter?.let {
+                                    createKSPropertyGetter(
+                                        modifiers = { setOf(Modifier.FUN) },
+                                    )
+                                }
                             },
                             parentDeclaration = { ksClassDeclarationCaches[fqName] },
                         )
@@ -514,34 +624,6 @@ private fun createResolver(
     }
 }
 
-private fun getAnnotation(fqName: String): KSAnnotation? {
-    return when (fqName) {
-        Immutable::class.qualifiedName -> createAnnotation(Immutable::class)
-        Entity::class.qualifiedName -> createAnnotation(Entity::class)
-        MappedSuperclass::class.qualifiedName -> createAnnotation(MappedSuperclass::class)
-        Embeddable::class.qualifiedName -> createAnnotation(Embeddable::class)
-        ErrorFamily::class.qualifiedName -> createAnnotation(ErrorFamily::class)
-        ErrorField::class.qualifiedName -> createAnnotation(ErrorField::class)
-        Id::class.qualifiedName -> createAnnotation(Id::class)
-        IdView::class.qualifiedName -> createAnnotation(IdView::class)
-        Key::class.qualifiedName -> createAnnotation(Key::class)
-        Version::class.qualifiedName -> createAnnotation(Version::class)
-        Formula::class.qualifiedName -> createAnnotation(Formula::class)
-        OneToOne::class.qualifiedName -> createAnnotation(OneToOne::class)
-        OneToMany::class.qualifiedName -> createAnnotation(OneToMany::class)
-        ManyToOne::class.qualifiedName -> createAnnotation(ManyToOne::class)
-        ManyToMany::class.qualifiedName -> createAnnotation(ManyToMany::class)
-        Column::class.qualifiedName -> createAnnotation(Column::class)
-        GeneratedValue::class.qualifiedName -> createAnnotation(GeneratedValue::class)
-        JoinColumn::class.qualifiedName -> createAnnotation(JoinColumn::class)
-        JoinTable::class.qualifiedName -> createAnnotation(JoinTable::class)
-        Transient::class.qualifiedName -> createAnnotation(Transient::class)
-        Serialized::class.qualifiedName -> createAnnotation(Serialized::class)
-        LogicalDeleted::class.qualifiedName -> createAnnotation(LogicalDeleted::class)
-        else -> null
-    }
-}
-
 private fun createAnnotation(annotation: KClass<out Annotation>): KSAnnotation {
     return createKSAnnotation(
         annotationType = createKSTypeReference(
@@ -794,6 +876,41 @@ private fun createKSClassDeclaration(
     }
 }
 
+fun createKSPropertyGetter(
+    returnType: () -> KSTypeReference? = { null },
+    receiver: () -> KSPropertyDeclaration = { TODO("Not yet implemented") },
+    declarations: () -> Sequence<KSDeclaration> = { emptySequence() },
+    location: () -> Location = { TODO("Not yet implemented") },
+    origin: () -> Origin = { Origin.KOTLIN },
+    parent: () -> KSDeclaration? = { null },
+    annotations: () -> Sequence<KSAnnotation> = { emptySequence() },
+    modifiers: () -> Set<Modifier> = { emptySet() },
+): KSPropertyGetter {
+    return object : KSPropertyGetter {
+        override val returnType: KSTypeReference?
+            get() = returnType()
+        override val receiver: KSPropertyDeclaration
+            get() = receiver()
+        override val declarations: Sequence<KSDeclaration>
+            get() = declarations()
+        override val location: Location
+            get() = location()
+        override val origin: Origin
+            get() = origin()
+        override val parent: KSNode?
+            get() = parent()
+
+        override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+            return visitor.visitPropertyGetter(this, data)
+        }
+
+        override val annotations: Sequence<KSAnnotation>
+            get() = annotations()
+        override val modifiers: Set<Modifier>
+            get() = modifiers()
+    }
+}
+
 fun createKSPropertyDeclaration(
     qualifiedName: () -> KSName? = { TODO("Not yet implemented") },
     extensionReceiver: () -> KSTypeReference? = { TODO("${qualifiedName()} Not yet implemented") },
@@ -923,6 +1040,37 @@ private fun createKSTypeReference(
 
         override val modifiers: Set<Modifier>
             get() = modifiers()
+    }
+}
+
+private fun createKSValueArgument(
+    isSpread: () -> Boolean = { false },
+    name: () -> KSName? = { null },
+    value: () -> Any? = { null },
+    annotations: () -> Sequence<KSAnnotation> = { emptySequence() },
+    location: () -> Location = { TODO("Not yet implemented") },
+    origin: () -> Origin = { TODO("Not yet implemented") },
+    parent: () -> KSNode? = { null },
+): KSValueArgument {
+    return object : KSValueArgument {
+        override val isSpread: Boolean
+            get() = isSpread()
+        override val name: KSName?
+            get() = name()
+        override val value: Any?
+            get() = value()
+        override val annotations: Sequence<KSAnnotation>
+            get() = annotations()
+        override val location: Location
+            get() = location()
+        override val origin: Origin
+            get() = origin()
+        override val parent: KSNode?
+            get() = parent()
+
+        override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+            return visitor.visitValueArgument(this, data)
+        }
     }
 }
 
