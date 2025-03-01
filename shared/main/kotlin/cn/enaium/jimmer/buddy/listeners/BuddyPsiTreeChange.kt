@@ -28,7 +28,7 @@ import kotlin.io.path.extension
 /**
  * @author Enaium
  */
-class JimmerPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
+class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
     override fun childAdded(event: PsiTreeChangeEvent) {
         event.file?.also { onChange(it) }
     }

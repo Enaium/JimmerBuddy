@@ -17,28 +17,17 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElementFinder
-import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.asJava.toFakeLightClass
+import com.intellij.openapi.startup.ProjectActivity
 
 /**
  * @author Enaium
  */
-class JimmerPsiElementFinder(val project: Project) : PsiElementFinder() {
-    override fun findClass(
-        qualifiedName: String,
-        scope: GlobalSearchScope
-    ): PsiClass? {
-        JimmerBuddy.init()
-        return null
-    }
-
-    override fun findClasses(
-        qualifiedName: String,
-        scope: GlobalSearchScope
-    ): Array<PsiClass> {
-        return PsiClass.EMPTY_ARRAY
+class BuddyStartupActivity : ProjectActivity {
+    override suspend fun execute(project: Project) {
+        DumbService.getInstance(project).runWhenSmart {
+            JimmerBuddy.init()
+        }
     }
 }

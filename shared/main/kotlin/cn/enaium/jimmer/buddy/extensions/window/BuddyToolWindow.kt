@@ -55,7 +55,7 @@ import kotlin.io.path.walk
 /**
  * @author Enaium
  */
-class JimmerToolWindow : ToolWindowFactory {
+class BuddyToolWindow : ToolWindowFactory {
     override fun createToolWindowContent(
         project: Project,
         toolWindow: ToolWindow

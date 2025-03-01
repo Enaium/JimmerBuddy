@@ -14,12 +14,11 @@
     <depends>org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <java.elementFinder implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiElementFinder"/>
-        <java.shortNamesCache implementation="cn.enaium.jimmer.buddy.extensions.JimmerPsiShortNamesCache"/>
-        <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.listeners.JimmerPsiTreeChange"/>
+        <postStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
+        <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.listeners.BuddyPsiTreeChange"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
-        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.JimmerToolWindow" id="Jimmer Buddy"
+        <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.BuddyToolWindow" id="Jimmer Buddy"
                     anchor="right" icon="/icons/logo.svg"/>
         <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.LogToolWindow" id="Jimmer Buddy Log"
                     anchor="bottom" icon="/icons/log.svg"/>
@@ -28,7 +27,7 @@
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
     </extensions>
     <projectListeners>
-        <listener class="cn.enaium.jimmer.buddy.listeners.JimmerFileEditorManagerListener"
+        <listener class="cn.enaium.jimmer.buddy.listeners.BuddyFileEditorManagerListener"
                   topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
     <actions>

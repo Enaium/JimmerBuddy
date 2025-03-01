@@ -28,7 +28,7 @@ import kotlin.io.path.extension
 /**
  * @author Enaium
  */
-class JimmerFileEditorManagerListener(val project: Project) : FileEditorManagerListener {
+class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerListener {
     override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         try {
             fileChange(file.toNioPath())
