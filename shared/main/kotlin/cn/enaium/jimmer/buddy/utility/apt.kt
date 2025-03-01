@@ -77,12 +77,12 @@ fun psiClassesToApt(
         }
     }
 
-    val psiClasses = mapOf(
+    val psiClasses = listOf(
         true to compilableClasses,
         false to cacheClasses
     ).flatMap { (compilable, classes) ->
         classes.map { compilable to it }
-    }
+    }.reversed().distinctBy { it.second.qualifiedName }
 
     psiClasses.forEach { (compilable, psiClass) ->
         typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(

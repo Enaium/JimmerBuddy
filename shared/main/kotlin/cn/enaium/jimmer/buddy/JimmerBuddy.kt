@@ -25,6 +25,7 @@ import com.intellij.openapi.project.*
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
 import org.babyfish.jimmer.apt.client.DocMetadata
@@ -40,6 +41,7 @@ import org.babyfish.jimmer.dto.compiler.OsFile
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import java.io.File
 import java.io.Reader
@@ -109,10 +111,14 @@ object JimmerBuddy {
     }
 
     fun initialize() {
+        reset()
+        init()
+    }
+
+    fun reset() {
         javaImmutablePsiClassCache.clear()
         kotlinImmutableKtClassCache.clear()
         isInit = false
-        init()
     }
 
     fun sourcesProcessJava(project: Project, projects: Map<Path, List<Path>>) {
@@ -124,8 +130,9 @@ object JimmerBuddy {
                         sourceFiles.isEmpty() && return@forEach
                         val psiCaches = CopyOnWriteArraySet<PsiClass>()
                         sourceFiles.forEach {
-                            val psiFile = PsiFileFactory.getInstance(project)
-                                .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
+                            val psiFile =
+                                it.toFile().toVirtualFile()?.findPsiFile(project) ?: PsiFileFactory.getInstance(project)
+                                    .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
                             psiCaches.addAll(psiFile.children.mapNotNull { psi ->
                                 return@mapNotNull if (psi is PsiClass) {
                                     if (psi.isJimmerImmutableType().not()) return@mapNotNull null
@@ -136,7 +143,7 @@ object JimmerBuddy {
                             })
                         }
 
-                        LOG.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${psiCaches.size}")
+                        LOG.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${javaImmutablePsiClassCache.size}")
 
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()

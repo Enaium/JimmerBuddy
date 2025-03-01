@@ -15,6 +15,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
+        <projectCloseHandler implementation="cn.enaium.jimmer.buddy.extensions.BuddyProjectCloseHandler"/>
         <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.listeners.BuddyPsiTreeChange"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
