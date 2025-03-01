@@ -44,6 +44,22 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
+    compilableClasses.forEach {
+        it.superTypeListEntries.forEach {
+            it.typeReference?.let { PSI_SHARED.type(it).ktClass }?.also {
+                it.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+            }
+        }
+        it.getProperties().forEach {
+            it.typeReference?.let { PSI_SHARED.type(it) }?.also {
+                it.ktClass?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+                it.arguments.forEach {
+                    it.ktClass?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+                }
+            }
+        }
+    }
+
     val ktClasses = mapOf(
         true to compilableClasses,
         false to cacheClasses

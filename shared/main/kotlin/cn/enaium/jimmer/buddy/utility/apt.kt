@@ -57,9 +57,34 @@ data class Apt(
     val sources: List<Source>,
 )
 
-fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
+fun psiClassesToApt(
+    compilableClasses: CopyOnWriteArraySet<PsiClass>,
+    cacheClasses: CopyOnWriteArraySet<PsiClass>
+): Apt {
     val typeElementCaches = mutableMapOf<String, TypeElement>()
-    psiClasses.forEach { psiClass ->
+
+    compilableClasses.forEach {
+        it.interfaces.forEach {
+            it.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+        }
+        it.methods.forEach {
+            val classResolve = it.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
+            classResolve?.element?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+            classResolve?.element?.typeParameters?.forEach {
+                classResolve.substitutor.substitute(it)?.let { PsiUtil.resolveGenericsClassInType(it).element }
+                    ?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
+            }
+        }
+    }
+
+    val psiClasses = mapOf(
+        true to compilableClasses,
+        false to cacheClasses
+    ).flatMap { (compilable, classes) ->
+        classes.map { compilable to it }
+    }
+
+    psiClasses.forEach { (compilable, psiClass) ->
         typeElementCaches[psiClass.qualifiedName!!] = createTypeElement(
             getEnclosedElements = {
                 if (psiClass.isInterface) {

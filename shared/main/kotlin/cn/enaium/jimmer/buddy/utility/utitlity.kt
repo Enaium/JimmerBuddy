@@ -16,15 +16,10 @@
 
 package cn.enaium.jimmer.buddy.utility
 
-import com.intellij.util.ui.ImageUtil
-import java.awt.GraphicsEnvironment
-import java.awt.Image
-import java.awt.image.BufferedImage
 import java.nio.file.Path
-import javax.swing.Icon
-import javax.swing.ImageIcon
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.name
 
 
 /**
@@ -58,6 +53,17 @@ fun isMavenProject(path: Path): Boolean {
 
 fun isGradleProject(path: Path): Boolean {
     return path.resolve("build.gradle.kts").exists() || path.resolve("build.gradle").exists()
+}
+
+fun isGeneratedFile(path: Path): Boolean {
+    var current: Path? = path.parent
+    while (current != null) {
+        if (current.name == "generated") {
+            return true
+        }
+        current = current.parent
+    }
+    return false
 }
 
 fun findProjects(rootProject: Path): Set<Path> {

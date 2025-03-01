@@ -122,7 +122,7 @@ object JimmerBuddy {
                     LOG.info("SourcesProcessJava Project:${projects.map { it.key.name }}")
                     projects.forEach { (projectDir, sourceFiles) ->
                         sourceFiles.isEmpty() && return@forEach
-                        val psiCaches = if (projects.size == 1) javaImmutablePsiClassCache else CopyOnWriteArraySet()
+                        val psiCaches = CopyOnWriteArraySet<PsiClass>()
                         sourceFiles.forEach {
                             val psiFile = PsiFileFactory.getInstance(project)
                                 .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
@@ -141,7 +141,7 @@ object JimmerBuddy {
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()
 
-                        val (pe, rootElements, sources) = psiClassesToApt(psiCaches)
+                        val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
                         val context = createContext(
                             pe.elementUtils,
                             pe.typeUtils,
@@ -183,7 +183,7 @@ object JimmerBuddy {
             ApplicationManager.getApplication().runReadAction {
                 LOG.info("DtoProcessJava Project:${dtoFiles.joinToString(", ") { it.name }}")
                 if (!DumbService.isDumb(project)) {
-                    val (pe, rootElements, sources) = psiClassesToApt(javaImmutablePsiClassCache)
+                    val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
                     val context = createContext(
                         pe.elementUtils,
                         pe.typeUtils,

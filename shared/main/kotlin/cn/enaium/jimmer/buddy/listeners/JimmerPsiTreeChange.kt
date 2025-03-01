@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjectDir
+import cn.enaium.jimmer.buddy.utility.isGeneratedFile
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiTreeChangeAdapter
@@ -58,6 +59,7 @@ class JimmerPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
         } catch (_: Throwable) {
             return
         }
+        isGeneratedFile(path) && return
         listOf<String>("java", "kt").any { path.extension == it }.not() && return
         JimmerBuddy.DEQ.schedule("PsiChange") {
             if (JimmerBuddy.isJavaProject(project)) {
