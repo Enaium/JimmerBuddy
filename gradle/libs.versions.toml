@@ -3,6 +3,7 @@ kotlin = "2.1.0"
 ksp = "2.1.0+"
 intellij = "2.2.1"
 jimmer = "0.9.59"
+byteBuddy = "1.17.1"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
@@ -10,6 +11,7 @@ jimmer-apt = { module = "org.babyfish.jimmer:jimmer-apt", version.ref = "jimmer"
 jimmer-ksp = { module = "org.babyfish.jimmer:jimmer-ksp", version.ref = "jimmer" }
 jimmer-dto-compiler = { module = "org.babyfish.jimmer:jimmer-dto-compiler", version.ref = "jimmer" }
 symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
+byte-buddy = { module = "net.bytebuddy:byte-buddy", version.ref = "byteBuddy" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

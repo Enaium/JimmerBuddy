@@ -23,6 +23,7 @@ import org.babyfish.jimmer.error.ErrorField;
 import org.babyfish.jimmer.sql.*;
 import org.babyfish.jimmer.sql.meta.LogicalDeletedValueGenerator;
 import org.babyfish.jimmer.sql.meta.UserIdGenerator;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 
@@ -171,6 +172,26 @@ public class Utility {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return Version.class;
+            }
+        };
+    }
+
+    public static Formula formula(String sql, String[] dependencies) {
+        return new Formula() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Formula.class;
+            }
+
+            @Override
+            public String sql() {
+                return sql;
+            }
+
+            @Override
+            public String[] dependencies() {
+                return dependencies;
             }
         };
     }
@@ -474,6 +495,20 @@ public class Utility {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return LogicalDeleted.class;
+            }
+        };
+    }
+
+    public static Nullable nullable() {
+        return new Nullable() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Nullable.class;
+            }
+
+            @Override
+            public String value() {
+                return "";
             }
         };
     }

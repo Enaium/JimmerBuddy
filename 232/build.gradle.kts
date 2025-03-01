@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.jimmer.ksp)
     implementation(libs.jimmer.dto.compiler)
     implementation(libs.symbol.processing.api)
+    implementation(libs.byte.buddy)
 }
 
 tasks {

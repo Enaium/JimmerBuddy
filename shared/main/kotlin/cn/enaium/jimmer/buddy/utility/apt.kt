@@ -17,19 +17,23 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.Utility
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiEnumConstant
-import com.jetbrains.rd.util.firstOrNull
+import com.intellij.psi.*
+import com.intellij.psi.util.PsiUtil
+import net.bytebuddy.ByteBuddy
+import net.bytebuddy.implementation.InvocationHandlerAdapter
+import net.bytebuddy.matcher.ElementMatchers
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
+import org.jetbrains.annotations.Nullable
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -67,10 +71,10 @@ fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
                             getEnclosingElement = { typeElementCaches[psiClass.qualifiedName]!! },
                             getParameters = { emptyList() },
                             getReturnType = {
-                                val canonicalText = method.returnType?.canonicalText
-                                    ?: throw IllegalArgumentException("Unknown type: ${method.returnType}")
+                                val returnType = method.returnType ?: throw IllegalStateException("Return type is null")
+                                val generic = PsiUtil.resolveGenericsClassInType(returnType)
 
-                                when (canonicalText) {
+                                when (returnType.canonicalText) {
                                     "long" -> createPrimitiveType(getKind = { TypeKind.LONG })
                                     "int" -> createPrimitiveType(getKind = { TypeKind.INT })
                                     "short" -> createPrimitiveType(getKind = { TypeKind.SHORT })
@@ -82,93 +86,31 @@ fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
                                     "void" -> createPrimitiveType(getKind = { TypeKind.VOID })
                                     else -> null
                                 }?.also { return@createExecutableElement it }
-                                val returnType = canonicalText.substringBefore("<")
-                                val returnTypeParameter = canonicalText.substringAfter("<").substringBefore(">")
+
+                                val genericElement =
+                                    generic.element ?: throw IllegalStateException("Generic element is null")
+
                                 createDeclaredType(
-                                    getQualifiedName = { returnType },
+                                    getQualifiedName = { genericElement.qualifiedName!! },
                                     asElement = {
-                                        if (canonicalText.contains("<")) {
-                                            createTypeElement(
-                                                getQualifiedName = { createName(returnType) },
-                                                getSimpleName = {
-                                                    createName(
-                                                        returnType.substringAfterLast(".")
-                                                    )
-                                                },
-                                                getKind = { ElementKind.CLASS },
-                                                getModifiers = { setOf(Modifier.PUBLIC) },
-                                                getEnclosedElements = { emptyList() },
-                                                getAnnotation = { null },
-                                                getAnnotationsByType = { emptyArray() },
-                                                getEnclosingElement = {
-                                                    createPackageElement(
-                                                        getQualifiedName = {
-                                                            createName(
-                                                                canonicalText.substringBeforeLast(
-                                                                    "."
-                                                                )
-                                                            )
-                                                        }
-                                                    )
-                                                },
-                                                getSuperclass = {
-                                                    if (returnType == "java.util.List") {
-                                                        createDeclaredType(
-                                                            getQualifiedName = { "java.util.Collection" },
-                                                            asElement = {
-                                                                createTypeElement(
-                                                                    getQualifiedName = { createName("java.util.Collection") },
-                                                                )
-                                                            })
-                                                    } else {
-                                                        null
-                                                    }
-                                                },
-                                                getInterfaces = { emptyList() }
-                                            )
-                                        } else {
-                                            typeElementCaches[canonicalText]
-                                                ?: createTypeElement(
-                                                    getQualifiedName = { createName(canonicalText) },
-                                                    getSimpleName = { createName(canonicalText.substringAfterLast(".")) },
-                                                    getKind = { ElementKind.CLASS },
-                                                    getModifiers = { setOf(Modifier.PUBLIC) },
-                                                    getEnclosingElement = {
-                                                        createPackageElement(
-                                                            getQualifiedName = {
-                                                                createName(
-                                                                    canonicalText.substringBeforeLast(
-                                                                        "."
-                                                                    )
-                                                                )
-                                                            }
-                                                        )
-                                                    },
-                                                    getEnclosedElements = { emptyList() },
-                                                    getAnnotation = { null },
-                                                    getAnnotationsByType = { emptyArray() },
-                                                    getSuperclass = { null },
-                                                    getInterfaces = { emptyList() }
-                                                )
-                                        }
+                                        typeElementCaches[genericElement.qualifiedName]
+                                            ?: genericElement.asTypeElement()
                                     },
                                     getTypeArguments = {
-                                        if (canonicalText.contains("<")) {
-                                            listOf(
+                                        if (generic.substitutor != PsiSubstitutor.EMPTY) {
+                                            generic.element?.typeParameters?.mapNotNull {
+                                                val parameter =
+                                                    generic.substitutor.substitute(it) ?: return@mapNotNull null
                                                 createDeclaredType(
-                                                    getQualifiedName = {
-                                                        returnTypeParameter
-                                                    },
+                                                    getQualifiedName = { parameter.canonicalText },
                                                     asElement = {
-                                                        typeElementCaches[returnTypeParameter]
-                                                            ?: typeElementCaches.filter { it.key.substringAfterLast(".") == returnTypeParameter }
-                                                                .firstOrNull()?.value
-                                                            ?: throw IllegalArgumentException("Unknown type: $returnTypeParameter")
+                                                        typeElementCaches[parameter.canonicalText]
+                                                            ?: PsiUtil.resolveGenericsClassInType(parameter).element?.asTypeElement()
+                                                            ?: throw IllegalStateException("Generic element is null")
                                                     },
-                                                    getTypeArguments = {
-                                                        emptyList()
-                                                    }
-                                                ))
+                                                    getTypeArguments = { emptyList() },
+                                                )
+                                            } ?: emptyList()
                                         } else {
                                             emptyList()
                                         }
@@ -176,31 +118,20 @@ fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
                                 )
                             },
                             getAnnotation = { anno ->
-                                if (method.modifierList.annotations.any { it.hasQualifiedName(anno.name) } == true) {
-                                    getAnnotation(
-                                        anno
-                                    )
-                                } else {
-                                    null
-                                }
+                                method.modifierList.annotations.find { it.hasQualifiedName(anno.name) }
+                                    ?.findAnnotation()
                             },
                             getAnnotationMirrors = {
                                 method.modifierList.annotations.mapNotNull {
-                                    if (it.hasQualifiedName(OneToMany::class.qualifiedName!!)) {
-                                        createAnnotationMirror(OneToMany::class)
-                                    } else if (it.hasQualifiedName(ManyToOne::class.qualifiedName!!)) {
-                                        createAnnotationMirror(ManyToOne::class)
-                                    } else if (it.hasQualifiedName(ManyToMany::class.qualifiedName!!)) {
-                                        createAnnotationMirror(ManyToMany::class)
-                                    } else if (it.hasQualifiedName(OneToOne::class.qualifiedName!!)) {
-                                        createAnnotationMirror(OneToOne::class)
-                                    } else {
-                                        null
+                                    it.findAnnotation()?.annotationClass?.let {
+                                        createAnnotationMirror(
+                                            it
+                                        )
                                     }
                                 }
                             },
                             getAnnotationsByType = { emptyArray() },
-                            isDefault = { false }
+                            isDefault = { method.body != null }
                         )
                     }
                 } else if (psiClass.isEnum) {
@@ -236,13 +167,7 @@ fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
             },
             getModifiers = { setOf(Modifier.PUBLIC) },
             getAnnotation = { anno ->
-                if (psiClass.modifierList?.annotations?.any { it.hasQualifiedName(anno.name) } == true) {
-                    getAnnotation(
-                        anno
-                    )
-                } else {
-                    null
-                }
+                psiClass.modifierList?.annotations?.find { it.hasQualifiedName(anno.name) }?.findAnnotation()
             },
             getEnclosingElement = {
                 createPackageElement(getQualifiedName = {
@@ -690,30 +615,119 @@ fun psiClassesToApt(psiClasses: CopyOnWriteArraySet<PsiClass>): Apt {
     )
 }
 
-private fun getAnnotation(type: Class<Annotation>): Annotation? = when (type) {
-    Immutable::class.java -> Utility.immutable()
-    Entity::class.java -> Utility.entity()
-    MappedSuperclass::class.java -> Utility.mappedSuperclass()
-    Embeddable::class.java -> Utility.embeddable()
-    ErrorFamily::class.java -> Utility.errorFamily()
-    ErrorField::class.java -> Utility.errorField()
-    Id::class.java -> Utility.id()
-    IdView::class.java -> Utility.idView()
-    Key::class.java -> Utility.key()
-    Version::class.java -> Utility.version()
-    Formula::class.java -> Utility.formula()
-    OneToOne::class.java -> Utility.oneToOne()
-    OneToMany::class.java -> Utility.oneToMany()
-    ManyToOne::class.java -> Utility.manyToOne()
-    ManyToMany::class.java -> Utility.manyToMany()
-    Column::class.java -> Utility.column()
-    GeneratedValue::class.java -> Utility.generatedValue()
-    JoinColumn::class.java -> Utility.joinColumn()
-    JoinTable::class.java -> Utility.joinTable()
-    Transient::class.java -> Utility._transient()
-    Serialized::class.java -> Utility.serialized()
-    LogicalDeleted::class.java -> Utility.logicalDeleted()
-    else -> throw IllegalArgumentException("Unknown annotation type: $type")
+private fun PsiClass.asTypeElement(): TypeElement {
+    return createTypeElement(
+        getQualifiedName = { createName(this.qualifiedName!!) },
+        getSimpleName = { createName(this.name!!) },
+        getKind = {
+            if (this.isInterface) {
+                ElementKind.INTERFACE
+            } else if (this.isEnum) {
+                ElementKind.ENUM
+            } else {
+                ElementKind.CLASS
+            }
+        },
+        getEnclosingElement = {
+            createPackageElement(
+                getQualifiedName = { createName(this.qualifiedName!!.substringBeforeLast(".")) }
+            )
+        },
+        getSuperclass = {
+            this.superClass?.let {
+                createDeclaredType(
+                    getQualifiedName = { it.qualifiedName!! },
+                    asElement = {
+                        it.asTypeElement()
+                    }
+                )
+            }
+        },
+        getInterfaces = {
+            this.interfaces.map {
+                createDeclaredType(
+                    getQualifiedName = { it.qualifiedName!! },
+                    asElement = {
+                        it.asTypeElement()
+                    }
+                )
+            }
+        }
+    )
+}
+
+private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
+    Immutable::class.qualifiedName -> Utility.immutable()
+    Entity::class.qualifiedName -> Utility.entity()
+    MappedSuperclass::class.qualifiedName -> Utility.mappedSuperclass()
+    Embeddable::class.qualifiedName -> Utility.embeddable()
+    ErrorFamily::class.qualifiedName -> Utility.errorFamily()
+    ErrorField::class.qualifiedName -> Utility.errorField()
+    Id::class.qualifiedName -> Utility.id()
+    IdView::class.qualifiedName -> Utility.idView()
+    Key::class.qualifiedName -> Utility.key()
+    Version::class.qualifiedName -> Utility.version()
+    Formula::class.qualifiedName -> Utility.formula()
+    OneToOne::class.qualifiedName -> Utility.oneToOne()
+    OneToMany::class.qualifiedName -> Utility.oneToMany()
+    ManyToOne::class.qualifiedName -> Utility.manyToOne()
+    ManyToMany::class.qualifiedName -> Utility.manyToMany()
+    Column::class.qualifiedName -> Utility.column()
+    GeneratedValue::class.qualifiedName -> Utility.generatedValue()
+    JoinColumn::class.qualifiedName -> Utility.joinColumn()
+    JoinTable::class.qualifiedName -> Utility.joinTable()
+    Transient::class.qualifiedName -> Utility._transient()
+    Serialized::class.qualifiedName -> Utility.serialized()
+    LogicalDeleted::class.qualifiedName -> Utility.logicalDeleted()
+    Nullable::class.qualifiedName -> Utility.nullable()
+    else -> null
+}?.let {
+    ByteBuddy()
+        .redefine(it.javaClass)
+        .name("${it.javaClass.name}_Proxy")
+        .method(ElementMatchers.namedOneOf(*it.javaClass.methods.filter { f ->
+            Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
+        }.map { it.name }.toTypedArray())).intercept(
+            InvocationHandlerAdapter.of(object : InvocationHandler {
+                override fun invoke(
+                    proxy: Any,
+                    method: Method,
+                    args: Array<Any>?
+                ): Any {
+                    return this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
+                        ?: method.invoke(it)
+                }
+            })
+        ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
+            it.isAccessible = true
+        }.newInstance() as Annotation
+}
+
+private fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
+    return when (this) {
+        is PsiLiteralExpression -> this.value.toString().let {
+            when (returnType.kotlin) {
+                Long::class -> it.toLong()
+                Int::class -> it.toInt()
+                Short::class -> it.toShort()
+                Byte::class -> it.toByte()
+                Boolean::class -> it.toBoolean()
+                else -> it
+            }
+        }
+
+        is PsiArrayInitializerMemberValue -> this.initializers.mapNotNull { it.toAny(returnType) }.let {
+            when (returnType.name) {
+                "[Ljava.lang.String;" -> run {
+                    return it.map { it.toString() }.toTypedArray()
+                }
+            }
+        }
+
+        else -> {
+            null
+        }
+    }
 }
 
 private fun createAnnotationMirror(
@@ -727,6 +741,11 @@ private fun createAnnotationMirror(
                     createTypeElement(
                         getQualifiedName = { createName(annotationType.qualifiedName!!) },
                         getSimpleName = { createName(annotationType.simpleName!!) },
+                        getEnclosingElement = {
+                            createPackageElement(
+                                getQualifiedName = { createName(annotationType.qualifiedName!!.substringBeforeLast(".")) }
+                            )
+                        }
                     )
                 })
         }
@@ -862,7 +881,7 @@ private fun createPrimitiveType(
 private fun createDeclaredType(
     getQualifiedName: () -> String,
     getKind: () -> TypeKind = { TypeKind.DECLARED },
-    asElement: () -> Element = { TODO("${getKind()} Not yet implemented") },
+    asElement: () -> Element = { TODO("${getQualifiedName()} Not yet implemented") },
     getEnclosingType: () -> TypeMirror? = {
         object : TypeMirror {
             override fun getKind(): TypeKind {
@@ -889,10 +908,10 @@ private fun createDeclaredType(
             }
         }
     },
-    getTypeArguments: () -> List<TypeMirror> = { TODO("${getKind()} Not yet implemented") },
-    getAnnotationMirrors: () -> List<AnnotationMirror> = { TODO("${getKind()} Not yet implemented") },
-    getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getKind()} Not yet implemented") },
-    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { TODO("${getKind()} Not yet implemented") },
+    getTypeArguments: () -> List<TypeMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotationMirrors: () -> List<AnnotationMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { TODO("${getQualifiedName()} Not yet implemented") },
 ): DeclaredType {
     return object : DeclaredType {
         override fun asElement(): Element {
@@ -1106,14 +1125,14 @@ private fun createTypeElement(
     getEnclosedElements: () -> List<Element> = { TODO("${getQualifiedName()} Not yet implemented") },
     getNestingKind: () -> NestingKind = { TODO("${getQualifiedName()} Not yet implemented") },
     getSimpleName: () -> Name = { TODO("${getQualifiedName()} Not yet implemented") },
-    getSuperclass: () -> TypeMirror? = { TODO("${getQualifiedName()} Not yet implemented") },
-    getInterfaces: () -> List<TypeMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getSuperclass: () -> TypeMirror? = { null },
+    getInterfaces: () -> List<TypeMirror> = { emptyList() },
     getTypeParameters: () -> List<TypeParameterElement> = { TODO("${getQualifiedName()} Not yet implemented") },
     getEnclosingElement: () -> Element = { TODO("${getQualifiedName()} Not yet implemented") },
     getKind: () -> ElementKind = { TODO("${getQualifiedName()} Not yet implemented") },
-    getModifiers: () -> Set<Modifier> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getModifiers: () -> Set<Modifier> = { setOf(Modifier.PUBLIC) },
     getAnnotationMirrors: () -> List<AnnotationMirror> = { emptyList() },
-    getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotation: (Class<Annotation>) -> Annotation? = { null },
     getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = {
         getAnnotation(it)?.let { arrayOf(it) } ?: emptyArray()
     },

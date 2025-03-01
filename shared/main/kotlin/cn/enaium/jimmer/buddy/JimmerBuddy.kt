@@ -18,12 +18,10 @@ package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.intellij.compiler.CompilerConfiguration
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.DumbService
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.project.*
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -43,6 +41,7 @@ import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
+import java.io.File
 import java.io.Reader
 import java.nio.file.Path
 import java.util.*
@@ -122,6 +121,7 @@ object JimmerBuddy {
                 if (!DumbService.isDumb(project)) {
                     LOG.info("SourcesProcessJava Project:${projects.map { it.key.name }}")
                     projects.forEach { (projectDir, sourceFiles) ->
+                        sourceFiles.isEmpty() && return@forEach
                         val psiCaches = if (projects.size == 1) javaImmutablePsiClassCache else CopyOnWriteArraySet()
                         sourceFiles.forEach {
                             val psiFile = PsiFileFactory.getInstance(project)
@@ -240,6 +240,7 @@ object JimmerBuddy {
                 if (!DumbService.isDumb(project)) {
                     LOG.info("SourceProcessKotlin Project:${projects.map { it.key.name }}")
                     projects.forEach { projectDir, sourceFiles ->
+                        sourceFiles.isEmpty() && return@forEach
                         val ktClassCaches =
                             if (projects.size == 1) kotlinImmutableKtClassCache else CopyOnWriteArraySet()
                         sourceFiles.forEach {
@@ -341,8 +342,11 @@ object JimmerBuddy {
             return false
         }
 
-        val classesRoots = OrderEnumerator.orderEntries(project).runtimeOnly().classesRoots
-        return classesRoots.any { it.name.startsWith("jimmer-core") } && classesRoots.none { it.name.startsWith("jimmer-core-kotlin") }
+        return project.modules.any { module ->
+            CompilerConfiguration.getInstance(project).getAnnotationProcessingConfiguration(module).processorPath.split(
+                File.pathSeparator
+            ).any { it.contains("jimmer-apt") }
+        }
     }
 
     fun isKotlinProject(project: Project): Boolean {
@@ -408,6 +412,7 @@ object JimmerBuddy {
     }
 
     fun asyncRefresh(files: List<Path>) {
+        files.isEmpty() && return
         ApplicationManager.getApplication().invokeLater {
             try {
                 LocalFileSystem.getInstance().refreshNioFiles(files)
