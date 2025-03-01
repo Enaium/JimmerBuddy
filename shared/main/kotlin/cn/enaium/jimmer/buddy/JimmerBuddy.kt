@@ -241,8 +241,7 @@ object JimmerBuddy {
                     LOG.info("SourceProcessKotlin Project:${projects.map { it.key.name }}")
                     projects.forEach { projectDir, sourceFiles ->
                         sourceFiles.isEmpty() && return@forEach
-                        val ktClassCaches =
-                            if (projects.size == 1) kotlinImmutableKtClassCache else CopyOnWriteArraySet()
+                        val ktClassCaches = CopyOnWriteArraySet<KtClass>()
                         sourceFiles.forEach {
                             val psiFile = it.toFile().toPsiFile(project)!!
                             ktClassCaches.addAll(psiFile.children.mapNotNull { psi ->
@@ -255,12 +254,12 @@ object JimmerBuddy {
                             })
                         }
 
-                        LOG.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${ktClassCaches.size}")
+                        LOG.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${kotlinImmutableKtClassCache.size}")
 
                         val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
                         generatedDir.createDirectories()
 
-                        val (resolver, environment, sources) = ktClassToKsp(ktClassCaches)
+                        val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
                         try {
                             val context = Context(resolver, environment)
                             org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(context, false).process()
@@ -287,7 +286,10 @@ object JimmerBuddy {
             ApplicationManager.getApplication().runReadAction {
                 if (!DumbService.isDumb(project)) {
                     LOG.info("DtoProcessKotlin Project:${dtoFiles.joinToString(", ") { it.name }}")
-                    val (resolver, environment, sources) = ktClassToKsp(kotlinImmutableKtClassCache)
+                    val (resolver, environment, sources) = ktClassToKsp(
+                        CopyOnWriteArraySet(),
+                        kotlinImmutableKtClassCache
+                    )
                     val context = Context(resolver, environment)
                     dtoFiles.forEach {
                         val dtoFile = DtoFile(object : OsFile {

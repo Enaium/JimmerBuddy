@@ -40,11 +40,18 @@ data class Ksp(
     val sources: List<Source>,
 )
 
-fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
+fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: CopyOnWriteArraySet<KtClass>): Ksp {
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
-    ktClasses.forEach { ktClass ->
+    val ktClasses = mapOf(
+        true to compilableClasses,
+        false to cacheClasses
+    ).flatMap { (compilable, classes) ->
+        classes.map { compilable to it }
+    }
+
+    ktClasses.forEach { (compilable, ktClass) ->
         val fqName = ktClass.fqName!!.asString()
         ksClassDeclarationCaches[fqName] = createKSClassDeclaration(
             classKind = {
@@ -220,7 +227,9 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
                                                                                             declaration = {
                                                                                                 createKSClassDeclaration(
                                                                                                     qualifiedName = {
-                                                                                                        createKSName(argument.fqName)
+                                                                                                        createKSName(
+                                                                                                            argument.fqName
+                                                                                                        )
                                                                                                     }
                                                                                                 )
                                                                                             }
@@ -295,15 +304,17 @@ fun ktClassToKsp(ktClasses: CopyOnWriteArraySet<KtClass>): Ksp {
             }
         )
 
-        ksFiles.add(
-            createKSFile(
-                fileName = { ktClass.containingFile.name },
-                filePath = { ktClass.containingFile.virtualFile.path },
-                packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
-                declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
-                annotations = { sequenceOf() }
+        if (compilable) {
+            ksFiles.add(
+                createKSFile(
+                    fileName = { ktClass.containingFile.name },
+                    filePath = { ktClass.containingFile.virtualFile.path },
+                    packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
+                    declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
+                    annotations = { sequenceOf() }
+                )
             )
-        )
+        }
     }
     val sources = mutableListOf<Source>()
     return Ksp(
