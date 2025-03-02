@@ -1,0 +1,14 @@
+[versions]
+#foreach($version in $versions)
+${version.name} = "${version.version}"
+#end
+
+[libraries]
+#foreach($library in $libraries)
+${library.name} = { module = "${library.module}", version.ref = "${library.versionRef}" }
+#end
+
+[plugins]
+#foreach($plugin in $plugins)
+${plugin.name} = { id = "${plugin.id}", version.ref = "${plugin.versionRef}" }
+#end

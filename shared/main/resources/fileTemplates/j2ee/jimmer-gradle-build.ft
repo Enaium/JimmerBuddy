@@ -1,0 +1,19 @@
+plugins {
+    java
+#foreach($plugin in $plugins)
+    alias(libs.plugins.${plugin.alias})
+#end
+}
+
+group = "${GROUP}"
+version = "0.1.0"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+#foreach($library in $libraries)
+    implementation(libs.${library.alias})
+#end
+}

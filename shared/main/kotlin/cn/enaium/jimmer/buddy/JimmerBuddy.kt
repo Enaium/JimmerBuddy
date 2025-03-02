@@ -17,13 +17,16 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.wizard.JimmerProjectModel
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.project.*
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
@@ -60,9 +63,13 @@ import kotlin.io.path.*
 object JimmerBuddy {
 
     const val NAME = "JimmerBuddy"
+    const val MODULE_TYPE_ID = "JimmerModuleType"
+    const val JIMMER_NAME = "Jimmer"
+    val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("vaadin_project_model")
 
     object Icons {
         val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
+        val LOGO_NORMAL = IconLoader.getIcon("/icons/normal.svg", JimmerBuddy::class.java)
         val IMMUTABLE = IconLoader.getIcon("/icons/immutable.svg", JimmerBuddy::class.java)
         val DTO = IconLoader.getIcon("/icons/dto.svg", JimmerBuddy::class.java)
     }
