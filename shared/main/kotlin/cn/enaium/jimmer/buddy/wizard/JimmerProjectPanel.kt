@@ -67,26 +67,46 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
             }
             row("Artifact:") {
                 textField().bindText(projectModel.artifactProperty)
+                projectModel.artifactProperty.afterChange {
+                    updateModel()
+                }
             }
             row("Group") {
                 textField().bindText(projectModel.groupProperty)
+                projectModel.groupProperty.afterChange {
+                    updateModel()
+                }
             }
             row("Type:") {
                 segmentedButton(JimmerProjectModel.Type.entries) {
                     it.text
                 }.bind(projectModel.typeProperty)
+                projectModel.typeProperty.afterChange {
+                    updateModel()
+                }
             }
             row("Language:") {
                 segmentedButton(JimmerProjectModel.Language.entries) {
                     it.text
                 }.bind(projectModel.languageProperty)
+                projectModel.languageProperty.afterChange {
+                    updateModel()
+                }
             }
             row("Builder:") {
                 segmentedButton(JimmerProjectModel.Builder.entries) {
                     it.text
                 }.bind(projectModel.builderProperty)
+                projectModel.builderProperty.afterChange {
+                    updateModel()
+                }
             }
-            row("Wrapper Version:") { textField().bindText(projectModel.wrapperVersionProperty) }
+            row("Wrapper Version:") {
+                textField().bindText(projectModel.wrapperVersionProperty)
+                projectModel.wrapperVersionProperty.afterChange {
+                    updateModel()
+                }
+            }
             row {
                 text("For more configuration options, visit <a href=\"https://babyfish-ct.github.io/jimmer-doc/docs/quick-view/get-started/create-project\">Jimmer Document</a>")
             }

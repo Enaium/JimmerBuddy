@@ -60,28 +60,28 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
 
     private val libJimmerCore = mapOf(
         "name" to "jimmer-core",
-        "module" to "org.babyfish.jimmer:jimmer-core",
+        "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
         "alias" to "jimmer.core"
     )
 
     private val libJimmerSql = mapOf(
         "name" to "jimmer-sql",
-        "module" to "org.babyfish.jimmer:jimmer-sql",
+        "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
         "alias" to "jimmer.sql"
     )
 
     private val libJimmerSqlKotlin = mapOf(
         "name" to "jimmer-sql-kotlin",
-        "module" to "org.babyfish.jimmer:jimmer-sql-kotlin",
+        "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
         "alias" to "jimmer.sql.kotlin"
     )
 
     private val libJimmerSpringBoot = mapOf(
-        "name" to "jimmer-spring-boot",
-        "module" to "org.babyfish.jimmer:jimmer-spring-boot-starter",
+        "name" to "jimmer-spring-boot-starter",
+        "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
         "alias" to "jimmer.spring.boot"
     )
@@ -155,39 +155,62 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
             }
         }
 
-        if (projectModel.builder == JimmerProjectModel.Builder.GRADLE) {
-            val fileTemplateManager = FileTemplateManager.getInstance(project)
-            val gradleWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_WRAPPER)
-            val gradleWrapperContent = gradleWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
-            val gradleWrapperPath = projectDir.resolve("gradle/wrapper/gradle-wrapper.properties")
-            if (gradleWrapperPath.exists().not()) {
-                gradleWrapperPath.createParentDirectories()
+        val fileTemplateManager = FileTemplateManager.getInstance(project)
+        when (projectModel.builder) {
+            JimmerProjectModel.Builder.GRADLE -> {
+                val gradleWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_WRAPPER)
+                val gradleWrapperContent = gradleWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
+                val gradleWrapperPath = projectDir.resolve("gradle/wrapper/gradle-wrapper.properties")
+                if (gradleWrapperPath.exists().not()) {
+                    gradleWrapperPath.createParentDirectories()
+                }
+                gradleWrapperPath.writeText(gradleWrapperContent)
+                val gradleToml = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_TOML)
+                val gradleTomlContent = gradleToml.getText(
+                    mapOf(
+                        "versions" to versions,
+                        "libraries" to libs,
+                        "plugins" to plugins
+                    )
+                )
+                val gradleTomlPath = projectDir.resolve("gradle/libs.versions.toml")
+                gradleTomlPath.writeText(gradleTomlContent)
+                val gradleBuild = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_BUILD)
+                val gradleBuildContent = gradleBuild.getText(
+                    mapOf(
+                        "GROUP" to projectModel.group,
+                        "plugins" to plugins,
+                        "libraries" to libs
+                    )
+                )
+                val gradleBuildPath = projectDir.resolve("build.gradle.kts")
+                gradleBuildPath.writeText(gradleBuildContent)
+                val gradleSettings = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_SETTINGS)
+                val gradleSettingsContent = gradleSettings.getText(mapOf("ARTIFACT" to projectModel.artifact))
+                val gradleSettingsPath = projectDir.resolve("settings.gradle.kts")
+                gradleSettingsPath.writeText(gradleSettingsContent)
             }
-            val gradleToml = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_TOML)
-            val gradleTomlContent = gradleToml.getText(
-                mapOf(
-                    "versions" to versions,
-                    "libraries" to libs,
-                    "plugins" to plugins
+
+            JimmerProjectModel.Builder.MAVEN -> {
+                val mavenWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.MAVEN_WRAPPER)
+                val mavenWrapperContent = mavenWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
+                val mavenWrapperPath = projectDir.resolve(".mvn/wrapper/maven-wrapper.properties")
+                if (mavenWrapperPath.exists().not()) {
+                    mavenWrapperPath.createParentDirectories()
+                }
+                mavenWrapperPath.writeText(mavenWrapperContent)
+                val mavenPom = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.MAVEN_POM)
+                val mavenPomContent = mavenPom.getText(
+                    mapOf(
+                        "GROUP" to projectModel.group,
+                        "ARTIFACT" to projectModel.artifact,
+                        "versions" to versions,
+                        "libraries" to libs
+                    )
                 )
-            )
-            val gradleTomlPath = projectDir.resolve("gradle/libs.versions.toml")
-            gradleTomlPath.writeText(gradleTomlContent)
-            val gradleBuild = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_BUILD)
-            val gradleBuildContent = gradleBuild.getText(
-                mapOf(
-                    "GROUP" to projectModel.group,
-                    "plugins" to plugins,
-                    "libraries" to libs
-                )
-            )
-            val gradleBuildPath = projectDir.resolve("build.gradle.kts")
-            gradleBuildPath.writeText(gradleBuildContent)
-            val gradleSettings = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_SETTINGS)
-            val gradleSettingsContent = gradleSettings.getText(mapOf("ARTIFACT" to projectModel.artifact))
-            val gradleSettingsPath = projectDir.resolve("settings.gradle.kts")
-            gradleSettingsPath.writeText(gradleSettingsContent)
-            gradleWrapperPath.writeText(gradleWrapperContent)
+                val mavenPomPath = projectDir.resolve("pom.xml")
+                mavenPomPath.writeText(mavenPomContent)
+            }
         }
     }
 }
