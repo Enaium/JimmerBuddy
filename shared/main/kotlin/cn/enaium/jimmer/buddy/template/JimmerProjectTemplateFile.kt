@@ -26,12 +26,12 @@ import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptorFactory
 class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
 
     companion object {
-        const val MAVEN_WRAPPER = "jimmer-maven-wrapper"
-        const val MAVEN_POM = "jimmer-maven-pom"
-        const val GRADLE_WRAPPER = "jimmer-gradle-wrapper"
-        const val GRADLE_BUILD = "jimmer-gradle-build"
-        const val GRADLE_SETTINGS = "jimmer-gradle-settings"
-        const val GRADLE_TOML = "jimmer-gradle-toml"
+        const val MAVEN_WRAPPER = "jimmer-maven-wrapper.properties"
+        const val MAVEN_POM = "jimmer-maven-pom.xml"
+        const val GRADLE_WRAPPER = "jimmer-gradle-wrapper.properties"
+        const val GRADLE_BUILD = "jimmer-gradle-build.gradle.kts"
+        const val GRADLE_SETTINGS = "jimmer-gradle-settings.gradle.kts"
+        const val GRADLE_TOML = "jimmer-gradle-toml.toml"
     }
 
     override fun getFileTemplatesDescriptor(): FileTemplateGroupDescriptor {
@@ -40,6 +40,8 @@ class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
         group.addTemplate(MAVEN_POM)
         group.addTemplate(GRADLE_WRAPPER)
         group.addTemplate(GRADLE_BUILD)
+        group.addTemplate(GRADLE_SETTINGS)
+        group.addTemplate(GRADLE_TOML)
         return group
     }
 }

@@ -36,10 +36,6 @@ class LogToolWindow : ToolWindowFactory {
         }
     }
 
-    override fun isApplicable(project: Project): Boolean {
-        return JimmerBuddy.isJimmerProject(project)
-    }
-
     override fun shouldBeAvailable(project: Project): Boolean {
         return JimmerBuddy.isJimmerProject(project)
     }

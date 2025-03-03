@@ -71,7 +71,7 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
                     updateModel()
                 }
             }
-            row("Group") {
+            row("Group:") {
                 textField().bindText(projectModel.groupProperty)
                 projectModel.groupProperty.afterChange {
                     updateModel()

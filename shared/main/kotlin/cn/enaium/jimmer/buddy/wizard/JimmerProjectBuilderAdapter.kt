@@ -58,7 +58,34 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
         "version" to "2.1.10+"
     )
 
+    private val versionSpringDependency = mapOf(
+        "name" to "springDependency",
+        "version" to "1.1.7"
+    )
+
+    private val versionSpringBoot = mapOf(
+        "name" to "springboot",
+        "version" to "3.4.3"
+    )
+
+    private val libJimmerApt = mapOf(
+        "configuration" to "annotationProcessor",
+        "name" to "jimmer-apt",
+        "group" to "org.babyfish.jimmer",
+        "versionRef" to "jimmer",
+        "alias" to "jimmer.apt"
+    )
+
+    private val libJimmerKsp = mapOf(
+        "configuration" to "ksp",
+        "name" to "jimmer-ksp",
+        "group" to "org.babyfish.jimmer",
+        "versionRef" to "jimmer",
+        "alias" to "jimmer.ksp"
+    )
+
     private val libJimmerCore = mapOf(
+        "configuration" to "implementation",
         "name" to "jimmer-core",
         "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
@@ -66,6 +93,7 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
     )
 
     private val libJimmerSql = mapOf(
+        "configuration" to "implementation",
         "name" to "jimmer-sql",
         "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
@@ -73,17 +101,26 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
     )
 
     private val libJimmerSqlKotlin = mapOf(
+        "configuration" to "implementation",
         "name" to "jimmer-sql-kotlin",
         "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
         "alias" to "jimmer.sql.kotlin"
     )
 
-    private val libJimmerSpringBoot = mapOf(
+    private val libJimmerSpringBootStarter = mapOf(
+        "configuration" to "implementation",
         "name" to "jimmer-spring-boot-starter",
         "group" to "org.babyfish.jimmer",
         "versionRef" to "jimmer",
-        "alias" to "jimmer.spring.boot"
+        "alias" to "jimmer.spring.boot.starter"
+    )
+
+    private val libSpringBootStaterWeb = mapOf(
+        "configuration" to "implementation",
+        "name" to "spring-boot-starter-web",
+        "group" to "org.springframework.boot",
+        "alias" to "spring.boot.starter.web"
     )
 
     private val pluginKotlinJvm = mapOf(
@@ -98,6 +135,20 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
         "id" to "com.google.devtools.ksp",
         "versionRef" to "ksp",
         "alias" to "ksp"
+    )
+
+    private val pluginSpringDependency = mapOf(
+        "name" to "spring-dependency-management",
+        "id" to "io.spring.dependency-management",
+        "versionRef" to "springDependency",
+        "alias" to "spring.dependency.management"
+    )
+
+    private val pluginSpringBoot = mapOf(
+        "name" to "spring-boot",
+        "id" to "org.springframework.boot",
+        "versionRef" to "springboot",
+        "alias" to "spring.boot"
     )
 
     private fun afterCreateProject(project: Project) {
@@ -121,11 +172,23 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
             JimmerProjectModel.Language.JAVA -> {
                 listOf()
             }
+        } + when (projectModel.type) {
+            JimmerProjectModel.Type.SPRING_BOOT -> {
+                listOf(versionSpringDependency, versionSpringBoot)
+            }
+
+            JimmerProjectModel.Type.SQL -> {
+                listOf()
+            }
+
+            JimmerProjectModel.Type.IMMUTABLE -> {
+                listOf()
+            }
         }
 
         val libs = when (projectModel.type) {
             JimmerProjectModel.Type.SPRING_BOOT -> {
-                listOf(libJimmerSpringBoot)
+                listOf(libJimmerSpringBootStarter, libSpringBootStaterWeb)
             }
 
             JimmerProjectModel.Type.SQL -> {
@@ -143,6 +206,18 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
             JimmerProjectModel.Type.IMMUTABLE -> {
                 listOf(libJimmerCore)
             }
+        } + when (projectModel.builder) {
+            JimmerProjectModel.Builder.GRADLE -> when (projectModel.language) {
+                JimmerProjectModel.Language.KOTLIN -> {
+                    listOf(libJimmerKsp)
+                }
+
+                JimmerProjectModel.Language.JAVA -> {
+                    listOf(libJimmerApt)
+                }
+            }
+
+            JimmerProjectModel.Builder.MAVEN -> listOf()
         }
 
         val plugins = when (projectModel.language) {
@@ -153,13 +228,26 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
             JimmerProjectModel.Language.JAVA -> {
                 listOf()
             }
+        } + when (projectModel.type) {
+            JimmerProjectModel.Type.SPRING_BOOT -> {
+                listOf(pluginSpringDependency, pluginSpringBoot)
+            }
+
+            JimmerProjectModel.Type.SQL -> {
+                listOf()
+            }
+
+            JimmerProjectModel.Type.IMMUTABLE -> {
+                listOf()
+            }
         }
 
         val fileTemplateManager = FileTemplateManager.getInstance(project)
         when (projectModel.builder) {
             JimmerProjectModel.Builder.GRADLE -> {
                 val gradleWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_WRAPPER)
-                val gradleWrapperContent = gradleWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
+                val gradleWrapperContent =
+                    gradleWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
                 val gradleWrapperPath = projectDir.resolve("gradle/wrapper/gradle-wrapper.properties")
                 if (gradleWrapperPath.exists().not()) {
                     gradleWrapperPath.createParentDirectories()
@@ -204,8 +292,23 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
                     mapOf(
                         "GROUP" to projectModel.group,
                         "ARTIFACT" to projectModel.artifact,
-                        "versions" to versions,
-                        "libraries" to libs
+                        "versions" to versions.filter { it != versionSpringDependency },
+                        "libraries" to libs,
+                        "apt" to libJimmerApt,
+                        "dependencyManagements" to listOf(
+                            mapOf(
+                                "name" to "spring-boot-dependencies",
+                                "id" to "org.springframework.boot",
+                                "versionRef" to "springboot",
+                            )
+                        ),
+                        "plugins" to listOf(
+                            mapOf(
+                                "name" to "spring-boot-maven-plugin",
+                                "id" to "org.springframework.boot",
+                                "versionRef" to "springboot"
+                            )
+                        )
                     )
                 )
                 val mavenPomPath = projectDir.resolve("pom.xml")

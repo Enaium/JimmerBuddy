@@ -5,7 +5,7 @@ ${version.name} = "${version.version}"
 
 [libraries]
 #foreach($library in $libraries)
-${library.name} = { module = "${library.group}:${library.name}", version.ref = "${library.versionRef}" }
+${library.name} = { module = "${library.group}:${library.name}"#if(${library.versionRef}), version.ref = "${library.versionRef}"#end }
 #end
 
 [plugins]

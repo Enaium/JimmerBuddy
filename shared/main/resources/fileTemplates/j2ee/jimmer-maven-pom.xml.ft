@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <dependencyManagement>
+        <dependencies>
+            #foreach($dependencyManagement in $dependencyManagements)
+            <dependency>
+                <groupId>${dependencyManagement.id}</groupId>
+                <artifactId>${dependencyManagement.name}</artifactId>
+                <version>${${dependencyManagement.versionRef}}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            #end
+        </dependencies>
+    </dependencyManagement>
+
+
+    <groupId>${GROUP}</groupId>
+    <artifactId>${ARTIFACT}</artifactId>
+    <version>0.1.0</version>
+
+    <properties>
+        #foreach($version in $versions)
+        <${version.name}>${version.version}</${version.name}>
+        #end
+    </properties>
+
+    <dependencies>
+        #foreach($librarie in $libraries)
+        <dependency>
+            <groupId>${librarie.group}</groupId>
+            <artifactId>${librarie.name}</artifactId>
+            #if($librarie.versionRef)
+            <version>${${librarie.versionRef}}</version>
+            #end
+        </dependency>
+        #end
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>${apt.name}</groupId>
+                            <artifactId>${apt.group}</artifactId>
+                            <version>${apt.versionRef}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            #foreach($plugin in $plugins)
+            <plugin>
+                <groupId>${plugin.id}</groupId>
+                <artifactId>${plugin.name}</artifactId>
+                <version>${${plugin.versionRef}}</version>
+            </plugin>
+            #end
+        </plugins>
+    </build>
+</project>

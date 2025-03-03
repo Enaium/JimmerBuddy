@@ -14,6 +14,6 @@ repositories {
 
 dependencies {
 #foreach($library in $libraries)
-    implementation(libs.${library.alias})
+    ${library.configuration}(libs.${library.alias})
 #end
 }
