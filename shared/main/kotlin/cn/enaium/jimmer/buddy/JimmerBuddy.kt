@@ -408,7 +408,7 @@ object JimmerBuddy {
     private fun getGeneratedDir(project: Project, projectDir: Path): Path? {
         if (isJavaProject(project)) {
             return if (isMavenProject(projectDir)) {
-                projectDir.resolve("target/generated/sources/annotationProcessor/java/main")
+                projectDir.resolve("target/generated-sources/annotations")
             } else if (isGradleProject(projectDir)) {
                 projectDir.resolve("build/generated/sources/annotationProcessor/java/main")
             } else {
