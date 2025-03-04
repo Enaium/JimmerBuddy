@@ -36,6 +36,8 @@
     <actions>
         <action id="cn.enaium.jimmer.buddy.action.Initialize" class="cn.enaium.jimmer.buddy.action.Initialize"
                 text="Initialize" description="Clean all cache"/>
+        <action id="cn.enaium.jimmer.buddy.action.GenerateEntity" class="cn.enaium.jimmer.buddy.action.GenerateEntity"
+                text="Generate Entity" description="Generate Entity for Jimmer"/>
     </actions>
 </idea-plugin>
 

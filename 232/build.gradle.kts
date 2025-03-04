@@ -36,6 +36,8 @@ dependencies {
     implementation(libs.jimmer.dto.compiler)
     implementation(libs.symbol.processing.api)
     implementation(libs.byte.buddy)
+    implementation(libs.kotlinpoet)
+    implementation(libs.javapoet)
 }
 
 tasks {
