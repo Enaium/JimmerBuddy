@@ -27,10 +27,7 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.psi.typeArguments
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.constants.*
@@ -103,8 +100,8 @@ class PsiShared242 : PsiShared {
                     ktTypeReference.type.symbol?.classId?.asFqNameString()!!.replace("/", "."),
                     ktTypeReference.type.isMarkedNullable,
                     ktTypeReference.type.symbol?.psi as? KtClass,
-                    ktTypeReference.typeArguments().mapNotNull {
-                        it.typeReference?.let { type(it) }
+                    (ktTypeReference).arguments().map {
+                        type(it)
                     }
                 )
             }
@@ -177,5 +174,10 @@ class PsiShared242 : PsiShared {
             is KaConstantValue.ULongValue -> this.value
             is KaConstantValue.UShortValue -> this.value
         }
+    }
+
+    fun KtTypeReference.arguments(): List<KtTypeReference> {
+        return (this.typeElement as? KtNullableType)?.typeArgumentsAsTypes ?: this.typeArguments()
+            .mapNotNull { it.typeReference }
     }
 }

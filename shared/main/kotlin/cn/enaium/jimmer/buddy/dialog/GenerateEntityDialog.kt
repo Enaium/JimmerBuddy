@@ -26,7 +26,6 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.io.isFile
 import java.net.URLClassLoader
 import java.nio.file.Path
 import java.sql.Connection
@@ -37,6 +36,7 @@ import java.util.*
 import java.util.logging.Logger
 import javax.swing.JComponent
 import kotlin.io.path.Path
+import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 import kotlin.io.path.walk
 
@@ -139,7 +139,7 @@ class GenerateEntityDialog(
                 jdbcDriver.group.split(".").joinToString("/")
             }/${jdbcDriver.name}"
         ).walk().findLast {
-            it.isFile() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
+            it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
                 .not() && it.name.endsWith(".jar")
         }?.also {
             driverJarFile = it
@@ -147,7 +147,7 @@ class GenerateEntityDialog(
 
         Path(System.getProperty("user.home")).resolve(".gradle/caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.name}")
             .walk().findLast {
-                it.isFile() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
+                it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
                     .not() && it.name.endsWith(".jar")
             }?.also {
                 driverJarFile = it
