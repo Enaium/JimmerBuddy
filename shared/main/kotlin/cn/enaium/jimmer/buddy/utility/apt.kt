@@ -280,7 +280,7 @@ fun psiClassesToApt(
                         vararg originatingElements: Element
                     ): JavaFileObject {
                         return object : SimpleJavaFileObject(
-                            Path("dummy.java").toUri(),
+                            Path(System.getProperty("user.dir"), "dummy.java").toUri(),
                             Kind.OTHER
                         ) {
                             override fun openOutputStream(): OutputStream {
@@ -322,7 +322,7 @@ fun psiClassesToApt(
                         relativeName: CharSequence
                     ): FileObject {
                         return object : SimpleJavaFileObject(
-                            Path("dummy.txt").toUri(),
+                            Path(System.getProperty("user.dir"), "dummy.txt").toUri(),
                             Kind.OTHER
                         ) {
 
