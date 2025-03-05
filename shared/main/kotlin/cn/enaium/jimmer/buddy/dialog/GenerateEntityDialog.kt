@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.dialog
 import cn.enaium.jimmer.buddy.database.generate.JavaEntityGenerate
 import cn.enaium.jimmer.buddy.database.generate.KotlinEntityGenerate
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.DialogWrapper
@@ -73,7 +74,7 @@ class GenerateEntityDialog(
                 textField().bindText(generateEntityModel.packageNameProperty)
             }
             row("Language:") {
-                segmentedButton(GenerateEntityModel.Language.entries) {
+                segmentedButtonText(GenerateEntityModel.Language.entries) {
                     it.text
                 }.bind(generateEntityModel.languageProperty)
             }
@@ -98,7 +99,7 @@ class GenerateEntityDialog(
                     textField().bindText(generateEntityModel.primaryKeyNameProperty)
                 }
                 row("Association:") {
-                    segmentedButton(GenerateEntityModel.Association.entries) {
+                    segmentedButtonText(GenerateEntityModel.Association.entries) {
                         it.text
                     }.bind(generateEntityModel.associationProperty)
                 }

@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.wizard
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.ide.IdeBundle
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -78,7 +79,7 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
                 }
             }
             row("Type:") {
-                segmentedButton(JimmerProjectModel.Type.entries) {
+                segmentedButtonText(JimmerProjectModel.Type.entries) {
                     it.text
                 }.bind(projectModel.typeProperty)
                 projectModel.typeProperty.afterChange {
@@ -86,7 +87,7 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
                 }
             }
             row("Language:") {
-                segmentedButton(JimmerProjectModel.Language.entries) {
+                segmentedButtonText(JimmerProjectModel.Language.entries) {
                     it.text
                 }.bind(projectModel.languageProperty)
                 projectModel.languageProperty.afterChange {
@@ -94,7 +95,7 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
                 }
             }
             row("Builder:") {
-                segmentedButton(JimmerProjectModel.Builder.entries) {
+                segmentedButtonText(JimmerProjectModel.Builder.entries) {
                     it.text
                 }.bind(projectModel.builderProperty)
                 projectModel.builderProperty.afterChange {
