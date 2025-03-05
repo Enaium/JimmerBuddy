@@ -322,7 +322,7 @@ fun psiClassesToApt(
                         relativeName: CharSequence
                     ): FileObject {
                         return object : SimpleJavaFileObject(
-                            Path(System.getProperty("user.dir"), "dummy.txt").toUri(),
+                            Path(System.getProperty("user.dir")).resolve(relativeName.toString()).toUri(),
                             Kind.OTHER
                         ) {
 
@@ -446,7 +446,7 @@ fun psiClassesToApt(
                             }
 
                             var eq =
-                                t1Element.qualifiedName == t2Element.qualifiedName
+                                t1Element.qualifiedName.contentEquals(t2Element.qualifiedName)
 
                             if (!eq) {
                                 if (t2Element.qualifiedName.toString() == "java.lang.Number") {

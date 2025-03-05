@@ -117,7 +117,11 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
             },
             asStarProjectedType = {
                 createKSType(
-                    declaration = { ksClassDeclarationCaches[fqName]!! }
+                    fqName,
+                    declaration = { ksClassDeclarationCaches[fqName]!! },
+                    isAssignableFrom = {
+                        it.toString() == fqName
+                    }
                 )
             },
             superTypes = {
@@ -730,6 +734,7 @@ fun createKSFile(
 }
 
 private fun createKSType(
+    qualifiedName: String? = null,
     annotations: () -> Sequence<KSAnnotation> = { emptySequence() },
     arguments: () -> List<KSTypeArgument> = { emptyList() },
     declaration: () -> KSDeclaration = { TODO("Not yet implemented") },
@@ -790,6 +795,10 @@ private fun createKSType(
 
         override fun starProjection(): KSType {
             return starProjection()
+        }
+
+        override fun toString(): String {
+            return qualifiedName ?: super.toString()
         }
     }
 }
