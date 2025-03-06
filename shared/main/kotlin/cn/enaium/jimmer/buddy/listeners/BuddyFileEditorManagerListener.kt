@@ -17,9 +17,11 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import java.nio.file.Path
@@ -59,12 +61,18 @@ class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerLi
         val dtoFiles = listOf(file).filter { it.extension == "dto" }
         dtoFiles.isEmpty() && return
         JimmerBuddy.DEQ.schedule("EditorChange") {
-            if (JimmerBuddy.isJavaProject(project)) {
-                JimmerBuddy.init()
-                JimmerBuddy.dtoProcessJava(project, dtoFiles)
-            } else if (JimmerBuddy.isKotlinProject(project)) {
-                JimmerBuddy.init()
-                JimmerBuddy.dtoProcessKotlin(project, dtoFiles)
+            ApplicationManager.getApplication().executeOnPooledThread {
+                ApplicationManager.getApplication().runReadAction {
+                    if (!DumbService.isDumb(project)) {
+                        if (JimmerBuddy.isJavaProject(project)) {
+                            JimmerBuddy.init()
+                            JimmerBuddy.dtoProcessJava(project, dtoFiles)
+                        } else if (JimmerBuddy.isKotlinProject(project)) {
+                            JimmerBuddy.init()
+                            JimmerBuddy.dtoProcessKotlin(project, dtoFiles)
+                        }
+                    }
+                }
             }
         }
     }

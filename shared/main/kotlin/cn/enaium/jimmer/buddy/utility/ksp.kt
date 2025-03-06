@@ -340,7 +340,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     return Ksp(
         resolver = createResolver(caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence()),
         environment = SymbolProcessorEnvironment(
-            emptyMap<String, String>(),
+            mapOf("jimmer.buddy.ignoreResourceGeneration" to "true"),
             KotlinVersion.CURRENT,
             object : CodeGenerator {
                 override val generatedFile: Collection<File>

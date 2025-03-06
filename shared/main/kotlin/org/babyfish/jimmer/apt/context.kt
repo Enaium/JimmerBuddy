@@ -47,6 +47,7 @@ fun createContext(
         tablesTypeName,
         tableExesTypeName,
         fetchersTypeName,
-        hibernateValidatorEnhancement
+        hibernateValidatorEnhancement,
+        true
     )
 }

@@ -19,6 +19,8 @@ package cn.enaium.jimmer.buddy.listeners
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjectDir
 import cn.enaium.jimmer.buddy.utility.isGeneratedFile
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiTreeChangeAdapter
@@ -62,20 +64,30 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
         isGeneratedFile(path) && return
         listOf<String>("java", "kt").any { path.extension == it }.not() && return
         JimmerBuddy.DEQ.schedule("PsiChange") {
-            if (JimmerBuddy.isJavaProject(project)) {
-                JimmerBuddy.init()
-                JimmerBuddy.sourcesProcessJava(
-                    project,
-                    mapOf((findProjectDir(path) ?: return@schedule) to listOf(path).filter { it.extension == "java" }
-                        .also { if (it.isEmpty()) return@schedule })
-                )
-            } else if (JimmerBuddy.isKotlinProject(project)) {
-                JimmerBuddy.init()
-                JimmerBuddy.sourceProcessKotlin(
-                    project,
-                    mapOf((findProjectDir(path) ?: return@schedule) to listOf(path).filter { it.extension == "kt" }
-                        .also { if (it.isEmpty()) return@schedule })
-                )
+            ApplicationManager.getApplication().executeOnPooledThread {
+                ApplicationManager.getApplication().runReadAction {
+                    if (!DumbService.isDumb(project)) {
+                        if (JimmerBuddy.isJavaProject(project)) {
+                            JimmerBuddy.init()
+                            JimmerBuddy.sourcesProcessJava(
+                                project,
+                                mapOf(
+                                    (findProjectDir(path)
+                                        ?: return@runReadAction) to listOf(path).filter { it.extension == "java" }
+                                        .also { if (it.isEmpty()) return@runReadAction })
+                            )
+                        } else if (JimmerBuddy.isKotlinProject(project)) {
+                            JimmerBuddy.init()
+                            JimmerBuddy.sourceProcessKotlin(
+                                project,
+                                mapOf(
+                                    (findProjectDir(path)
+                                        ?: return@runReadAction) to listOf(path).filter { it.extension == "kt" }
+                                        .also { if (it.isEmpty()) return@runReadAction })
+                            )
+                        }
+                    }
+                }
             }
         }
     }
