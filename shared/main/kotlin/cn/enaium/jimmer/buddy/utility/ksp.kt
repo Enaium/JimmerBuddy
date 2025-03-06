@@ -20,11 +20,15 @@ import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.load.java.JavaClassFinder
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
+import org.jetbrains.kotlin.resolve.jvm.KotlinJavaPsiFacade
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
@@ -338,7 +342,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     }
     val sources = mutableListOf<Source>()
     return Ksp(
-        resolver = createResolver(caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence()),
+        resolver = createResolver(caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence(), cacheClasses),
         environment = SymbolProcessorEnvironment(
             mapOf("jimmer.buddy.ignoreResourceGeneration" to "true"),
             KotlinVersion.CURRENT,
@@ -424,6 +428,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
 private fun createResolver(
     caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
+    cachesClasses: Set<KtClass>,
 ): Resolver {
 
     val collection = createKSClassDeclaration(asStarProjectedType = {
@@ -519,6 +524,19 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
+            } ?: cachesClasses.firstOrNull()?.let {
+                KotlinJavaPsiFacade.getInstance(it.project)
+                    .findClass(JavaClassFinder.Request(ClassId.fromString(name.asString())), it.project.allScope())
+                    ?.takeIf { it.isAnnotationType }?.let {
+                        val fqName = it.fqName!!.asString()
+                        createKSClassDeclaration(
+                            classKind = { ClassKind.ANNOTATION_CLASS },
+                            qualifiedName = { createKSName(fqName) },
+                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                            annotations = { emptySequence() }
+                        )
+                    }
             }
         }
 
@@ -689,7 +707,7 @@ private fun createKSName(name: String): KSName {
         }
 
         override fun getShortName(): String {
-            return name.substringAfter(".")
+            return name.substringAfterLast(".")
         }
 
         override fun toString(): String {
