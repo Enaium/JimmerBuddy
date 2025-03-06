@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.psi.typeArguments
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
@@ -114,6 +115,7 @@ class PsiShared242 : PsiShared {
                         DescriptorToSourceUtils.getSourceFromDescriptor(
                             it
                         ) as? KtClass
+                            ?: (ktTypeReference.typeElement as? KtUserType)?.referenceExpression?.mainReference?.resolve() as? KtClass
                     },
                     it.arguments.map { arg ->
                         PsiShared.Type(
@@ -123,6 +125,7 @@ class PsiShared242 : PsiShared {
                                 DescriptorToSourceUtils.getSourceFromDescriptor(
                                     it
                                 ) as? KtClass
+                                    ?: (ktTypeReference.typeElement as? KtUserType)?.referenceExpression?.mainReference?.resolve() as? KtClass
                             },
                         )
                     }
