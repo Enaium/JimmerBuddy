@@ -28,6 +28,7 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.kotlin.idea.base.util.allScope
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
@@ -349,7 +350,10 @@ fun psiClassesToApt(
                                         asElement = { numberTypeElement })
                                 })
                         } else {
-                            null
+                            cacheClasses.firstOrNull()?.let {
+                                JavaPsiFacade.getInstance(it.project).findClass(name.toString(), it.project.allScope())
+                                                                ?.takeIf { it.isAnnotationType }?.asTypeElement()
+                            }
                         }
                     }
 
