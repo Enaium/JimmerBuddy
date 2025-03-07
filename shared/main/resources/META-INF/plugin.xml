@@ -25,6 +25,7 @@
                     anchor="bottom" icon="/icons/log.svg"/>
         <moduleBuilder builderClass="cn.enaium.jimmer.buddy.wizard.JimmerProjectBuilderAdapter" order="first"/>
         <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile"/>
+        <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
@@ -38,6 +39,11 @@
                 text="Initialize" description="Clean all cache"/>
         <action id="cn.enaium.jimmer.buddy.action.GenerateEntity" class="cn.enaium.jimmer.buddy.action.GenerateEntity"
                 text="Generate Entity" description="Generate Entity for Jimmer"/>
+        <group id="JimmerBuddy.New">
+            <action id="JimmerBuddy.NewDtoFile" class="cn.enaium.jimmer.buddy.action.NewDtoFile"
+                    text="New dto file" description="New dto file based on Immutable" icon="/icons/dto.svg"/>
+            <add-to-group group-id="NewGroup1" anchor="last"/>
+        </group>
     </actions>
 </idea-plugin>
 

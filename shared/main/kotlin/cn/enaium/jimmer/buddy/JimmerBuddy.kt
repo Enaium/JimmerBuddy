@@ -31,10 +31,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFileFactory
-import net.bytebuddy.ByteBuddy
-import net.bytebuddy.dynamic.scaffold.TypeValidation
-import net.bytebuddy.implementation.FixedValue
-import net.bytebuddy.matcher.ElementMatchers
 import org.babyfish.jimmer.apt.client.DocMetadata
 import org.babyfish.jimmer.apt.createContext
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
@@ -44,7 +40,6 @@ import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.dto.compiler.DtoFile
 import org.babyfish.jimmer.dto.compiler.DtoModifier
-import org.babyfish.jimmer.dto.compiler.DtoType
 import org.babyfish.jimmer.dto.compiler.OsFile
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
@@ -84,6 +79,8 @@ object JimmerBuddy {
     private val kotlinImmutableKtClassCache = CopyOnWriteArraySet<KtClass>()
 
     var isInit = false
+
+    const val INFO_GROUP_ID = "JimmerBuddy.NotificationGroup"
 
     val LOG: Log by lazy { Log(ProjectManager.getInstance().defaultProject) }
 
