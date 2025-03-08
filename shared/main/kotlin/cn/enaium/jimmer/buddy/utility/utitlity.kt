@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.utility
 
 import java.nio.file.Path
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
@@ -83,5 +84,11 @@ private fun findProjects(rootProject: Path, results: MutableSet<Path>, level: In
             if (level < 4)
                 findProjects(file, results, level + 1)
         }
+    }
+}
+
+fun <T> copyOnWriteSetOf(vararg elements: T): CopyOnWriteArraySet<T> {
+    return CopyOnWriteArraySet<T>().apply {
+        addAll(elements)
     }
 }

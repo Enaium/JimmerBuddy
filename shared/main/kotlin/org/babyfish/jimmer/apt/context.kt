@@ -27,14 +27,14 @@ fun createContext(
     elements: Elements,
     types: Types,
     filer: Filer,
-    keepIsPrefix: Boolean,
-    includes: Array<String>,
-    excludes: Array<String>,
-    immutablesTypeName: String?,
-    tablesTypeName: String?,
-    tableExesTypeName: String?,
-    fetchersTypeName: String?,
-    hibernateValidatorEnhancement: Boolean,
+    keepIsPrefix: Boolean = false,
+    includes: Array<String> = emptyArray(),
+    excludes: Array<String> = emptyArray(),
+    immutablesTypeName: String? = null,
+    tablesTypeName: String? = null,
+    tableExesTypeName: String? = null,
+    fetchersTypeName: String? = null,
+    hibernateValidatorEnhancement: Boolean = false
 ): Context {
     return Context(
         elements,
