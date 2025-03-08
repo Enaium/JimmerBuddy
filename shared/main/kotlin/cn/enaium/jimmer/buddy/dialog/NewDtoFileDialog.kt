@@ -17,8 +17,10 @@
 package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.dialog.panel.KotlinPropsChoosePanel
 import cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile
 import cn.enaium.jimmer.buddy.utility.findProjectDir
+import cn.enaium.jimmer.buddy.utility.toImmutableType
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
@@ -29,9 +31,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.tools.projectWizard.wizard.ui.borderPanel
 import java.nio.file.Path
 import javax.swing.JComponent
 import kotlin.io.path.createParentDirectories
+import kotlin.io.path.extension
 import kotlin.io.path.writeText
 
 /**
@@ -54,12 +61,20 @@ class NewDtoFileDialog(
     }
 
     override fun createCenterPanel(): JComponent {
-        return panel {
-            row("Immutable Name:") {
-                textField().bindText(model.immutableNameProperty)
-            }
-            row("DTO File Name:") {
-                textField().bindText(model.dtoFileNameProperty)
+        return borderPanel {
+            addToTop(panel {
+                row("Immutable Name:") {
+                    textField().bindText(model.immutableNameProperty)
+                }
+                row("DTO File Name:") {
+                    textField().bindText(model.dtoFileNameProperty)
+                }
+                row { label("Choose Properties") }
+            })
+            if (sourceFile.extension == "kt") {
+                sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also {
+                    addToCenter(KotlinPropsChoosePanel(it.toImmutableType()))
+                }
             }
         }
     }
