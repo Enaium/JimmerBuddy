@@ -16,7 +16,10 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.util.Computable
 import java.nio.file.Path
+import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -91,4 +94,16 @@ fun <T> copyOnWriteSetOf(vararg elements: T): CopyOnWriteArraySet<T> {
     return CopyOnWriteArraySet<T>().apply {
         addAll(elements)
     }
+}
+
+fun <T> runReadOnly(block: () -> T): T {
+    return ApplicationManager.getApplication().runReadAction(Computable {
+        return@Computable block()
+    })
+}
+
+fun <T> thread(block: () -> T): T {
+    return ApplicationManager.getApplication().executeOnPooledThread(Callable {
+        return@Callable block()
+    }).get()
 }

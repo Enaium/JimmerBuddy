@@ -8,6 +8,7 @@ A plugin that adds first-class support for Project Jimmer Features
 - List all Immutables and DTOs in the project.
 - Generate entity from database or ddl.
 - Jimmer Project Wizard.
+- Generate DTO file for immutable.
 
 ## Screenshots
 
@@ -18,3 +19,5 @@ A plugin that adds first-class support for Project Jimmer Features
 ![project wizard](https://s2.loli.net/2025/03/05/USP5VdZvlA6iNzO.png)
 
 ![generate entity](https://s2.loli.net/2025/03/05/sWaZgDiRcblOw2x.png)
+
+![new dto file](https://s2.loli.net/2025/03/09/fMUpOA9kbugGl1m.gif)

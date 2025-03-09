@@ -21,15 +21,13 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
 import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.load.java.JavaClassFinder
-import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
-import org.jetbrains.kotlin.resolve.jvm.KotlinJavaPsiFacade
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
@@ -477,10 +475,9 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
-            } ?: KotlinJavaPsiFacade.getInstance(project)
-                .findClass(JavaClassFinder.Request(ClassId.fromString(name.asString())), project.allScope())
+            } ?: JavaPsiFacade.getInstance(project).findClass(name.toString(), project.allScope())
                 ?.takeIf { it.isAnnotationType }?.let {
-                    val fqName = it.fqName!!.asString()
+                    val fqName = it.qualifiedName!!
                     createKSClassDeclaration(
                         classKind = { ClassKind.ANNOTATION_CLASS },
                         qualifiedName = { createKSName(fqName) },

@@ -18,7 +18,11 @@ package cn.enaium.jimmer.buddy.dialog.panel
 
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.runReadOnly
+import cn.enaium.jimmer.buddy.utility.thread
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.Project
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTree.CheckboxTreeCellRenderer
 import com.intellij.ui.CheckboxTreeListener
@@ -36,6 +40,7 @@ import javax.swing.tree.DefaultTreeModel
  * @author Enaium
  */
 class ImmutablePropsChoosePanel(
+    val project: Project,
     rootImmutableType: CommonImmutableType,
     val properties: MutableList<NewDtoFileDialog.DtoProperty>
 ) : JPanel() {
@@ -49,33 +54,40 @@ class ImmutablePropsChoosePanel(
         tree.collapseRow(0)
         tree.addTreeWillExpandListener(object : TreeWillExpandListener {
             override fun treeWillExpand(event: TreeExpansionEvent) {
-                val node = event.path.lastPathComponent as DefaultMutableTreeNode
-                node.childCount > 0 && return
-                node.removeAllChildren()
+                thread {
+                    return@thread runReadOnly {
+                        if (DumbService.isDumb(project)) return@runReadOnly null
+                        val node = event.path.lastPathComponent as DefaultMutableTreeNode
+                        node.childCount > 0 && return@runReadOnly null
+                        node.removeAllChildren()
 
-                fun addProps(immutableType: CommonImmutableType) {
-                    immutableType.superTypes().forEach { superType ->
-                        addProps(superType)
-                    }
-                    immutableType.properties().forEach {
-                        node.add(ImmutablePropNode(it))
-                    }
-                }
-
-                if (node.childCount == 0) {
-                    when (node) {
-                        is ImmutableTypeNode -> {
-                            addProps(node.immutableType)
-                        }
-
-                        is ImmutablePropNode -> {
-                            node.immutableProp.targetType()?.also {
-                                addProps(it)
+                        fun addProps(immutableType: CommonImmutableType) {
+                            immutableType.superTypes().forEach { superType ->
+                                addProps(superType)
+                            }
+                            immutableType.properties().forEach {
+                                node.add(ImmutablePropNode(it))
                             }
                         }
+
+                        if (node.childCount == 0) {
+                            when (node) {
+                                is ImmutableTypeNode -> {
+                                    addProps(node.immutableType)
+                                }
+
+                                is ImmutablePropNode -> {
+                                    node.immutableProp.targetType()?.also {
+                                        addProps(it)
+                                    }
+                                }
+                            }
+                        }
+                        return@runReadOnly node
                     }
+                }?.also {
+                    (tree.model as DefaultTreeModel).nodeStructureChanged(it)
                 }
-                (tree.model as DefaultTreeModel).nodeStructureChanged(node)
             }
 
             override fun treeWillCollapse(event: TreeExpansionEvent) {
@@ -89,8 +101,9 @@ class ImmutablePropsChoosePanel(
                     while (children.hasMoreElements()) {
                         val node = children.nextElement() as ImmutableNode
                         if (node.choose()) {
-                            property.properties.add(NewDtoFileDialog.DtoProperty(node.toString()))
-                            addProperty(property, node)
+                            val element = NewDtoFileDialog.DtoProperty(node.toString())
+                            property.properties.add(element)
+                            addProperty(element, node)
                         }
                     }
                 }
@@ -133,8 +146,18 @@ class ImmutablePropsChoosePanel(
             isChecked = false
         }
 
-        fun choose(): Boolean {
-            return isChecked() || children().toList().filterIsInstance<ImmutableNode>().any { it.isChecked() }
+        fun choose(parent: ImmutableNode = this): Boolean {
+            if (parent.isChecked()) {
+                return true
+            }
+            val children = parent.children()
+            while (children.hasMoreElements()) {
+                val node = children.nextElement() as ImmutableNode
+                if (choose(node)) {
+                    return true
+                }
+            }
+            return false
         }
     }
 

@@ -19,18 +19,21 @@ package cn.enaium.jimmer.buddy.action
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
+import cn.enaium.jimmer.buddy.utility.runReadOnly
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiClass
-import com.intellij.util.io.isFile
-import io.ktor.util.*
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import java.util.concurrent.Callable
+import kotlin.io.path.extension
 
 /**
  * @author Enaium
@@ -38,9 +41,10 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 class NewDtoFile : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
+        if (DumbService.isDumb(project)) return
         val dataContext = e.dataContext
         dataContext.getData(CommonDataKeys.VIRTUAL_FILE)?.also { file ->
-            val sourceFile = file.toNioPath().takeIf { it.isFile() } ?: run {
+            val sourceFile = file.toNioPath().takeIf { it.toFile().isFile } ?: run {
                 Notifications.Bus.notify(
                     Notification(
                         JimmerBuddy.INFO_GROUP_ID,
@@ -50,28 +54,30 @@ class NewDtoFile : AnAction() {
                 )
                 return
             }
-            val name = if (sourceFile.extension == "java") {
-                val psiFile = sourceFile.toFile().toPsiFile(project) ?: return
-                psiFile.getChildOfType<PsiClass>()?.takeIf { it.isJimmerImmutableType() }?.qualifiedName
-            } else if (sourceFile.extension == "kt") {
-                val psiFile = sourceFile.toFile().toPsiFile(project) ?: return
-                psiFile.getChildOfType<KtClass>()?.takeIf { it.isJimmerImmutableType() }?.fqName?.asString()
-            } else {
-                null
-            }
 
-            if (name == null) {
-                Notifications.Bus.notify(
-                    Notification(
-                        JimmerBuddy.INFO_GROUP_ID,
-                        "You selected file is not a immutable type",
-                        NotificationType.WARNING
-                    )
+            ApplicationManager.getApplication().executeOnPooledThread(Callable {
+                if (sourceFile.extension == "java") {
+                    runReadOnly {
+                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
+                            ?.takeIf { it.isJimmerImmutableType() }?.qualifiedName
+                    }
+                } else if (sourceFile.extension == "kt") {
+                    runReadOnly {
+                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                            ?.takeIf { it.isJimmerImmutableType() }?.fqName?.asString()
+                    }
+                } else {
+                    null
+                }
+            }).get()?.also { name ->
+                NewDtoFileDialog(project, sourceFile, name).show()
+            } ?: Notifications.Bus.notify(
+                Notification(
+                    JimmerBuddy.INFO_GROUP_ID,
+                    "You selected file is not a immutable type",
+                    NotificationType.WARNING
                 )
-                return
-            }
-
-            NewDtoFileDialog(project, sourceFile, name).show()
+            )
         }
     }
 }

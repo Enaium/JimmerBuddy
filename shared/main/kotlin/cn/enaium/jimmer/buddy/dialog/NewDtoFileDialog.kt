@@ -19,10 +19,7 @@ package cn.enaium.jimmer.buddy.dialog
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.panel.ImmutablePropsChoosePanel
 import cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile
-import cn.enaium.jimmer.buddy.utility.findProjectDir
-import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
-import cn.enaium.jimmer.buddy.utility.toJavaImmutable
-import cn.enaium.jimmer.buddy.utility.toKotlinImmutable
+import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
@@ -96,11 +93,23 @@ class NewDtoFileDialog(
             })
             if (sourceFile.extension == "kt") {
                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also {
-                    addToCenter(ImmutablePropsChoosePanel(it.toKotlinImmutable().toCommonImmutableType(), properties))
+                    addToCenter(
+                        ImmutablePropsChoosePanel(
+                            project,
+                            thread { runReadOnly { it.toKotlinImmutable().toCommonImmutableType() } },
+                            properties
+                        )
+                    )
                 }
             } else if (sourceFile.extension == "java") {
                 sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also {
-                    addToCenter(ImmutablePropsChoosePanel(it.toJavaImmutable().toCommonImmutableType(), properties))
+                    addToCenter(
+                        ImmutablePropsChoosePanel(
+                            project,
+                            it.toJavaImmutable().toCommonImmutableType(),
+                            properties
+                        )
+                    )
                 }
             }
         }
