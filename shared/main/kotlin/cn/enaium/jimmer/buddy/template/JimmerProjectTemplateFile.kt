@@ -32,7 +32,8 @@ class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
         const val GRADLE_BUILD = "jimmer-gradle-build.gradle.kts"
         const val GRADLE_SETTINGS = "jimmer-gradle-settings.gradle.kts"
         const val GRADLE_TOML = "jimmer-gradle-toml.toml"
-        const val JIMMER_DTO = "jimmer-dto.dto"
+        const val JIMMER_DTO_HEAD = "jimmer-dto-head.dto"
+        const val JIMMER_DTO_CONTENT = "jimmer-dto-content.dto"
     }
 
     override fun getFileTemplatesDescriptor(): FileTemplateGroupDescriptor {
@@ -43,7 +44,8 @@ class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
         group.addTemplate(GRADLE_BUILD)
         group.addTemplate(GRADLE_SETTINGS)
         group.addTemplate(GRADLE_TOML)
-        group.addTemplate(JIMMER_DTO)
+        group.addTemplate(JIMMER_DTO_HEAD)
+        group.addTemplate(JIMMER_DTO_CONTENT)
         return group
     }
 }

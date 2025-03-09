@@ -1,0 +1,15 @@
+#foreach($DTO_TYPE in $DTO_TYPES)
+    #if (${DTO_TYPE.modifier})${DTO_TYPE.modifier} #end${DTO_TYPE.name} {
+    #foreach($PROPERTY in $DTO_TYPE.properties)
+        #property($PROPERTY, "")
+    #end
+}
+#end
+
+#macro(property $PROPERTY, $INDENT)
+    ${INDENT}${PROPERTY.name}#if (${PROPERTY.properties} && !${PROPERTY.properties.isEmpty()}) {
+    #foreach($SUB_PROPERTY in ${PROPERTY.properties})
+        #property($SUB_PROPERTY, "${INDENT}    ")
+    #end
+    ${INDENT}}#end
+#end

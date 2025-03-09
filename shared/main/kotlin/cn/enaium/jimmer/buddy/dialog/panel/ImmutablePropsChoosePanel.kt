@@ -16,10 +16,12 @@
 
 package cn.enaium.jimmer.buddy.dialog.panel
 
+import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import com.intellij.icons.AllIcons
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTree.CheckboxTreeCellRenderer
+import com.intellij.ui.CheckboxTreeListener
 import com.intellij.ui.CheckedTreeNode
 import java.awt.BorderLayout
 import javax.swing.JPanel
@@ -33,7 +35,10 @@ import javax.swing.tree.DefaultTreeModel
 /**
  * @author Enaium
  */
-class ImmutablePropsChoosePanel(rootImmutableType: CommonImmutableType) : JPanel() {
+class ImmutablePropsChoosePanel(
+    rootImmutableType: CommonImmutableType,
+    val properties: MutableList<NewDtoFileDialog.DtoProperty>
+) : JPanel() {
 
     private val root = ImmutableTypeNode(rootImmutableType)
 
@@ -76,6 +81,26 @@ class ImmutablePropsChoosePanel(rootImmutableType: CommonImmutableType) : JPanel
             override fun treeWillCollapse(event: TreeExpansionEvent) {
             }
         })
+        tree.addCheckboxTreeListener(object : CheckboxTreeListener {
+            override fun nodeStateChanged(node: CheckedTreeNode) {
+                properties.clear()
+                fun addProperty(property: NewDtoFileDialog.DtoProperty, immutableNode: ImmutableNode) {
+                    val children = immutableNode.children()
+                    while (children.hasMoreElements()) {
+                        val node = children.nextElement() as ImmutableNode
+                        if (node.choose()) {
+                            property.properties.add(NewDtoFileDialog.DtoProperty(node.toString()))
+                            addProperty(property, node)
+                        }
+                    }
+                }
+                root.children().toList().filterIsInstance<ImmutableNode>().filter { it.choose() }.forEach {
+                    addProperty(NewDtoFileDialog.DtoProperty(it.toString()).also {
+                        properties.add(it)
+                    }, it)
+                }
+            }
+        })
         add(JScrollPane(tree), BorderLayout.CENTER)
     }
 
@@ -106,6 +131,10 @@ class ImmutablePropsChoosePanel(rootImmutableType: CommonImmutableType) : JPanel
     private open class ImmutableNode() : CheckedTreeNode() {
         init {
             isChecked = false
+        }
+
+        fun choose(): Boolean {
+            return isChecked() || children().toList().filterIsInstance<ImmutableNode>().any { it.isChecked() }
         }
     }
 

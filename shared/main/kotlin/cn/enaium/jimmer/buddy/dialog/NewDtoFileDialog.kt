@@ -24,6 +24,9 @@ import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
 import cn.enaium.jimmer.buddy.utility.toJavaImmutable
 import cn.enaium.jimmer.buddy.utility.toKotlinImmutable
 import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
+import com.intellij.diff.DiffContentFactory
+import com.intellij.diff.DiffManager
+import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
@@ -42,11 +45,11 @@ import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.tools.projectWizard.wizard.ui.borderPanel
+import org.jetbrains.kotlin.utils.addToStdlib.ifTrue
 import java.nio.file.Path
 import javax.swing.JComponent
-import kotlin.io.path.createParentDirectories
-import kotlin.io.path.extension
-import kotlin.io.path.writeText
+import kotlin.io.path.*
+
 
 /**
  * @author Enaium
@@ -58,6 +61,8 @@ class NewDtoFileDialog(
 ) : DialogWrapper(false) {
 
     private val model = NewDtoFileModel()
+
+    val properties = mutableListOf<DtoProperty>()
 
     init {
         model.immutableName = immutableName
@@ -91,11 +96,11 @@ class NewDtoFileDialog(
             })
             if (sourceFile.extension == "kt") {
                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also {
-                    addToCenter(ImmutablePropsChoosePanel(it.toKotlinImmutable().toCommonImmutableType()))
+                    addToCenter(ImmutablePropsChoosePanel(it.toKotlinImmutable().toCommonImmutableType(), properties))
                 }
             } else if (sourceFile.extension == "java") {
                 sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also {
-                    addToCenter(ImmutablePropsChoosePanel(it.toJavaImmutable().toCommonImmutableType()))
+                    addToCenter(ImmutablePropsChoosePanel(it.toJavaImmutable().toCommonImmutableType(), properties))
                 }
             }
         }
@@ -105,15 +110,52 @@ class NewDtoFileDialog(
         findProjectDir(sourceFile)?.also { projectDir ->
             val dtoFile = projectDir.resolve("src/main/dto/${model.dtoFileName}.dto")
             val fileTemplateManager = FileTemplateManager.getInstance(project)
-            val dtoTemplate = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.JIMMER_DTO)
-            val dtoContent = dtoTemplate.getText(
+            val dtoHeadTemplate = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.JIMMER_DTO_HEAD)
+            val dtoHeadContent = dtoHeadTemplate.getText(
                 mapOf(
                     "IMMUTABLE_NAME" to model.immutableName,
                     "PACKAGE_NAME" to "${model.packageName}.dto"
                 )
             )
+            val dtoContentTemplate =
+                fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.JIMMER_DTO_CONTENT)
+            val dtoContent = dtoContentTemplate.getText(
+                mapOf(
+                    "DTO_TYPES" to listOf(
+                        mapOf(
+                            "modifier" to model.modifier.keyword,
+                            "name" to (model.typeName.takeIf { it.isNotBlank() } ?: model.dtoFileName),
+                            "properties" to properties
+                        )
+                    ),
+                )
+            )
             dtoFile.createParentDirectories()
-            dtoFile.writeText(dtoContent)
+            if (dtoFile.exists()) {
+                val oldDtoContent = dtoFile.readText()
+                val oldContent = DiffContentFactory.getInstance().create(oldDtoContent)
+
+                val newContent = DiffContentFactory.getInstance().create("$oldDtoContent\n\n$dtoContent")
+                val diffRequest = SimpleDiffRequest("New DTO", oldContent, newContent, "Old DTO", "New DTO")
+                object : DialogWrapper(false) {
+
+                    init {
+                        title = "New DTO"
+                        init()
+                    }
+
+                    override fun createCenterPanel(): JComponent {
+                        return DiffManager.getInstance().createRequestPanel(project, {}, null).apply {
+                            setRequest(diffRequest)
+                        }.component
+                    }
+                }.showAndGet().ifTrue {
+                    dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
+                    JimmerBuddy.asyncRefresh(listOf(dtoFile))
+                }
+            } else {
+                dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
+            }
             JimmerBuddy.asyncRefresh(listOf(dtoFile))
         } ?: Notifications.Bus.notify(
             Notification(
@@ -150,4 +192,9 @@ class NewDtoFileDialog(
             SPECIFICATION("Specification", "specification")
         }
     }
+
+    data class DtoProperty(
+        val name: String,
+        val properties: MutableList<DtoProperty> = mutableListOf()
+    )
 }
