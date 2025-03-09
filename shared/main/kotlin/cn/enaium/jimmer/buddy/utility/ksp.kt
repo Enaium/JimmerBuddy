@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.load.java.JavaClassFinder
 import org.jetbrains.kotlin.name.ClassId
@@ -38,6 +39,223 @@ import kotlin.reflect.KClass
 /**
  * @author Enaium
  */
+fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> = mutableMapOf<String, KSClassDeclaration>()): KSClassDeclaration {
+    return caches[this.fqName!!.asString()] ?: createKSClassDeclaration(
+        qualifiedName = { createKSName(fqName!!.asString()) },
+        classKind = {
+            if (isInterface()) {
+                ClassKind.INTERFACE
+            } else if (isEnum()) {
+                ClassKind.ENUM_CLASS
+            } else {
+                ClassKind.CLASS
+            }
+        },
+        simpleName = { createKSName(name!!) },
+        superTypes = {
+            superTypeListEntries.mapNotNull {
+                val superClass = it.typeReference?.let { PSI_SHARED.type(it) }?.ktClass ?: return@mapNotNull null
+                createKSTypeReference(
+                    resolve = {
+                        createKSType(
+                            declaration = {
+                                superClass.asKSClassDeclaration(caches)
+                            }
+                        )
+                    }
+                )
+            }.asSequence()
+        },
+        packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
+        parentDeclaration = { null },
+        annotations = {
+            PSI_SHARED.annotations(this).map { annotation ->
+                createKSAnnotation(
+                    annotationType = createKSTypeReference(
+                        resolve = {
+                            createKSType(
+                                declaration = {
+                                    createKSClassDeclaration(
+                                        classKind = { ClassKind.ANNOTATION_CLASS },
+                                        qualifiedName = { createKSName(annotation.fqName) },
+                                        simpleName = { createKSName(annotation.fqName.substringAfterLast(".")) },
+                                        packageName = { createKSName(annotation.fqName.substringBeforeLast(".")) },
+                                        annotations = { emptySequence() }
+                                    )
+                                }
+                            )
+                        }
+                    ),
+                    shortName = {
+                        createKSName(annotation.fqName.substringAfterLast("."))
+                    },
+                    arguments = {
+                        annotation.arguments.map { argument ->
+                            createKSValueArgument(
+                                name = { createKSName(argument.name) },
+                                value = { argument.value }
+                            )
+                        }
+                    }
+                )
+            }.asSequence()
+        },
+        declarations = {
+            if (this.isInterface()) {
+                this.getProperties().mapNotNull { property ->
+                    val typeReference =
+                        property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
+                    val typeReferenceClass = typeReference.ktClass
+                    createKSPropertyDeclaration(
+                        qualifiedName = {
+                            createKSName(property.fqName!!.asString())
+                        },
+                        simpleName = {
+                            createKSName(property.name!!)
+                        },
+                        annotations = {
+                            PSI_SHARED.annotations(property).map { annotation ->
+                                createKSAnnotation(
+                                    annotationType = createKSTypeReference(
+                                        resolve = {
+                                            createKSType(
+                                                declaration = {
+                                                    createKSClassDeclaration(
+                                                        classKind = { ClassKind.ANNOTATION_CLASS },
+                                                        qualifiedName = { createKSName(annotation.fqName) },
+                                                        simpleName = {
+                                                            createKSName(
+                                                                annotation.fqName.substringAfterLast(".")
+                                                            )
+                                                        },
+                                                        packageName = {
+                                                            createKSName(
+                                                                annotation.fqName.substringBeforeLast(".")
+                                                            )
+                                                        },
+                                                        annotations = { emptySequence() }
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    ),
+                                    shortName = {
+                                        createKSName(annotation.fqName.substringAfterLast("."))
+                                    },
+                                    arguments = {
+                                        annotation.arguments.map { argument ->
+                                            createKSValueArgument(
+                                                name = { createKSName(argument.name) },
+                                                value = { argument.value }
+                                            )
+                                        }
+                                    }
+                                )
+                            }.asSequence()
+                        },
+                        modifiers = {
+                            if (property.getter == null && property.setter == null) {
+                                setOf(Modifier.ABSTRACT)
+                            } else {
+                                setOf()
+                            }
+                        },
+                        type = {
+                            createKSTypeReference(
+                                resolve = {
+                                    createKSType(
+                                        arguments = {
+                                            typeReference.arguments.mapNotNull { argument ->
+                                                val ktClass = argument.ktClass ?: return@mapNotNull null
+                                                createKSTypeArgument(
+                                                    type = {
+                                                        createKSTypeReference(
+                                                            resolve = {
+                                                                createKSType(
+                                                                    declaration = {
+                                                                        ktClass.asKSClassDeclaration(caches)
+                                                                    }
+                                                                )
+                                                            }
+                                                        )
+                                                    },
+                                                    variance = { Variance.INVARIANT },
+                                                )
+                                            }
+                                        },
+                                        declaration = {
+                                            typeReferenceClass?.asKSClassDeclaration(caches)
+                                                ?: createKSClassDeclaration(
+                                                    classKind = { ClassKind.CLASS },
+                                                    qualifiedName = { createKSName(typeReference.fqName) },
+                                                    simpleName = {
+                                                        createKSName(
+                                                            typeReference.fqName
+                                                                .substringAfterLast(".")
+                                                        )
+                                                    },
+                                                    packageName = {
+                                                        createKSName(
+                                                            typeReference.fqName
+                                                                .substringBeforeLast(".")
+                                                        )
+                                                    },
+                                                    asStarProjectedType = {
+                                                        createKSType(
+                                                            declaration = {
+                                                                createKSClassDeclaration(
+                                                                    qualifiedName = { createKSName(typeReference.fqName) },
+                                                                )
+                                                            }
+                                                        )
+                                                    },
+                                                    annotations = { sequenceOf() }
+                                                )
+                                        },
+                                        isMarkedNullable = { typeReference.nullable },
+                                    )
+                                }
+                            )
+                        },
+                        getter = {
+                            property.getter?.let {
+                                createKSPropertyGetter(
+                                    modifiers = { setOf(Modifier.FUN) },
+                                )
+                            }
+                        },
+                        parentDeclaration = { caches[fqName!!.asString()] },
+                    )
+                }.asSequence()
+            } else if (this.isEnum()) {
+                this.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.map {
+                    createKSClassDeclaration(
+                        qualifiedName = { createKSName(it.name!!) },
+                        classKind = { ClassKind.ENUM_ENTRY },
+                        simpleName = { createKSName(it.name!!) },
+                        parentDeclaration = { caches[fqName!!.asString()] },
+                    )
+                }?.asSequence() ?: emptySequence()
+            } else {
+                emptySequence()
+            }
+        },
+        asStarProjectedType = {
+            createKSType(
+                this.fqName!!.asString(),
+                declaration = {
+                    this.asKSClassDeclaration(caches)
+                },
+                isAssignableFrom = {
+                    it.toString() == fqName!!.asString()
+                }
+            )
+        }
+    ).also {
+        caches[this.fqName!!.asString()] = it
+    }
+}
+
 data class Ksp(
     val resolver: Resolver,
     val environment: SymbolProcessorEnvironment,
@@ -48,22 +266,6 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
-    compilableClasses.forEach {
-        it.superTypeListEntries.forEach {
-            it.typeReference?.let { PSI_SHARED.type(it).ktClass }?.also {
-                it.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
-            }
-        }
-        it.getProperties().forEach {
-            it.typeReference?.let { PSI_SHARED.type(it) }?.also {
-                it.ktClass?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
-                it.arguments.forEach {
-                    it.ktClass?.takeIf { it.isJimmerImmutableType() }?.also { cacheClasses.add(it) }
-                }
-            }
-        }
-    }
-
     val ktClasses = mapOf(
         true to compilableClasses,
         false to cacheClasses
@@ -72,277 +274,28 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     }
 
     ktClasses.forEach { (compilable, ktClass) ->
-        val fqName = ktClass.fqName!!.asString()
-        ksClassDeclarationCaches[fqName] = createKSClassDeclaration(
-            classKind = {
-                if (ktClass.isInterface()) {
-                    ClassKind.INTERFACE
-                } else if (ktClass.isEnum()) {
-                    ClassKind.ENUM_CLASS
-                } else {
-                    ClassKind.CLASS
-                }
-            },
-            qualifiedName = { createKSName(fqName) },
-            simpleName = { createKSName(ktClass.name!!) },
-            packageName = { createKSName(fqName.substringBeforeLast(".")) },
-            parentDeclaration = { null },
-            annotations = {
-                PSI_SHARED.annotations(ktClass).map { annotation ->
-                    createKSAnnotation(
-                        annotationType = createKSTypeReference(
-                            resolve = {
-                                createKSType(
-                                    declaration = {
-                                        createKSClassDeclaration(
-                                            classKind = { ClassKind.ANNOTATION_CLASS },
-                                            qualifiedName = { createKSName(annotation.fqName) },
-                                            simpleName = { createKSName(annotation.fqName.substringAfterLast(".")) },
-                                            packageName = { createKSName(annotation.fqName.substringBeforeLast(".")) },
-                                            annotations = { emptySequence() }
-                                        )
-                                    }
-                                )
-                            }
-                        ),
-                        shortName = {
-                            createKSName(annotation.fqName.substringAfterLast("."))
-                        },
-                        arguments = {
-                            annotation.arguments.map { argument ->
-                                createKSValueArgument(
-                                    name = { createKSName(argument.name) },
-                                    value = { argument.value }
-                                )
-                            }
-                        }
-                    )
-                }.asSequence()
-            },
-            asStarProjectedType = {
-                createKSType(
-                    fqName,
-                    declaration = { ksClassDeclarationCaches[fqName]!! },
-                    isAssignableFrom = {
-                        it.toString() == fqName
-                    }
-                )
-            },
-            superTypes = {
-                ktClass.superTypeListEntries.map {
-                    createKSTypeReference(
-                        resolve = {
-                            createKSType(
-                                declaration = {
-                                    ksClassDeclarationCaches[it.typeReference?.let { PSI_SHARED.type(it) }?.fqName]
-                                        ?: throw IllegalArgumentException(
-                                            "Unknown super type ${
-                                                it.typeReference?.let {
-                                                    PSI_SHARED.type(
-                                                        it
-                                                    )
-                                                }?.fqName
-                                            }"
-                                        )
-                                }
-                            )
-                        }
-                    )
-                }.asSequence()
-            },
-            declarations = {
-                if (ktClass.isInterface()) {
-                    ktClass.getProperties().mapNotNull { property ->
-                        val typeReference =
-                            property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
-
-                        createKSPropertyDeclaration(
-                            qualifiedName = {
-                                createKSName(property.fqName!!.asString())
-                            },
-                            simpleName = {
-                                createKSName(property.name!!)
-                            },
-                            annotations = {
-                                PSI_SHARED.annotations(property).map { annotation ->
-                                    createKSAnnotation(
-                                        annotationType = createKSTypeReference(
-                                            resolve = {
-                                                createKSType(
-                                                    declaration = {
-                                                        createKSClassDeclaration(
-                                                            classKind = { ClassKind.ANNOTATION_CLASS },
-                                                            qualifiedName = { createKSName(annotation.fqName) },
-                                                            simpleName = {
-                                                                createKSName(
-                                                                    annotation.fqName.substringAfterLast(".")
-                                                                )
-                                                            },
-                                                            packageName = {
-                                                                createKSName(
-                                                                    annotation.fqName.substringBeforeLast(".")
-                                                                )
-                                                            },
-                                                            annotations = { emptySequence() }
-                                                        )
-                                                    }
-                                                )
-                                            }
-                                        ),
-                                        shortName = {
-                                            createKSName(annotation.fqName.substringAfterLast("."))
-                                        },
-                                        arguments = {
-                                            annotation.arguments.map { argument ->
-                                                createKSValueArgument(
-                                                    name = { createKSName(argument.name) },
-                                                    value = { argument.value }
-                                                )
-                                            }
-                                        }
-                                    )
-                                }.asSequence()
-                            },
-                            modifiers = {
-                                if (property.getter == null && property.setter == null) {
-                                    setOf(Modifier.ABSTRACT)
-                                } else {
-                                    setOf()
-                                }
-                            },
-                            type = {
-                                createKSTypeReference(
-                                    resolve = {
-                                        createKSType(
-                                            arguments = {
-                                                typeReference.arguments.map { argument ->
-                                                    createKSTypeArgument(
-                                                        type = {
-                                                            createKSTypeReference(
-                                                                resolve = {
-                                                                    ksClassDeclarationCaches[argument.fqName]?.asStarProjectedType()
-                                                                        ?: createKSType(
-                                                                            declaration = {
-                                                                                createKSClassDeclaration(
-                                                                                    qualifiedName = {
-                                                                                        createKSName(
-                                                                                            argument.fqName
-                                                                                        )
-                                                                                    },
-                                                                                    simpleName = {
-                                                                                        createKSName(
-                                                                                            argument.fqName.substringAfterLast(
-                                                                                                "."
-                                                                                            )
-                                                                                        )
-                                                                                    },
-                                                                                    classKind = {
-                                                                                        ClassKind.CLASS
-                                                                                    },
-                                                                                    packageName = {
-                                                                                        createKSName(
-                                                                                            argument.fqName.substringBeforeLast(
-                                                                                                "."
-                                                                                            )
-                                                                                        )
-                                                                                    },
-                                                                                    asStarProjectedType = {
-                                                                                        createKSType(
-                                                                                            declaration = {
-                                                                                                createKSClassDeclaration(
-                                                                                                    qualifiedName = {
-                                                                                                        createKSName(
-                                                                                                            argument.fqName
-                                                                                                        )
-                                                                                                    }
-                                                                                                )
-                                                                                            }
-                                                                                        )
-                                                                                    }
-                                                                                )
-                                                                            }
-                                                                        )
-                                                                }
-                                                            )
-                                                        },
-                                                        variance = { Variance.INVARIANT },
-                                                    )
-                                                }
-                                            },
-                                            declaration = {
-                                                ksClassDeclarationCaches[typeReference.fqName]
-                                                    ?: createKSClassDeclaration(
-                                                        classKind = { ClassKind.CLASS },
-                                                        qualifiedName = { createKSName(typeReference.fqName) },
-                                                        simpleName = {
-                                                            createKSName(
-                                                                typeReference.fqName
-                                                                    .substringAfterLast(".")
-                                                            )
-                                                        },
-                                                        packageName = {
-                                                            createKSName(
-                                                                typeReference.fqName
-                                                                    .substringBeforeLast(".")
-                                                            )
-                                                        },
-                                                        asStarProjectedType = {
-                                                            createKSType(
-                                                                declaration = {
-                                                                    createKSClassDeclaration(
-                                                                        qualifiedName = { createKSName(typeReference.fqName) },
-                                                                    )
-                                                                }
-                                                            )
-                                                        },
-                                                        annotations = { sequenceOf() }
-                                                    )
-                                            },
-                                            isMarkedNullable = { typeReference.nullable },
-                                        )
-                                    }
-                                )
-                            },
-                            getter = {
-                                property.getter?.let {
-                                    createKSPropertyGetter(
-                                        modifiers = { setOf(Modifier.FUN) },
-                                    )
-                                }
-                            },
-                            parentDeclaration = { ksClassDeclarationCaches[fqName] },
-                        )
-                    }.asSequence()
-                } else if (ktClass.isEnum()) {
-                    ktClass.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.map {
-                        createKSClassDeclaration(
-                            qualifiedName = { createKSName(it.name!!) },
-                            classKind = { ClassKind.ENUM_ENTRY },
-                            simpleName = { createKSName(it.name!!) },
-                            parentDeclaration = { ksClassDeclarationCaches[fqName] },
-                        )
-                    }?.asSequence() ?: emptySequence()
-                } else {
-                    emptySequence()
-                }
-            }
-        )
+        ksClassDeclarationCaches[ktClass.fqName!!.asString()] = ktClass.asKSClassDeclaration()
 
         if (compilable) {
             ksFiles.add(
                 createKSFile(
                     fileName = { ktClass.containingFile.name },
                     filePath = { ktClass.containingFile.virtualFile.path },
-                    packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
-                    declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
+                    packageName = { ksClassDeclarationCaches[ktClass.fqName!!.asString()]!!.packageName },
+                    declarations = { sequenceOf(ksClassDeclarationCaches[ktClass.fqName!!.asString()]!!) },
                     annotations = { sequenceOf() }
+
                 )
             )
         }
     }
     val sources = mutableListOf<Source>()
     return Ksp(
-        resolver = createResolver(caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence(), cacheClasses),
+        resolver = createResolver(
+            project = ktClasses.first().second.project,
+            caches = ksClassDeclarationCaches,
+            newFiles = ksFiles.asSequence()
+        ),
         environment = SymbolProcessorEnvironment(
             mapOf("jimmer.buddy.ignoreResourceGeneration" to "true"),
             KotlinVersion.CURRENT,
@@ -426,9 +379,9 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
 }
 
 private fun createResolver(
+    project: Project,
     caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
-    cachesClasses: Set<KtClass>,
 ): Resolver {
 
     val collection = createKSClassDeclaration(asStarProjectedType = {
@@ -524,20 +477,18 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
-            } ?: cachesClasses.firstOrNull()?.let {
-                KotlinJavaPsiFacade.getInstance(it.project)
-                    .findClass(JavaClassFinder.Request(ClassId.fromString(name.asString())), it.project.allScope())
-                    ?.takeIf { it.isAnnotationType }?.let {
-                        val fqName = it.fqName!!.asString()
-                        createKSClassDeclaration(
-                            classKind = { ClassKind.ANNOTATION_CLASS },
-                            qualifiedName = { createKSName(fqName) },
-                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
-                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                            annotations = { emptySequence() }
-                        )
-                    }
-            }
+            } ?: KotlinJavaPsiFacade.getInstance(project)
+                .findClass(JavaClassFinder.Request(ClassId.fromString(name.asString())), project.allScope())
+                ?.takeIf { it.isAnnotationType }?.let {
+                    val fqName = it.fqName!!.asString()
+                    createKSClassDeclaration(
+                        classKind = { ClassKind.ANNOTATION_CLASS },
+                        qualifiedName = { createKSName(fqName) },
+                        simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                        packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                        annotations = { emptySequence() }
+                    )
+                }
         }
 
         @KspExperimental
