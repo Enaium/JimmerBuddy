@@ -16,64 +16,71 @@
 
 package cn.enaium.jimmer.buddy.dialog.panel
 
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import com.intellij.icons.AllIcons
-import com.intellij.ui.treeStructure.Tree
-import org.babyfish.jimmer.ksp.immutable.meta.ImmutableProp
-import org.babyfish.jimmer.ksp.immutable.meta.ImmutableType
+import com.intellij.ui.CheckboxTree
+import com.intellij.ui.CheckboxTree.CheckboxTreeCellRenderer
+import com.intellij.ui.CheckedTreeNode
 import java.awt.BorderLayout
-import java.awt.Component
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTree
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeWillExpandListener
 import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 
 /**
  * @author Enaium
  */
-class KotlinPropsChoosePanel(rootImmutableType: ImmutableType) : JPanel() {
+class ImmutablePropsChoosePanel(rootImmutableType: CommonImmutableType) : JPanel() {
 
-    private val root = ImmutableNode(rootImmutableType)
+    private val root = ImmutableTypeNode(rootImmutableType)
 
     init {
         layout = BorderLayout()
-        val treeModel = DefaultTreeModel(root)
-        val tree = Tree(treeModel)
-//        tree.cellRenderer = ImmutableNodeCellRender()
+        val tree = CheckboxTree(ImmutableNodeCellRender(), root)
+        tree.isRootVisible = true
+        tree.collapseRow(0)
         tree.addTreeWillExpandListener(object : TreeWillExpandListener {
             override fun treeWillExpand(event: TreeExpansionEvent) {
                 val node = event.path.lastPathComponent as DefaultMutableTreeNode
+                node.childCount > 0 && return
                 node.removeAllChildren()
+
+                fun addProps(immutableType: CommonImmutableType) {
+                    immutableType.superTypes().forEach { superType ->
+                        addProps(superType)
+                    }
+                    immutableType.properties().forEach {
+                        node.add(ImmutablePropNode(it))
+                    }
+                }
+
                 if (node.childCount == 0) {
                     when (node) {
-                        is ImmutableNode -> {
-                            node.immutableType.properties.forEach {
-                                node.add(ImmutablePropNode(it.value))
-                            }
+                        is ImmutableTypeNode -> {
+                            addProps(node.immutableType)
                         }
 
                         is ImmutablePropNode -> {
-                            node.immutableProp.targetType?.properties?.forEach {
-                                node.add(ImmutablePropNode(it.value))
+                            node.immutableProp.targetType()?.also {
+                                addProps(it)
                             }
                         }
                     }
                 }
-                treeModel.nodeStructureChanged(node)
+                (tree.model as DefaultTreeModel).nodeStructureChanged(node)
             }
 
             override fun treeWillCollapse(event: TreeExpansionEvent) {
             }
         })
-        tree.collapseRow(0)
         add(JScrollPane(tree), BorderLayout.CENTER)
     }
 
-    private class ImmutableNodeCellRender : DefaultTreeCellRenderer() {
-        override fun getTreeCellRendererComponent(
+    private class ImmutableNodeCellRender : CheckboxTreeCellRenderer() {
+        override fun customizeRenderer(
             tree: JTree,
             value: Any,
             selected: Boolean,
@@ -81,36 +88,44 @@ class KotlinPropsChoosePanel(rootImmutableType: ImmutableType) : JPanel() {
             leaf: Boolean,
             row: Int,
             hasFocus: Boolean
-        ): Component {
-            icon = when (value) {
-                is ImmutableNode -> AllIcons.Nodes.Interface
-                is ImmutablePropNode -> AllIcons.Nodes.Property
+        ) {
+            textRenderer.icon = when (value) {
+                is ImmutableTypeNode -> AllIcons.Nodes.Interface
+                is ImmutablePropNode -> if (leaf) {
+                    AllIcons.Nodes.Property
+                } else {
+                    AllIcons.Nodes.Interface
+                }
+
                 else -> null
             }
-            text = value.toString()
-            return this
+            textRenderer.append(value.toString())
         }
     }
 
-    private class ImmutableNode(val immutableType: ImmutableType) : DefaultMutableTreeNode() {
-
-        override fun isLeaf(): Boolean {
-            return immutableType.properties.isEmpty()
-        }
-
-        override fun toString(): String {
-            return immutableType.name
+    private open class ImmutableNode() : CheckedTreeNode() {
+        init {
+            isChecked = false
         }
     }
 
-    private class ImmutablePropNode(val immutableProp: ImmutableProp) : DefaultMutableTreeNode() {
-
+    private class ImmutableTypeNode(val immutableType: CommonImmutableType) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return immutableProp.targetType?.properties?.isEmpty() != false
+            return immutableType.properties().isEmpty()
         }
 
         override fun toString(): String {
-            return immutableProp.name
+            return immutableType.name()
+        }
+    }
+
+    private class ImmutablePropNode(val immutableProp: CommonImmutableType.CommonImmutableProp) : ImmutableNode() {
+        override fun isLeaf(): Boolean {
+            return immutableProp.targetType()?.properties()?.isEmpty() != false
+        }
+
+        override fun toString(): String {
+            return immutableProp.name()
         }
     }
 }

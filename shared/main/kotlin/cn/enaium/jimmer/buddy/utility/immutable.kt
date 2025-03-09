@@ -25,15 +25,59 @@ import org.jetbrains.kotlin.psi.KtClass
 /**
  * @author Enaium
  */
-fun PsiClass.toImmutableType(): org.babyfish.jimmer.apt.immutable.meta.ImmutableType {
+fun PsiClass.toJavaImmutable(): org.babyfish.jimmer.apt.immutable.meta.ImmutableType {
     val (pe, typeElements, sources) = psiClassesToApt(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = createContext(pe.elementUtils, pe.typeUtils, pe.filer)
     return context.getImmutableType(pe.elementUtils.getTypeElement(this.qualifiedName!!))
 }
 
-fun KtClass.toImmutableType(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
+fun KtClass.toKotlinImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
     val (resolver, environment, sources) = ktClassToKsp(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = Context(resolver, environment)
     val classDeclarationByName = resolver.getClassDeclarationByName(this.fqName!!.asString())!!
     return context.typeOf(classDeclarationByName)
+}
+
+fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType(): CommonImmutableType {
+    return CommonImmutableType(
+        { this.name },
+        { this.superTypes.map { it.toCommonImmutableType() } },
+        {
+            this.declaredProperties.map { (name, prop) ->
+                CommonImmutableType.CommonImmutableProp(
+                    { name },
+                    { prop.declaringType.toCommonImmutableType() },
+                    { prop.targetType?.toCommonImmutableType() }
+                )
+            }
+        }
+    )
+}
+
+fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType(): CommonImmutableType {
+    return CommonImmutableType(
+        { this.name },
+        { this.superTypes.map { it.toCommonImmutableType() } },
+        {
+            this.declaredProps.map { (name, prop) ->
+                CommonImmutableType.CommonImmutableProp(
+                    { name },
+                    { prop.declaringType.toCommonImmutableType() },
+                    { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() }
+                )
+            }
+        }
+    )
+}
+
+data class CommonImmutableType(
+    val name: () -> String,
+    val superTypes: () -> List<CommonImmutableType>,
+    val properties: () -> List<CommonImmutableProp>,
+) {
+    data class CommonImmutableProp(
+        val name: () -> String,
+        val declaringType: () -> CommonImmutableType,
+        val targetType: () -> CommonImmutableType?,
+    )
 }
