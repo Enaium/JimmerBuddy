@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.resolve.constants.*
 /**
  * @author Enaium
  */
-class PsiShared232 : PsiShared {
+class PsiShared231 : PsiShared {
     override fun annotations(ktClass: KtClass): List<PsiShared.Annotation> {
         return ktClass.annotationEntries.map {
             PsiShared.Annotation(

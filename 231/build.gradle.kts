@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.intellij)
 }
 group = "cn.enaium"
-version = "${property("version")}-232"
+version = "${property("version")}-231"
 
 sourceSets {
     main {
@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2023.2")
+        intellijIdeaCommunity("2023.1")
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.kotlin")
     }
@@ -42,7 +42,7 @@ dependencies {
 
 tasks {
     patchPluginXml {
-        sinceBuild.set("232")
+        sinceBuild.set("231")
         untilBuild.set("242.*")
     }
 

@@ -17,7 +17,8 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import com.intellij.openapi.application.ApplicationManager
+import cn.enaium.jimmer.buddy.utility.runReadOnly
+import cn.enaium.jimmer.buddy.utility.thread
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -61,8 +62,8 @@ class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerLi
         val dtoFiles = listOf(file).filter { it.extension == "dto" }
         dtoFiles.isEmpty() && return
         JimmerBuddy.DEQ.schedule("EditorChange") {
-            ApplicationManager.getApplication().executeOnPooledThread {
-                ApplicationManager.getApplication().runReadAction {
+            thread {
+                runReadOnly {
                     if (!DumbService.isDumb(project)) {
                         if (JimmerBuddy.isJavaProject(project)) {
                             JimmerBuddy.init()

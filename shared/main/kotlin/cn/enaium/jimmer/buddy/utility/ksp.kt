@@ -290,7 +290,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     val sources = mutableListOf<Source>()
     return Ksp(
         resolver = createResolver(
-            project = ktClasses.first().second.project,
+            project = ktClasses.firstOrNull()?.second?.project,
             caches = ksClassDeclarationCaches,
             newFiles = ksFiles.asSequence()
         ),
@@ -377,7 +377,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
 }
 
 private fun createResolver(
-    project: Project,
+    project: Project?,
     caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
 ): Resolver {
@@ -475,7 +475,7 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
-            } ?: JavaPsiFacade.getInstance(project).findClass(name.toString(), project.allScope())
+            } ?: project?.let { JavaPsiFacade.getInstance(it).findClass(name.toString(), it.allScope()) }
                 ?.takeIf { it.isAnnotationType }?.let {
                     val fqName = it.qualifiedName!!
                     createKSClassDeclaration(
