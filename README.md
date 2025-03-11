@@ -20,4 +20,5 @@ A plugin that adds first-class support for Project Jimmer Features
 
 ![generate entity](https://s2.loli.net/2025/03/05/sWaZgDiRcblOw2x.png)
 
-![new dto file](https://s2.loli.net/2025/03/09/fMUpOA9kbugGl1m.gif)
+![new dto file](https://s2.loli.net/2025/03/11/gjAWhY8DiOKT5vz.gif)
+
