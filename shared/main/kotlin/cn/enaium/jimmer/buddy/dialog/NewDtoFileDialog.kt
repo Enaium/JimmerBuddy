@@ -144,7 +144,7 @@ class NewDtoFileDialog(
                 val oldDtoContent = dtoFile.readText()
                 val oldContent = DiffContentFactory.getInstance().create(oldDtoContent)
 
-                val newContent = DiffContentFactory.getInstance().create("$oldDtoContent\n\n$dtoContent")
+                val newContent = DiffContentFactory.getInstance().create("$oldDtoContent\n$dtoContent")
                 val diffRequest = SimpleDiffRequest("New DTO", oldContent, newContent, "Old DTO", "New DTO")
                 object : DialogWrapper(false) {
 
@@ -159,7 +159,7 @@ class NewDtoFileDialog(
                         }.component
                     }
                 }.showAndGet().ifTrue {
-                    dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
+                    dtoFile.writeText("$oldDtoContent\n$dtoContent")
                     JimmerBuddy.asyncRefresh(listOf(dtoFile))
                 }
             } else {
