@@ -123,7 +123,7 @@ class NewDtoFileDialog(
             val dtoHeadContent = dtoHeadTemplate.getText(
                 mapOf(
                     "IMMUTABLE_NAME" to model.immutableName,
-                    "PACKAGE_NAME" to "${model.packageName}.dto"
+                    "PACKAGE_NAME" to model.packageName
                 )
             )
             val dtoContentTemplate =
