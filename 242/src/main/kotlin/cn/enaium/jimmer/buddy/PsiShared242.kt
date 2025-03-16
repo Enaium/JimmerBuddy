@@ -17,6 +17,9 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
+import cn.enaium.jimmer.buddy.utility.createKSClassDeclaration
+import cn.enaium.jimmer.buddy.utility.createKSName
+import cn.enaium.jimmer.buddy.utility.createKSType
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
@@ -32,6 +35,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.constants.KClassValue.Value.NormalClass
 
 /**
  * @author Enaium
@@ -98,7 +102,7 @@ class PsiShared242 : PsiShared {
         if (isK2Enable()) {
             analyze(ktTypeReference) {
                 return PsiShared.Type(
-                    ktTypeReference.type.symbol?.classId?.asFqNameString()!!.replace("/", "."),
+                    ktTypeReference.type.symbol?.classId?.asSingleFqName()?.asString()!!.replace("/", "."),
                     ktTypeReference.type.isMarkedNullable,
                     ktTypeReference.type.symbol?.psi as? KtClass,
                     (ktTypeReference).arguments().map {
@@ -143,6 +147,25 @@ class PsiShared242 : PsiShared {
             BooleanValue::class -> this.value.toString().toBoolean()
             ArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
             TypedArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
+            KClassValue::class -> (this.value as? NormalClass)?.classId?.asSingleFqName()?.asString()?.replace("/", ".")
+                ?.let {
+                    createKSType(
+                        declaration = {
+                            createKSClassDeclaration(
+                                qualifiedName = {
+                                    createKSName(it)
+                                },
+                                simpleName = {
+                                    createKSName(it.substringAfterLast("."))
+                                },
+                                packageName = {
+                                    createKSName(it.substringBeforeLast("."))
+                                }
+                            )
+                        }
+                    )
+                }
+
             else -> {
                 null
             }
@@ -153,6 +176,25 @@ class PsiShared242 : PsiShared {
         return when (this) {
             is KaAnnotationValue.ConstantValue -> this.value.toAny()
             is KaAnnotationValue.ArrayValue -> this.values.map { it.toAny() }
+            is KaAnnotationValue.ClassLiteralValue -> this.classId?.asSingleFqName()?.asString()?.replace("/", ".")
+                ?.let {
+                    createKSType(
+                        declaration = {
+                            createKSClassDeclaration(
+                                qualifiedName = {
+                                    createKSName(it)
+                                },
+                                simpleName = {
+                                    createKSName(it.substringAfterLast("."))
+                                },
+                                packageName = {
+                                    createKSName(it.substringBeforeLast("."))
+                                }
+                            )
+                        }
+                    )
+                }
+
             else -> {
                 null
             }

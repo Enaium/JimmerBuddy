@@ -20,9 +20,6 @@ import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
-import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
-import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -290,7 +287,6 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     val sources = mutableListOf<Source>()
     return Ksp(
         resolver = createResolver(
-            project = ktClasses.firstOrNull()?.second?.project,
             caches = ksClassDeclarationCaches,
             newFiles = ksFiles.asSequence()
         ),
@@ -377,7 +373,6 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
 }
 
 private fun createResolver(
-    project: Project?,
     caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
 ): Resolver {
@@ -475,17 +470,12 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
-            } ?: project?.let { JavaPsiFacade.getInstance(it).findClass(name.toString(), it.allScope()) }
-                ?.takeIf { it.isAnnotationType }?.let {
-                    val fqName = it.qualifiedName!!
-                    createKSClassDeclaration(
-                        classKind = { ClassKind.ANNOTATION_CLASS },
-                        qualifiedName = { createKSName(fqName) },
-                        simpleName = { createKSName(fqName.substringAfterLast(".")) },
-                        packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                        annotations = { emptySequence() }
-                    )
-                }
+            } ?: createKSClassDeclaration(
+                classKind = { ClassKind.CLASS },
+                qualifiedName = { createKSName(name.asString()) },
+                simpleName = { createKSName(name.asString().substringAfterLast(".")) },
+                packageName = { createKSName(name.asString().substringBeforeLast(".")) },
+            )
         }
 
         @KspExperimental
@@ -644,7 +634,7 @@ private fun createAnnotation(annotation: KClass<out Annotation>): KSAnnotation {
     )
 }
 
-private fun createKSName(name: String): KSName {
+fun createKSName(name: String): KSName {
     return object : KSName {
         override fun asString(): String {
             return name
@@ -699,7 +689,7 @@ fun createKSFile(
     }
 }
 
-private fun createKSType(
+fun createKSType(
     qualifiedName: String? = null,
     annotations: () -> Sequence<KSAnnotation> = { emptySequence() },
     arguments: () -> List<KSTypeArgument> = { emptyList() },
@@ -769,7 +759,7 @@ private fun createKSType(
     }
 }
 
-private fun createKSClassDeclaration(
+fun createKSClassDeclaration(
     qualifiedName: () -> KSName? = { TODO("Not yet implemented") },
     classKind: () -> ClassKind = { TODO("${qualifiedName()} Not yet implemented") },
     isCompanionObject: () -> Boolean = { TODO("${qualifiedName()} Not yet implemented") },

@@ -17,6 +17,9 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.PsiShared
+import cn.enaium.jimmer.buddy.utility.createKSClassDeclaration
+import cn.enaium.jimmer.buddy.utility.createKSName
+import cn.enaium.jimmer.buddy.utility.createKSType
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
@@ -26,6 +29,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.constants.*
+import org.jetbrains.kotlin.resolve.constants.KClassValue.Value.NormalClass
 
 /**
  * @author Enaium
@@ -94,6 +98,24 @@ class PsiShared231 : PsiShared {
             BooleanValue::class -> this.value.toString().toBoolean()
             ArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
             TypedArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
+            KClassValue::class -> (this.value as? NormalClass)?.classId?.asSingleFqName()?.asString()?.replace("/", ".")
+                ?.let {
+                    createKSType(
+                        declaration = {
+                            createKSClassDeclaration(
+                                qualifiedName = {
+                                    createKSName(it)
+                                },
+                                simpleName = {
+                                    createKSName(it.substringAfterLast("."))
+                                },
+                                packageName = {
+                                    createKSName(it.substringBeforeLast("."))
+                                }
+                            )
+                        }
+                    )
+                }
             else -> {
                 null
             }
