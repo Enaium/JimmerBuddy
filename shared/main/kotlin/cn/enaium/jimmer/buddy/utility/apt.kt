@@ -28,7 +28,6 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
-import org.jetbrains.kotlin.idea.base.util.allScope
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
@@ -47,7 +46,6 @@ import javax.lang.model.util.Types
 import javax.tools.*
 import javax.tools.JavaFileObject.Kind
 import kotlin.io.path.Path
-import kotlin.reflect.KClass
 
 /**
  * @author Enaium
@@ -117,7 +115,7 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                         },
                         getAnnotationMirrors = {
                             method.modifierList.annotations.mapNotNull {
-                                it.findAnnotation()?.annotationClass?.let {
+                                it.findAnnotation()?.let {
                                     createAnnotationMirror(
                                         it
                                     )
@@ -350,10 +348,17 @@ fun psiClassesToApt(
                                         asElement = { numberTypeElement })
                                 })
                         } else {
-                            cacheClasses.firstOrNull()?.let {
-                                JavaPsiFacade.getInstance(it.project).findClass(name.toString(), it.project.allScope())
-                                    ?.takeIf { it.isAnnotationType }?.asTypeElement()
-                            }
+                            createTypeElement(
+                                getKind = { ElementKind.CLASS },
+                                getQualifiedName = { createName(name.toString()) },
+                                getSimpleName = { createName(name.toString().substringAfterLast(".")) },
+                                getEnclosingElement = {
+                                    createPackageElement(
+                                        getQualifiedName = { createName(name.toString().substringBeforeLast(".")) }
+                                    )
+                                },
+                                getEnclosedElements = { emptyList() }
+                            )
                         }
                     }
 
@@ -719,20 +724,43 @@ private fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
     }
 }
 
+private fun createAnnotationValue(
+    value: Any? = null,
+): AnnotationValue {
+    return object : AnnotationValue {
+        override fun getValue(): Any? {
+            TODO("Not yet implemented")
+        }
+
+        override fun <R : Any?, P : Any?> accept(
+            v: AnnotationValueVisitor<R, P>?,
+            p: P?
+        ): R? {
+            return v?.visit(this, p)
+        }
+    }
+}
+
 private fun createAnnotationMirror(
-    annotationType: KClass<out Annotation>
+    anno: Annotation
 ): AnnotationMirror {
     return object : AnnotationMirror {
         override fun getAnnotationType(): DeclaredType {
             return createDeclaredType(
-                getQualifiedName = { annotationType.qualifiedName!! },
+                getQualifiedName = { anno.annotationClass.qualifiedName!! },
                 asElement = {
                     createTypeElement(
-                        getQualifiedName = { createName(annotationType.qualifiedName!!) },
-                        getSimpleName = { createName(annotationType.simpleName!!) },
+                        getQualifiedName = { createName(anno.annotationClass.qualifiedName!!) },
+                        getSimpleName = { createName(anno.annotationClass.simpleName!!) },
                         getEnclosingElement = {
                             createPackageElement(
-                                getQualifiedName = { createName(annotationType.qualifiedName!!.substringBeforeLast(".")) }
+                                getQualifiedName = {
+                                    createName(
+                                        anno.annotationClass.qualifiedName!!.substringBeforeLast(
+                                            "."
+                                        )
+                                    )
+                                }
                             )
                         }
                     )
@@ -740,7 +768,27 @@ private fun createAnnotationMirror(
         }
 
         override fun getElementValues(): Map<out ExecutableElement, AnnotationValue> {
-            return emptyMap()
+            return if (listOf(Transient::class.qualifiedName).any { it == anno.annotationClass.qualifiedName }) {
+                anno.javaClass.methods.filter { f ->
+                    Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
+                }.mapNotNull { method ->
+                    try {
+                        createAnnotationValue(
+                            anno.javaClass.getMethod(method.name).also {
+                                it.isAccessible = true
+                            }.invoke(anno),
+                        )
+                    } catch (_: Throwable) {
+                        null
+                    }?.let {
+                        createExecutableElement(
+                            getSimpleName = { createName(method.name) },
+                        ) to it
+                    }
+                }.toMap()
+            } else {
+                emptyMap()
+            }
         }
     }
 }
