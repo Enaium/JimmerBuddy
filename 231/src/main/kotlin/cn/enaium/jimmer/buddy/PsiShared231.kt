@@ -81,7 +81,6 @@ class PsiShared231 : PsiShared {
                             DescriptorToSourceUtils.getSourceFromDescriptor(
                                 it
                             ) as? KtClass
-                                ?: (ktTypeReference.typeElement as? KtUserType)?.referenceExpression?.mainReference?.resolve() as? KtClass
                         },
                     )
                 }

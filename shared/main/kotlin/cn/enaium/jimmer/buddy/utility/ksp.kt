@@ -160,15 +160,38 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                 resolve = {
                                     createKSType(
                                         arguments = {
-                                            typeReference.arguments.mapNotNull { argument ->
-                                                val ktClass = argument.ktClass ?: return@mapNotNull null
+                                            typeReference.arguments.map { argument ->
+                                                val ktClass = argument.ktClass
                                                 createKSTypeArgument(
                                                     type = {
                                                         createKSTypeReference(
                                                             resolve = {
                                                                 createKSType(
                                                                     declaration = {
-                                                                        ktClass.asKSClassDeclaration(caches)
+                                                                        ktClass?.asKSClassDeclaration(caches)
+                                                                            ?: createKSClassDeclaration(
+                                                                                classKind = { ClassKind.CLASS },
+                                                                                qualifiedName = { createKSName(argument.fqName) },
+                                                                                simpleName = {
+                                                                                    createKSName(
+                                                                                        argument.fqName.substringAfterLast(
+                                                                                            "."
+                                                                                        )
+                                                                                    )
+                                                                                },
+                                                                                packageName = {
+                                                                                    createKSName(
+                                                                                        argument.fqName.substringBeforeLast(
+                                                                                            "."
+                                                                                        )
+                                                                                    )
+                                                                                },
+                                                                                asStarProjectedType = {
+                                                                                    createKSType(
+                                                                                        qualifiedName = argument.fqName
+                                                                                    )
+                                                                                }
+                                                                            )
                                                                     }
                                                                 )
                                                             }
