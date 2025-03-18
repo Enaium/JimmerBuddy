@@ -38,6 +38,7 @@ import org.babyfish.jimmer.apt.dto.DtoGenerator
 import org.babyfish.jimmer.apt.entry.EntryProcessor
 import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
+import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.dto.compiler.DtoFile
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.dto.compiler.OsFile
@@ -139,6 +140,7 @@ object JimmerBuddy {
 
     fun sourcesProcessJava(project: Project, projects: Map<Path, List<Path>>) {
         LOG.info("SourcesProcessJava Project:${projects.map { it.key.name }}")
+        val needRefresh = mutableListOf<Pair<Source, Path>>()
         projects.forEach { (projectDir, sourceFiles) ->
             sourceFiles.isEmpty() && return@forEach
             val psiCaches = CopyOnWriteArraySet<PsiClass>()
@@ -159,7 +161,6 @@ object JimmerBuddy {
             LOG.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${javaImmutablePsiClassCache.size}")
 
             val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-            generatedDir.createDirectories()
 
             val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
             val context = createContext(
@@ -178,24 +179,43 @@ object JimmerBuddy {
             val roundEnv = createRoundEnvironment(rootElements)
 
             try {
-                val immutableTypeElements = ImmutableProcessor(context, pe.messager).process(roundEnv).keys
-                EntryProcessor(context, immutableTypeElements).process()
+                val immutableProcessor = ImmutableProcessor(context, pe.messager)
+                val immutableTypeElements = try {
+                    ImmutableProcessor::class.java.getDeclaredMethod(
+                        "parseImmutableTypes",
+                        RoundEnvironment::class.java
+                    )
+                } catch (_: Throwable) {
+                    null
+                }?.let {
+                    it.isAccessible = true
+                    it.invoke(immutableProcessor, roundEnv) as Map<TypeElement, ImmutableType>
+                } ?: emptyMap()
+
+                ImmutableProcessor::class.java.declaredMethods.find { it.name == "generateJimmerTypes" }?.also {
+                    it.isAccessible = true
+                    it.invoke(
+                        immutableProcessor,
+                        immutableTypeElements.filter { ite ->
+                            psiCaches.mapNotNull { it.qualifiedName }.any { it == ite.value.qualifiedName }
+                        })
+                }
+
+                EntryProcessor(context, immutableTypeElements.keys).process()
                 ErrorProcessor(context, false).process(roundEnv)
-                asyncRefresh(sources.map {
-                    val path = generatedDir.resolve(it.packageName.replace(".", "/"))
-                        .resolve("${it.fileName}.${it.extensionName}")
-                    path.parent.createDirectories()
-                    path.writeText(it.content)
-                    path
-                })
+                sources.forEach {
+                    needRefresh.add(it to generatedDir)
+                }
             } catch (e: Throwable) {
                 LOG.error(e)
             }
+            asyncRefreshSources(needRefresh)
             javaImmutablePsiClassCache.addAll(psiCaches)
         }
     }
 
     fun dtoProcessJava(project: Project, dtoFiles: List<Path>) {
+        val needRefresh = mutableListOf<Pair<Source, Path>>()
         LOG.info("DtoProcessJava Project:${dtoFiles.joinToString(", ") { it.name }}")
         val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
         val context = createContext(
@@ -232,20 +252,18 @@ object JimmerBuddy {
                 }
                 val projectDir = findProjectDir(it) ?: return@forEach
                 val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                asyncRefresh(sources.map {
-                    val path = generatedDir.resolve(it.packageName.replace(".", "/"))
-                        .resolve("${it.fileName}.${it.extensionName}")
-                    path.parent.createDirectories()
-                    path.writeText(it.content)
-                    path
-                })
+                sources.forEach {
+                    needRefresh.add(it to generatedDir)
+                }
             } catch (e: Throwable) {
                 LOG.error(e)
             }
         }
+        asyncRefreshSources(needRefresh)
     }
 
     fun sourceProcessKotlin(project: Project, projects: Map<Path, List<Path>>) {
+        val needRefresh = mutableListOf<Pair<Source, Path>>()
         LOG.info("SourceProcessKotlin Project:${projects.map { it.key.name }}")
         projects.forEach { projectDir, sourceFiles ->
             sourceFiles.isEmpty() && return@forEach
@@ -265,28 +283,25 @@ object JimmerBuddy {
             LOG.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${kotlinImmutableKtClassCache.size}")
 
             val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-            generatedDir.createDirectories()
 
             val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
             try {
                 val context = Context(resolver, environment)
                 org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(context, false).process()
                 org.babyfish.jimmer.ksp.error.ErrorProcessor(context, true).process()
-                asyncRefresh(files = sources.map { source ->
-                    val path = generatedDir.resolve(source.packageName.replace(".", "/"))
-                        .resolve("${source.fileName}.${source.extensionName}")
-                    path.parent.createDirectories()
-                    path.writeText(source.content)
-                    path
-                })
+                sources.forEach {
+                    needRefresh.add(it to generatedDir)
+                }
             } catch (e: Throwable) {
                 LOG.error(e)
             }
             kotlinImmutableKtClassCache.addAll(ktClassCaches)
         }
+        asyncRefreshSources(needRefresh)
     }
 
     fun dtoProcessKotlin(project: Project, dtoFiles: List<Path>) {
+        val needRefresh = mutableListOf<Pair<Source, Path>>()
         LOG.info("DtoProcessKotlin Project:${dtoFiles.joinToString(", ") { it.name }}")
         val (resolver, environment, sources) = ktClassToKsp(
             CopyOnWriteArraySet(),
@@ -319,18 +334,14 @@ object JimmerBuddy {
                 }
                 val projectDir = findProjectDir(it) ?: return@forEach
                 val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                generatedDir.createDirectories()
-                asyncRefresh(sources.map { source ->
-                    val path = generatedDir.resolve(source.packageName.replace(".", "/"))
-                        .resolve("${source.fileName}.${source.extensionName}")
-                    path.parent.createDirectories()
-                    path.writeText(source.content)
-                    path
-                })
+                sources.forEach {
+                    needRefresh.add(it to generatedDir)
+                }
             } catch (e: Throwable) {
                 LOG.error(e)
             }
         }
+        asyncRefreshSources(needRefresh)
     }
 
 
@@ -410,6 +421,16 @@ object JimmerBuddy {
         } else {
             return null
         }
+    }
+
+    fun asyncRefreshSources(sources: List<Pair<Source, Path>>) {
+        asyncRefresh(files = sources.map { source ->
+            val path = source.second.resolve(source.first.packageName.replace(".", "/"))
+                .resolve("${source.first.fileName}.${source.first.extensionName}")
+            path.createParentDirectories()
+            path.writeText(source.first.content)
+            path
+        })
     }
 
     fun asyncRefresh(files: List<Path>) {
