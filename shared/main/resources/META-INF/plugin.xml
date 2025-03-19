@@ -38,6 +38,46 @@
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="kotlin" id="JimmerBuddy.KotlinLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
+        <localInspection
+                displayName="Immutable annotation must be used on an interface"
+                shortName="JavaImmutableAnnotation"
+                groupName="Jimmer"
+                language="JAVA"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.ImmutableAnnotationInspection"
+        />
+        <localInspection
+                displayName="Immutable annotation must be used on an interface"
+                shortName="KotlinImmutableAnnotation"
+                groupName="Jimmer"
+                language="kotlin"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.ImmutableAnnotationInspection"
+        />
+        <localInspection
+                displayName="Association annotation must be @ToOne or @ToMany"
+                shortName="JavaAssociationAnnotation"
+                groupName="Jimmer"
+                language="JAVA"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.AssociationAnnotationInspection"
+        />
+        <localInspection
+                displayName="Association annotation must be @ToOne or @ToMany"
+                shortName="KotlinAssociationAnnotation"
+                groupName="Jimmer"
+                language="kotlin"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.AssociationAnnotationInspection"
+        />
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

@@ -18,27 +18,31 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiMethod
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
-import org.babyfish.jimmer.sql.Embeddable
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.MappedSuperclass
+import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtProperty
 
 /**
  * @author Enaium
  */
-fun PsiClass.isJimmerImmutableType(): Boolean {
+fun PsiClass.hasImmutableAnnotation(): Boolean {
     return this.modifierList?.annotations?.any { annotation ->
         annotation.hasQualifiedName(Immutable::class.qualifiedName!!)
                 || annotation.hasQualifiedName(Entity::class.qualifiedName!!)
                 || annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
                 || annotation.hasQualifiedName(Embeddable::class.qualifiedName!!)
                 || annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
-    } == true && this.isInterface
+    } == true
 }
 
-fun KtClass.isJimmerImmutableType(): Boolean {
+fun PsiClass.isJimmerImmutableType(): Boolean {
+    return this.hasImmutableAnnotation() && this.isInterface
+}
+
+fun KtClass.hasImmutableAnnotation(): Boolean {
     return PSI_SHARED.annotations(this).any { annotation ->
         val fqName = annotation.fqName
         fqName == Immutable::class.qualifiedName!!
@@ -46,5 +50,39 @@ fun KtClass.isJimmerImmutableType(): Boolean {
                 || fqName == MappedSuperclass::class.qualifiedName!!
                 || fqName == Embeddable::class.qualifiedName!!
                 || fqName == ErrorFamily::class.qualifiedName!!
-    } == true && this.isInterface()
+    } == true
+}
+
+fun KtClass.isJimmerImmutableType(): Boolean {
+    return this.hasImmutableAnnotation() && this.isInterface()
+}
+
+fun PsiMethod.hasToManyAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(OneToMany::class.qualifiedName!!)
+                || annotation.hasQualifiedName(ManyToMany::class.qualifiedName!!)
+    } == true
+}
+
+fun PsiMethod.hasToOneAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(OneToOne::class.qualifiedName!!)
+                || annotation.hasQualifiedName(ManyToOne::class.qualifiedName!!)
+    } == true
+}
+
+fun KtProperty.hasToManyAnnotation(): Boolean {
+    return PSI_SHARED.annotations(this).any { annotation ->
+        val fqName = annotation.fqName
+        fqName == OneToMany::class.qualifiedName!!
+                || fqName == ManyToMany::class.qualifiedName!!
+    } == true
+}
+
+fun KtProperty.hasToOneAnnotation(): Boolean {
+    return PSI_SHARED.annotations(this).any { annotation ->
+        val fqName = annotation.fqName
+        fqName == OneToOne::class.qualifiedName!!
+                || fqName == ManyToOne::class.qualifiedName!!
+    } == true
 }
