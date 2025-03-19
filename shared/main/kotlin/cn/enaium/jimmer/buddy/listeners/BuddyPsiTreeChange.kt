@@ -19,12 +19,16 @@ package cn.enaium.jimmer.buddy.listeners
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjectDir
 import cn.enaium.jimmer.buddy.utility.isGeneratedFile
+import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeEvent
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import kotlin.io.path.extension
 
 /**
@@ -67,7 +71,9 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
             ApplicationManager.getApplication().executeOnPooledThread {
                 ApplicationManager.getApplication().runReadAction {
                     if (!DumbService.isDumb(project)) {
-                        if (JimmerBuddy.isJavaProject(project)) {
+                        if (JimmerBuddy.isJavaProject(project) && psiFile.getChildOfType<PsiClass>()
+                                ?.isJimmerImmutableType() == true
+                        ) {
                             JimmerBuddy.init()
                             JimmerBuddy.sourcesProcessJava(
                                 project,
@@ -76,7 +82,9 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                                         ?: return@runReadAction) to listOf(path).filter { it.extension == "java" }
                                         .also { if (it.isEmpty()) return@runReadAction })
                             )
-                        } else if (JimmerBuddy.isKotlinProject(project)) {
+                        } else if (JimmerBuddy.isKotlinProject(project) && psiFile.getChildOfType<KtClass>()
+                                ?.isJimmerImmutableType() == true
+                        ) {
                             JimmerBuddy.init()
                             JimmerBuddy.sourceProcessKotlin(
                                 project,

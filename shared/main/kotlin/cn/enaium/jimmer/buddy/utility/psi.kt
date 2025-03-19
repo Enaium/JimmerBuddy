@@ -35,7 +35,7 @@ fun PsiClass.isJimmerImmutableType(): Boolean {
                 || annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
                 || annotation.hasQualifiedName(Embeddable::class.qualifiedName!!)
                 || annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
-    } == true
+    } == true && this.isInterface
 }
 
 fun KtClass.isJimmerImmutableType(): Boolean {
@@ -46,5 +46,5 @@ fun KtClass.isJimmerImmutableType(): Boolean {
                 || fqName == MappedSuperclass::class.qualifiedName!!
                 || fqName == Embeddable::class.qualifiedName!!
                 || fqName == ErrorFamily::class.qualifiedName!!
-    } == true
+    } == true && this.isInterface()
 }
