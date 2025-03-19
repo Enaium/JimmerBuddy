@@ -34,6 +34,10 @@
         <moduleBuilder builderClass="cn.enaium.jimmer.buddy.wizard.JimmerProjectBuilderAdapter" order="first"/>
         <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
+        <codeInsight.lineMarkerProvider language="JAVA" id="JimmerBuddy.JavaLineMark"
+                                        implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="kotlin" id="JimmerBuddy.KotlinLineMark"
+                                        implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

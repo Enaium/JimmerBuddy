@@ -72,6 +72,7 @@ object JimmerBuddy {
         val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
         val LOGO_NORMAL = IconLoader.getIcon("/icons/normal.svg", JimmerBuddy::class.java)
         val IMMUTABLE = IconLoader.getIcon("/icons/immutable.svg", JimmerBuddy::class.java)
+        val PROP = IconLoader.getIcon("/icons/prop.svg", JimmerBuddy::class.java)
         val DTO = IconLoader.getIcon("/icons/dto.svg", JimmerBuddy::class.java)
     }
 

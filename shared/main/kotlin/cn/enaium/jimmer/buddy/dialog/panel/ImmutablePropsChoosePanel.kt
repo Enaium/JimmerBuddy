@@ -16,11 +16,11 @@
 
 package cn.enaium.jimmer.buddy.dialog.panel
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.ui.CheckboxTree
@@ -128,11 +128,11 @@ class ImmutablePropsChoosePanel(
             hasFocus: Boolean
         ) {
             textRenderer.icon = when (value) {
-                is ImmutableTypeNode -> AllIcons.Nodes.Interface
+                is ImmutableTypeNode -> JimmerBuddy.Icons.IMMUTABLE
                 is ImmutablePropNode -> if (leaf) {
-                    AllIcons.Nodes.Property
+                    JimmerBuddy.Icons.PROP
                 } else {
-                    AllIcons.Nodes.Interface
+                    JimmerBuddy.Icons.IMMUTABLE
                 }
 
                 else -> null
