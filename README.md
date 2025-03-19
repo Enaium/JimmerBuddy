@@ -2,6 +2,8 @@
 
 A plugin that adds first-class support for Project Jimmer
 
+![](https://s2.loli.net/2025/03/19/bChkJ7Sidp2QOXy.png)
+
 ## Features
 
 - Automatically generate class for immutable, error, dto etc.
@@ -9,6 +11,7 @@ A plugin that adds first-class support for Project Jimmer
 - Generate entity from database or ddl.
 - Jimmer Project Wizard.
 - Generate DTO file for immutable.
+- Inspection for immutable.
 
 ## Screenshots
 
@@ -22,3 +25,6 @@ A plugin that adds first-class support for Project Jimmer
 
 ![new dto file](https://s2.loli.net/2025/03/11/gjAWhY8DiOKT5vz.gif)
 
+![inspection](https://s2.loli.net/2025/03/19/GYUof7MaizypW9B.png)
+
+![inspection](https://s2.loli.net/2025/03/19/WSbH2kPVGIwZ4Lr.png)
