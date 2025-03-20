@@ -38,7 +38,7 @@ class PsiShared231 : PsiShared {
     override fun annotations(ktClass: KtClass): List<PsiShared.Annotation> {
         return ktClass.annotationEntries.map {
             PsiShared.Annotation(
-                it.annotation()?.fqName!!.asString(),
+                it.annotation()?.fqName?.asString(),
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiShared.Annotation.Argument(
                         name.asString(),
@@ -52,7 +52,7 @@ class PsiShared231 : PsiShared {
     override fun annotations(ktProperty: KtProperty): List<PsiShared.Annotation> {
         return ktProperty.annotationEntries.map {
             PsiShared.Annotation(
-                it.annotation()?.fqName!!.asString(),
+                it.annotation()?.fqName?.asString(),
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiShared.Annotation.Argument(
                         name.asString(),
@@ -65,7 +65,7 @@ class PsiShared231 : PsiShared {
     override fun type(ktTypeReference: KtTypeReference): PsiShared.Type {
         return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
             PsiShared.Type(
-                it.fqName!!.asString(),
+                it.fqName?.asString(),
                 it.isMarkedNullable,
                 (it.constructor.declarationDescriptor as? ClassDescriptor)?.let {
                     DescriptorToSourceUtils.getSourceFromDescriptor(
@@ -75,7 +75,7 @@ class PsiShared231 : PsiShared {
                 },
                 it.arguments.map { arg ->
                     PsiShared.Type(
-                        arg.type.fqName!!.asString(),
+                        arg.type.fqName?.asString(),
                         arg.type.isMarkedNullable,
                         (arg.type.constructor.declarationDescriptor as? ClassDescriptor)?.let {
                             DescriptorToSourceUtils.getSourceFromDescriptor(
@@ -115,6 +115,7 @@ class PsiShared231 : PsiShared {
                         }
                     )
                 }
+
             else -> {
                 null
             }

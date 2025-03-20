@@ -24,12 +24,12 @@ import org.jetbrains.kotlin.psi.KtTypeReference
  * @author Enaium
  */
 interface PsiShared {
-    data class Annotation(val fqName: String, val arguments: List<Argument>) {
+    data class Annotation(val fqName: String?, val arguments: List<Argument>) {
         data class Argument(val name: String, val value: Any?)
     }
 
     data class Type(
-        val fqName: String,
+        val fqName: String?,
         val nullable: Boolean,
         val ktClass: KtClass?,
         val arguments: List<Type> = emptyList()

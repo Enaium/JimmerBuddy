@@ -50,7 +50,7 @@ class PsiShared242 : PsiShared {
             analyze(ktClass) {
                 return ktClass.symbol.annotations.map {
                     PsiShared.Annotation(
-                        it.classId?.asFqNameString()!!.replace("/", "."),
+                        it.classId?.asFqNameString()?.replace("/", "."),
                         it.arguments.map { argument ->
                             PsiShared.Annotation.Argument(argument.name.asString(), argument.expression.toAny())
                         }
@@ -60,7 +60,7 @@ class PsiShared242 : PsiShared {
         } else {
             return ktClass.annotationEntries.map {
                 PsiShared.Annotation(
-                    it.annotation()?.fqName!!.asString(),
+                    it.annotation()?.fqName?.asString(),
                     it.annotation()?.allValueArguments?.map { (name, value) ->
                         PsiShared.Annotation.Argument(
                             name.asString(),
@@ -76,7 +76,7 @@ class PsiShared242 : PsiShared {
             analyze(ktProperty) {
                 return ktProperty.symbol.annotations.map {
                     PsiShared.Annotation(
-                        it.classId?.asFqNameString()!!.replace("/", "."),
+                        it.classId?.asFqNameString()?.replace("/", "."),
                         it.arguments.map { argument ->
                             PsiShared.Annotation.Argument(argument.name.asString(), argument.expression.toAny())
                         }
@@ -86,7 +86,7 @@ class PsiShared242 : PsiShared {
         } else {
             return ktProperty.annotationEntries.map {
                 PsiShared.Annotation(
-                    it.annotation()?.fqName!!.asString(),
+                    it.annotation()?.fqName?.asString(),
                     it.annotation()?.allValueArguments?.map { (name, value) ->
                         PsiShared.Annotation.Argument(
                             name.asString(),
@@ -102,7 +102,7 @@ class PsiShared242 : PsiShared {
         if (isK2Enable()) {
             analyze(ktTypeReference) {
                 return PsiShared.Type(
-                    ktTypeReference.type.symbol?.classId?.asSingleFqName()?.asString()!!.replace("/", "."),
+                    ktTypeReference.type.symbol?.classId?.asSingleFqName()?.asString()?.replace("/", "."),
                     ktTypeReference.type.isMarkedNullable,
                     ktTypeReference.type.symbol?.psi as? KtClass,
                     (ktTypeReference).arguments().map {
@@ -113,7 +113,7 @@ class PsiShared242 : PsiShared {
         } else {
             return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
                 PsiShared.Type(
-                    it.fqName!!.asString(),
+                    it.fqName?.asString(),
                     it.isMarkedNullable,
                     (it.constructor.declarationDescriptor as? ClassDescriptor)?.let {
                         DescriptorToSourceUtils.getSourceFromDescriptor(
@@ -123,7 +123,7 @@ class PsiShared242 : PsiShared {
                     },
                     it.arguments.map { arg ->
                         PsiShared.Type(
-                            arg.type.fqName!!.asString(),
+                            arg.type.fqName?.asString(),
                             arg.type.isMarkedNullable,
                             (arg.type.constructor.declarationDescriptor as? ClassDescriptor)?.let {
                                 DescriptorToSourceUtils.getSourceFromDescriptor(

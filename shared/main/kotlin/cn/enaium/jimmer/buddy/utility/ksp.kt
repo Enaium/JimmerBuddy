@@ -29,7 +29,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.reflect.KClass
 
 /**
  * @author Enaium
@@ -64,7 +63,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
         parentDeclaration = { null },
         annotations = {
-            PSI_SHARED.annotations(this).map { annotation ->
+            PSI_SHARED.annotations(this).mapNotNull { annotation ->
+                val fqName = annotation.fqName ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType = createKSTypeReference(
                         resolve = {
@@ -72,9 +72,9 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                 declaration = {
                                     createKSClassDeclaration(
                                         classKind = { ClassKind.ANNOTATION_CLASS },
-                                        qualifiedName = { createKSName(annotation.fqName) },
-                                        simpleName = { createKSName(annotation.fqName.substringAfterLast(".")) },
-                                        packageName = { createKSName(annotation.fqName.substringBeforeLast(".")) },
+                                        qualifiedName = { createKSName(fqName) },
+                                        simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                                        packageName = { createKSName(fqName.substringBeforeLast(".")) },
                                         annotations = { emptySequence() }
                                     )
                                 }
@@ -82,7 +82,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                         }
                     ),
                     shortName = {
-                        createKSName(annotation.fqName.substringAfterLast("."))
+                        createKSName(fqName.substringAfterLast("."))
                     },
                     arguments = {
                         annotation.arguments.map { argument ->
@@ -98,9 +98,9 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         declarations = {
             if (this.isInterface()) {
                 this.getProperties().mapNotNull { property ->
-                    val typeReference =
-                        property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
+                    val typeReference = property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
                     val typeReferenceClass = typeReference.ktClass
+                    val fqName = typeReference.fqName ?: return@mapNotNull null
                     createKSPropertyDeclaration(
                         qualifiedName = {
                             createKSName(property.fqName!!.asString())
@@ -109,7 +109,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                             createKSName(property.name!!)
                         },
                         annotations = {
-                            PSI_SHARED.annotations(property).map { annotation ->
+                            PSI_SHARED.annotations(property).mapNotNull { annotation ->
+                                val fqName = annotation.fqName ?: return@mapNotNull null
                                 createKSAnnotation(
                                     annotationType = createKSTypeReference(
                                         resolve = {
@@ -117,15 +118,15 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                 declaration = {
                                                     createKSClassDeclaration(
                                                         classKind = { ClassKind.ANNOTATION_CLASS },
-                                                        qualifiedName = { createKSName(annotation.fqName) },
+                                                        qualifiedName = { createKSName(fqName) },
                                                         simpleName = {
                                                             createKSName(
-                                                                annotation.fqName.substringAfterLast(".")
+                                                                fqName.substringAfterLast(".")
                                                             )
                                                         },
                                                         packageName = {
                                                             createKSName(
-                                                                annotation.fqName.substringBeforeLast(".")
+                                                                fqName.substringBeforeLast(".")
                                                             )
                                                         },
                                                         annotations = { emptySequence() }
@@ -135,7 +136,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                         }
                                     ),
                                     shortName = {
-                                        createKSName(annotation.fqName.substringAfterLast("."))
+                                        createKSName(fqName.substringAfterLast("."))
                                     },
                                     arguments = {
                                         annotation.arguments.map { argument ->
@@ -160,7 +161,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                 resolve = {
                                     createKSType(
                                         arguments = {
-                                            typeReference.arguments.map { argument ->
+                                            typeReference.arguments.mapNotNull { argument ->
+                                                val fqName = argument.fqName ?: return@mapNotNull null
                                                 val ktClass = argument.ktClass
                                                 createKSTypeArgument(
                                                     type = {
@@ -171,24 +173,24 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                                         ktClass?.asKSClassDeclaration(caches)
                                                                             ?: createKSClassDeclaration(
                                                                                 classKind = { ClassKind.CLASS },
-                                                                                qualifiedName = { createKSName(argument.fqName) },
+                                                                                qualifiedName = { createKSName(fqName) },
                                                                                 simpleName = {
                                                                                     createKSName(
-                                                                                        argument.fqName.substringAfterLast(
+                                                                                        fqName.substringAfterLast(
                                                                                             "."
                                                                                         )
                                                                                     )
                                                                                 },
                                                                                 packageName = {
                                                                                     createKSName(
-                                                                                        argument.fqName.substringBeforeLast(
+                                                                                        fqName.substringBeforeLast(
                                                                                             "."
                                                                                         )
                                                                                     )
                                                                                 },
                                                                                 asStarProjectedType = {
                                                                                     createKSType(
-                                                                                        qualifiedName = argument.fqName
+                                                                                        qualifiedName = fqName
                                                                                     )
                                                                                 }
                                                                             )
@@ -205,16 +207,16 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                             typeReferenceClass?.asKSClassDeclaration(caches)
                                                 ?: createKSClassDeclaration(
                                                     classKind = { ClassKind.CLASS },
-                                                    qualifiedName = { createKSName(typeReference.fqName) },
+                                                    qualifiedName = { createKSName(fqName) },
                                                     simpleName = {
                                                         createKSName(
-                                                            typeReference.fqName
+                                                            fqName
                                                                 .substringAfterLast(".")
                                                         )
                                                     },
                                                     packageName = {
                                                         createKSName(
-                                                            typeReference.fqName
+                                                            fqName
                                                                 .substringBeforeLast(".")
                                                         )
                                                     },
@@ -222,7 +224,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                         createKSType(
                                                             declaration = {
                                                                 createKSClassDeclaration(
-                                                                    qualifiedName = { createKSName(typeReference.fqName) },
+                                                                    qualifiedName = { createKSName(fqName) },
                                                                 )
                                                             }
                                                         )
@@ -242,7 +244,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                 )
                             }
                         },
-                        parentDeclaration = { caches[fqName!!.asString()] },
+                        parentDeclaration = { caches[this@asKSClassDeclaration.fqName!!.asString()] },
                     )
                 }.asSequence()
             } else if (this.isEnum()) {
@@ -632,29 +634,6 @@ private fun createResolver(
             TODO("Not yet implemented")
         }
     }
-}
-
-private fun createAnnotation(annotation: KClass<out Annotation>): KSAnnotation {
-    return createKSAnnotation(
-        annotationType = createKSTypeReference(
-            resolve = {
-                createKSType(
-                    declaration = {
-                        createKSClassDeclaration(
-                            classKind = { ClassKind.ANNOTATION_CLASS },
-                            qualifiedName = { createKSName(annotation.qualifiedName!!) },
-                            simpleName = { createKSName(annotation.simpleName!!) },
-                            packageName = { createKSName(annotation.java.packageName) },
-                            annotations = { emptySequence() }
-                        )
-                    }
-                )
-            }
-        ),
-        shortName = {
-            createKSName(annotation.simpleName!!)
-        }
-    )
 }
 
 fun createKSName(name: String): KSName {
