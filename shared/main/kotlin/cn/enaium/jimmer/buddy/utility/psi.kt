@@ -81,6 +81,12 @@ fun PsiMethod.hasToOneAnnotation(): Boolean {
     } == true
 }
 
+fun PsiMethod.hasIdViewAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(IdView::class.qualifiedName!!)
+    } == true
+}
+
 fun KtProperty.hasToManyAnnotation(): Boolean {
     return PSI_SHARED.annotations(this).any { annotation ->
         val fqName = annotation.fqName
@@ -94,5 +100,12 @@ fun KtProperty.hasToOneAnnotation(): Boolean {
         val fqName = annotation.fqName
         fqName == OneToOne::class.qualifiedName!!
                 || fqName == ManyToOne::class.qualifiedName!!
+    } == true
+}
+
+fun KtProperty.hasIdViewAnnotation(): Boolean {
+    return PSI_SHARED.annotations(this).any { annotation ->
+        val fqName = annotation.fqName
+        fqName == IdView::class.qualifiedName!!
     } == true
 }

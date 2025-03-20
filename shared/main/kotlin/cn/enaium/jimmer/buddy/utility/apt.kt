@@ -707,7 +707,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
         }.newInstance() as Annotation
 }
 
-private fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
+fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
     return when (this) {
         is PsiLiteralExpression -> this.value.toString().let {
             when (returnType.kotlin) {
