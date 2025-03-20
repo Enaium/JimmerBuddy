@@ -151,7 +151,7 @@ object JimmerBuddy {
                         .createFileFromText("dummy.java", JavaFileType.INSTANCE, it.readText())
                 psiCaches.addAll(psiFile.children.mapNotNull { psi ->
                     return@mapNotNull if (psi is PsiClass) {
-                        if (psi.isJimmerImmutableType().not()) return@mapNotNull null
+                        if (psi.hasJimmerAnnotation().not()) return@mapNotNull null
                         psi
                     } else {
                         null
@@ -273,7 +273,7 @@ object JimmerBuddy {
                 val psiFile = it.toFile().toPsiFile(project)!!
                 ktClassCaches.addAll(psiFile.children.mapNotNull { psi ->
                     return@mapNotNull if (psi is KtClass) {
-                        if (psi.isJimmerImmutableType().not()) return@mapNotNull null
+                        if (psi.hasJimmerAnnotation().not()) return@mapNotNull null
                         psi
                     } else {
                         null

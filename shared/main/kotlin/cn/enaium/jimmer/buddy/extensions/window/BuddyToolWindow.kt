@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.window
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjects
-import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
+import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.icons.AllIcons
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.actionSystem.AnAction
@@ -110,13 +110,13 @@ class BuddyToolWindow : ToolWindowFactory {
                                             JavaFileType.INSTANCE,
                                             file.readText()
                                         ).getChildOfType<PsiClass>()?.also { psiClass ->
-                                            if (psiClass.isJimmerImmutableType()) {
+                                            if (psiClass.hasImmutableAnnotation()) {
                                                 names.add(ImmutableItem(psiClass.name!!, file.toPath()))
                                             }
                                         }
                                     } else if (file.extension == "kt") {
                                         file.toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
-                                            if (ktClass.isJimmerImmutableType()) {
+                                            if (ktClass.hasImmutableAnnotation()) {
                                                 names.add(ImmutableItem(ktClass.name!!, file.toPath()))
                                             }
                                         }

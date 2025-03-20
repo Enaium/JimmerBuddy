@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
+import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
@@ -33,7 +33,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
         element: PsiElement,
         result: MutableCollection<in RelatedItemLineMarkerInfo<*>>
     ) {
-        if (element is PsiClass && element.isJimmerImmutableType() || element is KtClass && element.isJimmerImmutableType()) {
+        if (element is PsiClass && element.hasImmutableAnnotation() || element is KtClass && element.hasImmutableAnnotation()) {
             element.identifyingElement?.also {
                 result.add(
                     NavigationGutterIconBuilder.create(JimmerBuddy.Icons.IMMUTABLE).setTargets()

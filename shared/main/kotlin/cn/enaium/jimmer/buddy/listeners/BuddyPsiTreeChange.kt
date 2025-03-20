@@ -19,7 +19,7 @@ package cn.enaium.jimmer.buddy.listeners
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjectDir
 import cn.enaium.jimmer.buddy.utility.isGeneratedFile
-import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
+import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -72,7 +72,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                 ApplicationManager.getApplication().runReadAction {
                     if (!DumbService.isDumb(project)) {
                         if (JimmerBuddy.isJavaProject(project) && psiFile.getChildOfType<PsiClass>()
-                                ?.isJimmerImmutableType() == true
+                                ?.hasJimmerAnnotation() == true
                         ) {
                             JimmerBuddy.init()
                             JimmerBuddy.sourcesProcessJava(
@@ -83,7 +83,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                                         .also { if (it.isEmpty()) return@runReadAction })
                             )
                         } else if (JimmerBuddy.isKotlinProject(project) && psiFile.getChildOfType<KtClass>()
-                                ?.isJimmerImmutableType() == true
+                                ?.hasJimmerAnnotation() == true
                         ) {
                             JimmerBuddy.init()
                             JimmerBuddy.sourceProcessKotlin(

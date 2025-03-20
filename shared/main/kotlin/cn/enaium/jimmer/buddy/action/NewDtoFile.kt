@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.action
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
-import cn.enaium.jimmer.buddy.utility.isJimmerImmutableType
+import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
@@ -59,12 +59,12 @@ class NewDtoFile : AnAction() {
                 if (sourceFile.extension == "java") {
                     runReadOnly {
                         sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                            ?.takeIf { it.isJimmerImmutableType() }?.qualifiedName
+                            ?.takeIf { it.hasJimmerAnnotation() }?.qualifiedName
                     }
                 } else if (sourceFile.extension == "kt") {
                     runReadOnly {
                         sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                            ?.takeIf { it.isJimmerImmutableType() }?.fqName?.asString()
+                            ?.takeIf { it.hasJimmerAnnotation() }?.fqName?.asString()
                     }
                 } else {
                     null

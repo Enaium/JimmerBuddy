@@ -34,12 +34,17 @@ fun PsiClass.hasImmutableAnnotation(): Boolean {
                 || annotation.hasQualifiedName(Entity::class.qualifiedName!!)
                 || annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
                 || annotation.hasQualifiedName(Embeddable::class.qualifiedName!!)
-                || annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
     } == true
 }
 
-fun PsiClass.isJimmerImmutableType(): Boolean {
-    return this.hasImmutableAnnotation() && this.isInterface
+fun PsiClass.hasErrorFamilyAnnotation(): Boolean {
+    return this.modifierList?.annotations?.any { annotation ->
+        annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
+    } == true
+}
+
+fun PsiClass.hasJimmerAnnotation(): Boolean {
+    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
 }
 
 fun KtClass.hasImmutableAnnotation(): Boolean {
@@ -49,12 +54,17 @@ fun KtClass.hasImmutableAnnotation(): Boolean {
                 || fqName == Entity::class.qualifiedName!!
                 || fqName == MappedSuperclass::class.qualifiedName!!
                 || fqName == Embeddable::class.qualifiedName!!
-                || fqName == ErrorFamily::class.qualifiedName!!
     } == true
 }
 
-fun KtClass.isJimmerImmutableType(): Boolean {
-    return this.hasImmutableAnnotation() && this.isInterface()
+fun KtClass.hasErrorFamilyAnnotation(): Boolean {
+    return PSI_SHARED.annotations(this).any { annotation ->
+        annotation.fqName == ErrorFamily::class.qualifiedName!!
+    } == true
+}
+
+fun KtClass.hasJimmerAnnotation(): Boolean {
+    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
 }
 
 fun PsiMethod.hasToManyAnnotation(): Boolean {
