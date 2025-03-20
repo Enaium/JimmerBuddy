@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
+import cn.enaium.jimmer.buddy.utility.toAny
 import cn.enaium.jimmer.buddy.utility.toImmutable
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
@@ -27,6 +28,8 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
+import org.babyfish.jimmer.sql.ManyToMany
+import org.babyfish.jimmer.sql.OneToMany
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
@@ -68,7 +71,17 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                             it.element
                                         }
                                     }?.also {
-                                        nav.setTargets(it)
+                                        nav.setTargets(
+                                            listOfNotNull(
+                                                it,
+                                                it.methods.find {
+                                                    it.name == method.let {
+                                                        it.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName }
+                                                    }?.findAttributeValue("mappedBy")?.toAny(String::class.java)
+                                                        ?.toString()
+                                                }
+                                            )
+                                        )
                                     } ?: nav.setTargets()
                                 }
                                 .createLineMarkerInfo(it)
@@ -95,7 +108,17 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                             it.ktClass
                                         }
                                     }?.also {
-                                        nav.setTargets(it)
+                                        nav.setTargets(
+                                            listOfNotNull(
+                                                it,
+                                                it.getProperties().find {
+                                                    it.name == property.let {
+                                                        PSI_SHARED.annotations(it)
+                                                            .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName }
+                                                    }?.arguments?.find { it.name == "mappedBy" }?.value?.toString()
+                                                }
+                                            )
+                                        )
                                     } ?: nav.setTargets()
                                 }
                                 .createLineMarkerInfo(it)
