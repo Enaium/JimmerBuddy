@@ -25,13 +25,13 @@ import org.jetbrains.kotlin.psi.KtClass
 /**
  * @author Enaium
  */
-fun PsiClass.toJavaImmutable(): org.babyfish.jimmer.apt.immutable.meta.ImmutableType {
+fun PsiClass.toImmutable(): org.babyfish.jimmer.apt.immutable.meta.ImmutableType {
     val (pe, typeElements, sources) = psiClassesToApt(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = createContext(pe.elementUtils, pe.typeUtils, pe.filer)
     return context.getImmutableType(pe.elementUtils.getTypeElement(this.qualifiedName!!))
 }
 
-fun KtClass.toKotlinImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
+fun KtClass.toImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
     val (resolver, environment, sources) = ktClassToKsp(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = Context(resolver, environment)
     val classDeclarationByName = resolver.getClassDeclarationByName(this.fqName!!.asString())!!

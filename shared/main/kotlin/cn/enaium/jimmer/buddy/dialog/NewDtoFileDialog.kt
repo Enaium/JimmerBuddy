@@ -96,7 +96,7 @@ class NewDtoFileDialog(
                     addToCenter(
                         ImmutablePropsChoosePanel(
                             project,
-                            thread { runReadOnly { it.toKotlinImmutable().toCommonImmutableType() } },
+                            thread { runReadOnly { it.toImmutable().toCommonImmutableType() } },
                             properties
                         )
                     )
@@ -106,7 +106,7 @@ class NewDtoFileDialog(
                     addToCenter(
                         ImmutablePropsChoosePanel(
                             project,
-                            it.toJavaImmutable().toCommonImmutableType(),
+                            it.toImmutable().toCommonImmutableType(),
                             properties
                         )
                     )

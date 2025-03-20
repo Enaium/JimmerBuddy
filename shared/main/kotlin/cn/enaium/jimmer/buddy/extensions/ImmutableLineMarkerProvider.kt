@@ -17,12 +17,16 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
+import cn.enaium.jimmer.buddy.utility.toImmutable
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiSubstitutor
+import com.intellij.psi.util.PsiUtil
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
@@ -41,19 +45,59 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                 )
             }
             if (element is PsiClass) {
+                val immutableType = element.toImmutable()
                 element.methods.forEach { method ->
                     method.identifyingElement?.also {
                         result.add(
-                            NavigationGutterIconBuilder.create(JimmerBuddy.Icons.PROP).setTargets()
+                            NavigationGutterIconBuilder.create(JimmerBuddy.Icons.PROP)
+                                .also { nav ->
+                                    immutableType.declaredProps[method.name]?.let {
+                                        if (it.context().getImmutableType(it.elementType)
+                                                ?.let { it.isEntity || it.isEmbeddable } == true
+                                        ) {
+                                            method.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
+                                        } else {
+                                            null
+                                        }
+                                    }?.let {
+                                        if (it.substitutor != PsiSubstitutor.EMPTY) {
+                                            it.element?.typeParameters?.firstOrNull()?.let { parameter ->
+                                                PsiUtil.resolveGenericsClassInType(it.substitutor.substitute(parameter)).element
+                                            }
+                                        } else {
+                                            it.element
+                                        }
+                                    }?.also {
+                                        nav.setTargets(it)
+                                    } ?: nav.setTargets()
+                                }
                                 .createLineMarkerInfo(it)
                         )
                     }
                 }
             } else if (element is KtClass) {
+                val immutableType = element.toImmutable()
                 element.getProperties().forEach { property ->
                     property.identifyingElement?.also {
                         result.add(
                             NavigationGutterIconBuilder.create(JimmerBuddy.Icons.PROP).setTargets()
+                                .also { nav ->
+                                    immutableType.declaredProperties[property.name]?.let {
+                                        if (it.targetType?.let { it.isImmutable || it.isEntity || it.isEmbeddable } == true) {
+                                            property.typeReference?.let { PSI_SHARED.type(it) }
+                                        } else {
+                                            null
+                                        }
+                                    }?.let {
+                                        if (it.arguments.isNotEmpty()) {
+                                            it.arguments.firstOrNull()?.ktClass
+                                        } else {
+                                            it.ktClass
+                                        }
+                                    }?.also {
+                                        nav.setTargets(it)
+                                    } ?: nav.setTargets()
+                                }
                                 .createLineMarkerInfo(it)
                         )
                     }
