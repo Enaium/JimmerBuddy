@@ -12,7 +12,8 @@
             <li>Generate entity from database or ddl.</li>
             <li>Jimmer Project Wizard.</li>
             <li>Generate DTO file for immutable.</li>
-            <li>Inspection for immutable.</li>
+            <li>Inspection for immutable and prop.</li>
+            <li>Navigate to immutable or prop.</li>
         </ul>]]>
     </description>
     <change-notes>
