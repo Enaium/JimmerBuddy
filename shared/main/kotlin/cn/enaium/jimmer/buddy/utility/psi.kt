@@ -19,6 +19,8 @@ package cn.enaium.jimmer.buddy.utility
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiSubstitutor
+import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
@@ -108,4 +110,26 @@ fun KtProperty.hasIdViewAnnotation(): Boolean {
         val fqName = annotation.fqName
         fqName == IdView::class.qualifiedName!!
     } == true
+}
+
+fun PsiMethod.getTarget(): PsiClass? {
+    return this.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }?.let {
+        if (it.substitutor != PsiSubstitutor.EMPTY) {
+            it.element?.typeParameters?.firstOrNull()?.let { parameter ->
+                PsiUtil.resolveGenericsClassInType(it.substitutor.substitute(parameter)).element
+            }
+        } else {
+            it.element
+        }
+    }
+}
+
+fun KtProperty.getTarget(): KtClass? {
+    return this.typeReference?.let { PSI_SHARED.type(it) }?.let {
+        if (it.arguments.isNotEmpty()) {
+            it.arguments.firstOrNull()?.ktClass
+        } else {
+            it.ktClass
+        }
+    }
 }

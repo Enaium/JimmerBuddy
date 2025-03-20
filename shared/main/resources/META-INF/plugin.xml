@@ -99,6 +99,26 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.inspection.IdViewAnnotationInspection"
         />
+        <localInspection
+                displayName="ToMany annotation"
+                shortName="JavaToManyAnnotation"
+                groupName="Jimmer"
+                language="JAVA"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.ToManyAnnotationInspection"
+        />
+        <localInspection
+                displayName="ToMany annotation"
+                shortName="KotlinToManyAnnotation"
+                groupName="Jimmer"
+                language="kotlin"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.ToManyAnnotationInspection"
+        />
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
