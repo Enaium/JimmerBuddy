@@ -12,6 +12,7 @@
             <li>Generate entity from database or ddl.</li>
             <li>Jimmer Project Wizard.</li>
             <li>Generate DTO file for immutable.</li>
+            <li>Inspection for immutable.</li>
         </ul>]]>
     </description>
     <change-notes>

@@ -347,6 +347,16 @@ fun psiClassesToApt(
                                         getQualifiedName = { "java.lang.Number" },
                                         asElement = { numberTypeElement })
                                 })
+                        } else if (name == "java.lang.Object") {
+                            val objectTypeElement =
+                                createTypeElement(getQualifiedName = { createName("java.lang.Object") })
+                            createTypeElement(
+                                getQualifiedName = { createName("java.lang.Object") },
+                                asType = {
+                                    createDeclaredType(
+                                        getQualifiedName = { "java.lang.Object" },
+                                        asElement = { objectTypeElement })
+                                })
                         } else {
                             createTypeElement(
                                 getKind = { ElementKind.CLASS },
