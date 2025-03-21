@@ -18,7 +18,7 @@ A plugin that adds first-class support for Project Jimmer
 
 ![automatically generate class](https://s2.loli.net/2025/03/05/WAxQ34sUnS9i7q5.gif)
 
-![immutables](https://s2.loli.net/2025/03/05/u61UoySQEkshwDl.png)
+![immutables](https://s2.loli.net/2025/03/21/dcZQLJeAhqNSTvH.gif)
 
 ![project wizard](https://s2.loli.net/2025/03/05/USP5VdZvlA6iNzO.png)
 
