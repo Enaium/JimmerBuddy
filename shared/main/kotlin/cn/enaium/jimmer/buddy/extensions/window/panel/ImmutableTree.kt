@@ -35,6 +35,7 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
@@ -46,7 +47,6 @@ import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.nio.file.Path
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
@@ -97,7 +97,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
-        add(JScrollPane(tree), BorderLayout.CENTER)
+        add(JBScrollPane(tree), BorderLayout.CENTER)
         loadImmutables()
     }
 
@@ -110,9 +110,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                         if (file.extension == "java") {
                             file.toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also { psiClass ->
                                 if (thread { runReadOnly { psiClass.hasImmutableAnnotation() } }) {
-                                    val newChild = ImmutableType(psiClass, file.toPath())
+                                    val newChild = ImmutableType(psiClass)
                                     psiClass.methods.forEach {
-                                        newChild.add(ImmutableProp(it, file.toPath()))
+                                        newChild.add(ImmutableProp(it))
                                     }
                                     root.add(newChild)
                                 }
@@ -120,9 +120,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                         } else if (file.extension == "kt") {
                             file.toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
                                 if (thread { runReadOnly { ktClass.hasImmutableAnnotation() } }) {
-                                    val newChild = ImmutableType(ktClass, file.toPath())
+                                    val newChild = ImmutableType(ktClass)
                                     ktClass.getProperties().forEach {
-                                        newChild.add(ImmutableProp(it, file.toPath()))
+                                        newChild.add(ImmutableProp(it))
                                     }
                                     root.add(newChild)
                                 }
@@ -156,9 +156,9 @@ class ImmutableTree(val project: Project) : JPanel() {
 
             return JPanel(BorderLayout()).apply {
                 if (sel) {
-                    setBackground(this@ImmutableNodeCell.getBackgroundSelectionColor());
+                    setBackground(this@ImmutableNodeCell.getBackgroundSelectionColor())
                 } else {
-                    setBackground(this@ImmutableNodeCell.getBackground());
+                    setBackground(this@ImmutableNodeCell.getBackground())
                 }
                 add(JLabel(value.toString()).apply {
                     icon = this@ImmutableNodeCell.icon
@@ -167,11 +167,11 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableNode(val target: PsiElement, val sourceFile: Path) :
+    private open class ImmutableNode(val target: PsiElement) :
         DefaultMutableTreeNode()
 
-    private open class ImmutableType(target: PsiElement, sourceFile: Path) :
-        ImmutableNode(target, sourceFile) {
+    private open class ImmutableType(target: PsiElement) : ImmutableNode(target) {
+        val sourceFile = target.containingFile.virtualFile.toNioPath()
         val qualifiedName: String = if (target is PsiClass) {
             target.qualifiedName ?: "Unknown Name"
         } else if (target is KtClass) {
@@ -195,8 +195,7 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableProp(target: PsiElement, sourceFile: Path) :
-        ImmutableNode(target, sourceFile) {
+    private open class ImmutableProp(target: PsiElement) : ImmutableNode(target) {
 
         override fun isLeaf(): Boolean {
             return true

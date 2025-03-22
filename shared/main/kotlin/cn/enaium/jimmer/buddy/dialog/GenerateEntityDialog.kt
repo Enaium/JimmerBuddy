@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.dialog
 import cn.enaium.jimmer.buddy.database.generate.JavaEntityGenerate
 import cn.enaium.jimmer.buddy.database.generate.KotlinEntityGenerate
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
@@ -45,7 +46,8 @@ import kotlin.io.path.walk
  * @author Enaium
  */
 class GenerateEntityDialog(
-    private val project: Project
+    private val project: Project,
+    private val databaseItem: JimmerBuddySetting.DatabaseItem
 ) : DialogWrapper(false) {
 
     private val generateEntityModel = GenerateEntityModel()
@@ -58,15 +60,6 @@ class GenerateEntityDialog(
 
     override fun createCenterPanel(): JComponent {
         return panel {
-            row("URI:") {
-                textField().bindText(generateEntityModel.uriProperty)
-            }
-            row("Username:") {
-                textField().bindText(generateEntityModel.usernameProperty)
-            }
-            row("Password:") {
-                passwordField().bindText(generateEntityModel.passwordProperty)
-            }
             row("Relative Path:") {
                 textField().bindText(generateEntityModel.relativePathProperty)
             }
@@ -117,12 +110,12 @@ class GenerateEntityDialog(
     }
 
     override fun doOKAction() {
-        if (generateEntityModel.uri.isBlank() || generateEntityModel.relativePath.isBlank()) {
-            Messages.showErrorDialog("URI, Relative Path cannot be empty", "Error")
+        if (generateEntityModel.relativePath.isBlank()) {
+            Messages.showErrorDialog("Relative Path cannot be empty", "Error")
             return
         }
 
-        val uri = generateEntityModel.uri
+        val uri = databaseItem.uri
 
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {
             if (uri.startsWith("file:")) {
@@ -181,7 +174,7 @@ class GenerateEntityDialog(
 
         val projectDir = project.guessProjectDir() ?: return
 
-        generate.generate(projectDir.toNioPath(), generateEntityModel)
+        generate.generate(projectDir.toNioPath(), generateEntityModel, databaseItem)
         super.doOKAction()
     }
 

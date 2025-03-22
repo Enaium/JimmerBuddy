@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.window
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
 import cn.enaium.jimmer.buddy.utility.findProjects
 import com.intellij.icons.AllIcons
@@ -64,6 +65,13 @@ class BuddyToolWindow : ToolWindowFactory {
             toolWindow.contentManager.factory.createContent(
                 DTOList(project),
                 "DTOs",
+                false
+            )
+        )
+        toolWindow.contentManager.addContent(
+            toolWindow.contentManager.factory.createContent(
+                DatabaseList(project),
+                "Databases",
                 false
             )
         )

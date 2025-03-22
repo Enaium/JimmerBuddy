@@ -24,9 +24,6 @@ import com.intellij.openapi.observable.properties.PropertyGraph
  */
 class GenerateEntityModel : BaseState() {
     private val graph: PropertyGraph = PropertyGraph()
-    val uriProperty = graph.property<String>("")
-    val usernameProperty = graph.property<String>("")
-    val passwordProperty = graph.property<String>("")
     val relativePathProperty = graph.property<String>("")
     val packageNameProperty = graph.property<String>("")
     val languageProperty = graph.property<Language>(Language.KOTLIN)
@@ -41,9 +38,6 @@ class GenerateEntityModel : BaseState() {
     val schemaPatternProperty = graph.property<String>("")
     val tableNamePatternProperty = graph.property<String>("")
 
-    val uri: String by uriProperty
-    val username: String by usernameProperty
-    val password: String by passwordProperty
     val relativePath: String by relativePathProperty
     val packageName: String by packageNameProperty
     val language: Language by languageProperty

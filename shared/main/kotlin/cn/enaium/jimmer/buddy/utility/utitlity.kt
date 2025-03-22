@@ -107,3 +107,9 @@ fun <T> thread(block: () -> T): T {
         return@Callable block()
     }).get()
 }
+
+fun invokeLater(block: () -> Unit) {
+    ApplicationManager.getApplication().invokeLater {
+        block()
+    }
+}

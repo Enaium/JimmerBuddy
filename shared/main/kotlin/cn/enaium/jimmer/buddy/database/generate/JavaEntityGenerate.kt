@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.squareup.javapoet.*
 import org.babyfish.jimmer.sql.*
@@ -33,11 +34,12 @@ import javax.lang.model.element.Modifier
 class JavaEntityGenerate : EntityGenerate {
     override fun generate(
         projectDir: Path,
-        generateEntity: GenerateEntityModel
+        generateEntity: GenerateEntityModel,
+        databaseItem: JimmerBuddySetting.DatabaseItem
     ) {
         val idSuffix = "_${generateEntity.primaryKeyName}"
 
-        val connect = getConnection(generateEntity)
+        val connect = getConnection(generateEntity, databaseItem)
         val metaData = connect.metaData
 
         val tables = metaData.getTables(

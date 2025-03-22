@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -32,11 +33,12 @@ import java.util.*
 class KotlinEntityGenerate : EntityGenerate {
     override fun generate(
         projectDir: Path,
-        generateEntity: GenerateEntityModel
+        generateEntity: GenerateEntityModel,
+        databaseItem: JimmerBuddySetting.DatabaseItem
     ) {
         val idSuffix = "_${generateEntity.primaryKeyName}"
 
-        val connect = getConnection(generateEntity)
+        val connect = getConnection(generateEntity, databaseItem)
 
         val metaData = connect.metaData
 

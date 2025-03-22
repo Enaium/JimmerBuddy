@@ -27,9 +27,9 @@ import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTree.CheckboxTreeCellRenderer
 import com.intellij.ui.CheckboxTreeListener
 import com.intellij.ui.CheckedTreeNode
+import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
 import javax.swing.JPanel
-import javax.swing.JScrollPane
 import javax.swing.JTree
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeWillExpandListener
@@ -114,7 +114,7 @@ class ImmutablePropsChoosePanel(
                 }
             }
         })
-        add(JScrollPane(tree), BorderLayout.CENTER)
+        add(JBScrollPane(tree), BorderLayout.CENTER)
     }
 
     private class ImmutableNodeCellRender : CheckboxTreeCellRenderer() {
