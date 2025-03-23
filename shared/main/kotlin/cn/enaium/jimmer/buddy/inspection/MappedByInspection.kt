@@ -26,18 +26,19 @@ import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethod
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.OneToMany
+import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 
 /**
  * @author Enaium
  */
-class ToManyAnnotationInspection : LocalInspectionTool() {
+class MappedByInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 if (element is PsiMethod) {
-                    element.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName }
+                    element.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName || it.qualifiedName == OneToOne::class.qualifiedName }
                         ?.also {
                             val mappedBy = it.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
                                 ?.takeIf { it.isNotBlank() } ?: return@also
@@ -57,7 +58,7 @@ class ToManyAnnotationInspection : LocalInspectionTool() {
                         }
                 } else if (element is KtProperty) {
                     PSI_SHARED.annotations(element)
-                        .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName }
+                        .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }
                         ?.also {
                             val mappedBy =
                                 it.arguments.find { argument -> argument.name == "mappedBy" }?.value?.toString()

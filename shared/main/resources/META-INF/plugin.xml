@@ -101,24 +101,24 @@
                 implementationClass="cn.enaium.jimmer.buddy.inspection.IdViewAnnotationInspection"
         />
         <localInspection
-                displayName="ToMany annotation"
-                shortName="JavaToManyAnnotation"
+                displayName="MappedBy"
+                shortName="JavaMappedBy"
                 groupName="Jimmer"
                 language="JAVA"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.ToManyAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.MappedByInspection"
         />
         <localInspection
-                displayName="ToMany annotation"
-                shortName="KotlinToManyAnnotation"
+                displayName="MappedBy"
+                shortName="KotlinMappedBy"
                 groupName="Jimmer"
                 language="kotlin"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.ToManyAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.inspection.MappedByInspection"
         />
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
