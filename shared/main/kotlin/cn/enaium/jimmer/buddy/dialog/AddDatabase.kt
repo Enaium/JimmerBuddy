@@ -29,8 +29,7 @@ import javax.swing.JComponent
 /**
  * @author Enaium
  */
-class AddDatabase : DialogWrapper(false) {
-
+class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
     private val databaseModel = DatabaseModel()
 
     init {
@@ -50,6 +49,15 @@ class AddDatabase : DialogWrapper(false) {
             row("Password:") {
                 passwordField().bindText(databaseModel.passwordProperty)
             }
+            row("Catalog:") {
+                textField().bindText(databaseModel.catalogProperty)
+            }
+            row("Schema Pattern:") {
+                textField().bindText(databaseModel.schemaPatternProperty)
+            }
+            row("Table Name Pattern:") {
+                textField().bindText(databaseModel.tableNamePatternProperty)
+            }
         }
     }
 
@@ -62,19 +70,28 @@ class AddDatabase : DialogWrapper(false) {
         JimmerBuddySetting.INSTANCE.state.databases = JimmerBuddySetting.INSTANCE.state.databases + DatabaseItem(
             databaseModel.uri,
             databaseModel.username,
-            databaseModel.password
+            databaseModel.password,
+            databaseModel.catalog,
+            databaseModel.schemaPattern,
+            databaseModel.tableNamePattern
         )
         super.doOKAction()
     }
 
-    class DatabaseModel : BaseState() {
+    private inner class DatabaseModel : BaseState() {
         private val graph: PropertyGraph = PropertyGraph()
-        val uriProperty = graph.property<String>("")
-        val usernameProperty = graph.property<String>("")
-        val passwordProperty = graph.property<String>("")
+        val uriProperty = graph.property<String>(select?.uri ?: "")
+        val usernameProperty = graph.property<String>(select?.username ?: "")
+        val passwordProperty = graph.property<String>(select?.password ?: "")
+        val catalogProperty = graph.property<String>(select?.catalog ?: "")
+        val schemaPatternProperty = graph.property<String>(select?.schemaPattern ?: "")
+        val tableNamePatternProperty = graph.property<String>(select?.tableNamePattern ?: "")
 
         val uri: String by uriProperty
         val username: String by usernameProperty
         val password: String by passwordProperty
+        val catalog: String by catalogProperty
+        val schemaPattern: String by schemaPatternProperty
+        val tableNamePattern: String by tableNamePatternProperty
     }
 }

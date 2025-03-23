@@ -22,7 +22,7 @@ package cn.enaium.jimmer.buddy.database.model
 data class Column(
     val name: String,
     val tableName: String,
-    val type: String,
+    var type: String,
     val remark: String?,
     val defaultValue: String?,
     val nullable: Boolean,

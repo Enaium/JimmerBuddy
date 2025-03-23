@@ -44,9 +44,12 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
     )
 
     data class DatabaseItem(
-        val uri: String,
-        val username: String,
-        val password: String
+        var uri: String = "",
+        var username: String = "",
+        var password: String = "",
+        var catalog: String = "",
+        var schemaPattern: String = "",
+        var tableNamePattern: String = ""
     )
 
     private var state = Setting()

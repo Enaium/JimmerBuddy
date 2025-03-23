@@ -163,3 +163,26 @@ internal val javaTypeMappings = mutableMapOf(
     "float4" to java.lang.Float::class.java.name,
     "float8" to java.lang.Double::class.java.name,
 )
+
+internal enum class ColumnType {
+    TINYINT,
+    SMALLINT,
+    INTEGER,
+    BIGINT,
+    DECIMAL,
+    NUMERIC,
+    VARCHAR,
+    TEXT,
+    DATE,
+    TIME,
+    DATETIME,
+    TIMESTAMP,
+    BOOL,
+    BOOLEAN,
+    UUID,
+    INT2,
+    INT4,
+    INT8,
+    FLOAT4,
+    FLOAT8
+}

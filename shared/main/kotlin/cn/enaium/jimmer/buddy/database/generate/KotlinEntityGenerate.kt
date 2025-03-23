@@ -19,8 +19,10 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.firstCharLowercase
+import cn.enaium.jimmer.buddy.utility.kotlinTypeMappings
+import cn.enaium.jimmer.buddy.utility.snakeToCamelCase
+import cn.enaium.jimmer.buddy.utility.toPlural
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import org.babyfish.jimmer.sql.*
@@ -34,19 +36,9 @@ class KotlinEntityGenerate : EntityGenerate {
     override fun generate(
         projectDir: Path,
         generateEntity: GenerateEntityModel,
-        databaseItem: JimmerBuddySetting.DatabaseItem
-    ) {
+        tables: Set<cn.enaium.jimmer.buddy.database.model.Table>
+    ): List<Path> {
         val idSuffix = "_${generateEntity.primaryKeyName}"
-
-        val connect = getConnection(generateEntity, databaseItem)
-
-        val metaData = connect.metaData
-
-        val tables = metaData.getTables(
-            catalog = generateEntity.catalog.takeIf { it.isNotBlank() },
-            schemaPattern = generateEntity.schemaPattern.takeIf { it.isNotBlank() },
-            tableNamePattern = generateEntity.tableNamePattern.takeIf { it.isNotBlank() },
-        )
 
         val commonColumns = getCommonColumns(tables)
 
@@ -263,13 +255,14 @@ class KotlinEntityGenerate : EntityGenerate {
         }
 
         // Write to file
-        for ((tableName, typeBuilder) in type2Builder) {
-            FileSpec.builder(packageName, tableName)
-                .indent("    ")
-                .addType(typeBuilder.build()).build()
-                .writeTo(projectDir.resolve(generateEntity.relativePath))
+        return type2Builder.map { (tableName, typeBuilder) ->
+            projectDir.resolve(generateEntity.relativePath).also {
+                FileSpec.builder(packageName, tableName)
+                    .indent("    ")
+                    .addType(typeBuilder.build()).build()
+                    .writeTo(it)
+            }
         }
-        connect.close()
     }
 
     private fun getTypeName(typeMappings: Map<String, String>, column: Column): TypeName {

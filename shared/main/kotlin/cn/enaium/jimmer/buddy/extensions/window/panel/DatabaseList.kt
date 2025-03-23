@@ -49,6 +49,7 @@ class DatabaseList(val project: Project) : JPanel() {
                 databaseList.setListData(JimmerBuddySetting.INSTANCE.state.databases.toTypedArray())
             }
         }
+        refresh()
         databaseList.apply {
             cellRenderer = DatabaseCell()
             selectionMode = ListSelectionModel.SINGLE_SELECTION
@@ -60,6 +61,15 @@ class DatabaseList(val project: Project) : JPanel() {
                             add(JMenuItem("Generate").apply {
                                 addActionListener {
                                     GenerateEntityDialog(project, select).show()
+                                }
+                            })
+                            add(JMenuItem("Edit").apply {
+                                addActionListener {
+                                    if (AddDatabase(select).showAndGet()) {
+                                        JimmerBuddySetting.INSTANCE.state.databases =
+                                            JimmerBuddySetting.INSTANCE.state.databases - select
+                                    }
+                                    refresh()
                                 }
                             })
                             add(JMenuItem("Remove").apply {
@@ -76,13 +86,20 @@ class DatabaseList(val project: Project) : JPanel() {
         }
         add(
             JPanel(BorderLayout()).apply {
-                add(ActionButton(object : AnAction(AllIcons.General.Add) {
-                    override fun actionPerformed(e: AnActionEvent) {
-                        if (AddDatabase().showAndGet()) {
+                add(JPanel().apply {
+                    add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
+                        override fun actionPerformed(e: AnActionEvent) {
                             refresh()
                         }
-                    }
-                }, null, "Add", Dimension(24, 24)), BorderLayout.EAST)
+                    }, null, "Refresh", Dimension(24, 24)))
+                    add(ActionButton(object : AnAction(AllIcons.General.Add) {
+                        override fun actionPerformed(e: AnActionEvent) {
+                            if (AddDatabase().showAndGet()) {
+                                refresh()
+                            }
+                        }
+                    }, null, "Add", Dimension(24, 24)))
+                }, BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(databaseList))

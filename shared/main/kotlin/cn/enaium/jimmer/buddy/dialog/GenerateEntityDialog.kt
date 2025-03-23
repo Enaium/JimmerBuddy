@@ -16,18 +16,26 @@
 
 package cn.enaium.jimmer.buddy.dialog
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.database.generate.JavaEntityGenerate
 import cn.enaium.jimmer.buddy.database.generate.KotlinEntityGenerate
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.database.model.Table
+import cn.enaium.jimmer.buddy.dialog.panel.TableTreeTable
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
+import cn.enaium.jimmer.buddy.utility.getTables
 import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import com.jetbrains.rd.util.reflection.toPath
+import org.jetbrains.kotlin.tools.projectWizard.wizard.ui.borderPanel
+import java.net.URI
 import java.net.URLClassLoader
 import java.nio.file.Path
 import java.sql.Connection
@@ -51,70 +59,51 @@ class GenerateEntityDialog(
 ) : DialogWrapper(false) {
 
     private val generateEntityModel = GenerateEntityModel()
+    private val tableTreeTable = TableTreeTable(getTables())
 
     init {
         title = "Generate Entity"
-        isResizable = false
         init()
     }
 
     override fun createCenterPanel(): JComponent {
-        return panel {
-            row("Relative Path:") {
-                textField().bindText(generateEntityModel.relativePathProperty)
-            }
-            row("Package Name:") {
-                textField().bindText(generateEntityModel.packageNameProperty)
-            }
-            row("Language:") {
-                segmentedButtonText(GenerateEntityModel.Language.entries) {
-                    it.text
-                }.bind(generateEntityModel.languageProperty)
-            }
-
-            collapsibleGroup("Advanced") {
-                row {
-                    checkBox("Comment:").bindSelected(generateEntityModel.commentProperty)
+        return borderPanel {
+            addToTop(panel {
+                row("Relative Path:") {
+                    textField().align(Align.FILL).bindText(generateEntityModel.relativePathProperty)
                 }
-                row {
-                    checkBox("Table Annotation:").bindSelected(generateEntityModel.tableAnnotationProperty)
+                row("Package Name:") {
+                    textField().align(Align.FILL).bindText(generateEntityModel.packageNameProperty)
                 }
-                row {
-                    checkBox("Column Annotation:").bindSelected(generateEntityModel.columnAnnotationProperty)
-                }
-                row {
-                    checkBox("Id View Annotation:").bindSelected(generateEntityModel.idViewAnnotationProperty)
-                }
-                row {
-                    checkBox("Join Table Annotation:").bindSelected(generateEntityModel.joinTableAnnotationProperty)
-                }
-                row("Primary Key Name:") {
-                    textField().bindText(generateEntityModel.primaryKeyNameProperty)
-                }
-                row("Association:") {
-                    segmentedButtonText(GenerateEntityModel.Association.entries) {
+                row("Language:") {
+                    segmentedButtonText(GenerateEntityModel.Language.entries) {
                         it.text
-                    }.bind(generateEntityModel.associationProperty)
+                    }.bind(generateEntityModel.languageProperty)
                 }
-                row("Catalog:") {
-                    textField().bindText(generateEntityModel.catalogProperty)
+
+                collapsibleGroup("Advanced") {
+                    row {
+                        checkBox("Comment").bindSelected(generateEntityModel.commentProperty)
+                        checkBox("@Table").bindSelected(generateEntityModel.tableAnnotationProperty)
+                        checkBox("@Column").bindSelected(generateEntityModel.columnAnnotationProperty)
+                        checkBox("@IdView").bindSelected(generateEntityModel.idViewAnnotationProperty)
+                        checkBox("@JoinTable").bindSelected(generateEntityModel.joinTableAnnotationProperty)
+                    }
+                    row("Primary Key Name:") {
+                        textField().align(Align.FILL).bindText(generateEntityModel.primaryKeyNameProperty)
+                    }
+                    row("Association:") {
+                        segmentedButtonText(GenerateEntityModel.Association.entries) {
+                            it.text
+                        }.bind(generateEntityModel.associationProperty)
+                    }
                 }
-                row("Schema Pattern:") {
-                    textField().bindText(generateEntityModel.schemaPatternProperty)
-                }
-                row("Table Name Pattern:") {
-                    textField().bindText(generateEntityModel.tableNamePatternProperty)
-                }
-            }
+            })
+            addToCenter(tableTreeTable)
         }
     }
 
-    override fun doOKAction() {
-        if (generateEntityModel.relativePath.isBlank()) {
-            Messages.showErrorDialog("Relative Path cannot be empty", "Error")
-            return
-        }
-
+    private fun getTables(): Set<Table> {
         val uri = databaseItem.uri
 
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {
@@ -122,7 +111,7 @@ class GenerateEntityDialog(
                 return@let JdbcDriver.H2
             } else {
                 Messages.showErrorDialog("Unsupported JDBC Driver", "Error")
-                return
+                return emptySet()
             }
         }
 
@@ -149,7 +138,7 @@ class GenerateEntityDialog(
 
         if (driverJarFile == null) {
             Messages.showErrorDialog("Failed to find driver jar", "Error")
-            return
+            return emptySet()
         }
 
         DriverManager.registerDriver(
@@ -161,6 +150,40 @@ class GenerateEntityDialog(
                     .newInstance() as Driver
             )
         )
+        return getConnection().use {
+            it.metaData.getTables(
+                catalog = databaseItem.catalog.takeIf { it.isNotBlank() },
+                schemaPattern = databaseItem.schemaPattern.takeIf { it.isNotBlank() },
+                tableNamePattern = databaseItem.tableNamePattern.takeIf { it.isNotBlank() },
+            )
+        }
+    }
+
+
+    private fun getConnection(): Connection {
+        return URI.create(databaseItem.uri).takeIf { it.scheme == "file" }?.let { ddl ->
+            DriverManager.getConnection(
+                "jdbc:h2:mem:test;DATABASE_TO_LOWER=true;INIT=RUNSCRIPT FROM '${
+                    ddl.toURL().toPath().absolutePath.replace(
+                        "\\",
+                        "/"
+                    )
+                }'"
+            )
+        } ?: let {
+            DriverManager.getConnection(
+                databaseItem.uri,
+                databaseItem.username,
+                databaseItem.password
+            )
+        }
+    }
+
+    override fun doOKAction() {
+        if (generateEntityModel.relativePath.isBlank()) {
+            Messages.showErrorDialog("Relative Path cannot be empty", "Error")
+            return
+        }
 
         val generate = when (generateEntityModel.language) {
             GenerateEntityModel.Language.KOTLIN -> {
@@ -173,8 +196,13 @@ class GenerateEntityDialog(
         }
 
         val projectDir = project.guessProjectDir() ?: return
-
-        generate.generate(projectDir.toNioPath(), generateEntityModel, databaseItem)
+        JimmerBuddy.asyncRefresh(
+            generate.generate(
+                projectDir.toNioPath(),
+                generateEntityModel,
+                tableTreeTable.getResult()
+            )
+        )
         super.doOKAction()
     }
 

@@ -19,8 +19,10 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.firstCharLowercase
+import cn.enaium.jimmer.buddy.utility.javaTypeMappings
+import cn.enaium.jimmer.buddy.utility.snakeToCamelCase
+import cn.enaium.jimmer.buddy.utility.toPlural
 import com.squareup.javapoet.*
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
@@ -35,18 +37,9 @@ class JavaEntityGenerate : EntityGenerate {
     override fun generate(
         projectDir: Path,
         generateEntity: GenerateEntityModel,
-        databaseItem: JimmerBuddySetting.DatabaseItem
-    ) {
+        tables: Set<cn.enaium.jimmer.buddy.database.model.Table>
+    ): List<Path> {
         val idSuffix = "_${generateEntity.primaryKeyName}"
-
-        val connect = getConnection(generateEntity, databaseItem)
-        val metaData = connect.metaData
-
-        val tables = metaData.getTables(
-            catalog = generateEntity.catalog.takeIf { it.isNotBlank() },
-            schemaPattern = generateEntity.schemaPattern.takeIf { it.isNotBlank() },
-            tableNamePattern = generateEntity.tableNamePattern.takeIf { it.isNotBlank() },
-        )
 
         val commonColumns = getCommonColumns(tables)
 
@@ -286,13 +279,14 @@ class JavaEntityGenerate : EntityGenerate {
         }
 
         // Write to file
-        type2Builder.forEach { (_, type) ->
-            JavaFile.builder(packageName, type.build())
-                .indent("    ")
-                .build()
-                .writeTo(projectDir.resolve(generateEntity.relativePath))
+        return type2Builder.map { (_, type) ->
+            projectDir.resolve(generateEntity.relativePath).also {
+                JavaFile.builder(packageName, type.build())
+                    .indent("    ")
+                    .build()
+                    .writeTo(it)
+            }
         }
-        connect.close()
     }
 
     private fun getTypeName(typeMappings: Map<String, String>, column: Column): TypeName {

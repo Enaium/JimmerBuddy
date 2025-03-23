@@ -34,9 +34,6 @@ class GenerateEntityModel : BaseState() {
     val joinTableAnnotationProperty = graph.property<Boolean>(false)
     val primaryKeyNameProperty = graph.property<String>("id")
     val associationProperty = graph.property<Association>(Association.REAL)
-    val catalogProperty = graph.property<String>("")
-    val schemaPatternProperty = graph.property<String>("")
-    val tableNamePatternProperty = graph.property<String>("")
 
     val relativePath: String by relativePathProperty
     val packageName: String by packageNameProperty
@@ -48,9 +45,6 @@ class GenerateEntityModel : BaseState() {
     val joinTableAnnotation: Boolean by joinTableAnnotationProperty
     val primaryKeyName: String by primaryKeyNameProperty
     val association: Association by associationProperty
-    val catalog: String by catalogProperty
-    val schemaPattern: String by schemaPatternProperty
-    val tableNamePattern: String by tableNamePatternProperty
 
     enum class Language(val text: String) {
         KOTLIN("Kotlin"),
