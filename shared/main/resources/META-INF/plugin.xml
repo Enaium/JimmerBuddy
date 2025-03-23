@@ -33,7 +33,8 @@
                     anchor="right" icon="/icons/logo.svg"/>
         <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.LogToolWindow" id="Jimmer Buddy Log"
                     anchor="bottom" icon="/icons/log.svg"/>
-        <moduleBuilder builderClass="cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectBuilderAdapter" order="first"/>
+        <moduleBuilder builderClass="cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectBuilderAdapter"
+                       order="first"/>
         <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
         <codeInsight.lineMarkerProvider language="JAVA" id="JimmerBuddy.JavaLineMark"
@@ -119,6 +120,26 @@
                 level="ERROR"
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
+        />
+        <localInspection
+                displayName="FormulaAnnotation"
+                shortName="JavaFormulaAnnotation"
+                groupName="Jimmer"
+                language="JAVA"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
+        />
+        <localInspection
+                displayName="FormulaAnnotation"
+                shortName="KotlinFormulaAnnotation"
+                groupName="Jimmer"
+                language="kotlin"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
         />
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">

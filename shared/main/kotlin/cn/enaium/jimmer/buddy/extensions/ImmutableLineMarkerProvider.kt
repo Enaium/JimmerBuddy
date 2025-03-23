@@ -48,7 +48,11 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                 )
             }
             if (element is PsiClass) {
-                val immutableType = element.toImmutable()
+                val immutableType = try {
+                    element.toImmutable()
+                } catch (_: Throwable) {
+                    return
+                }
                 element.methods.forEach { method ->
                     method.identifyingElement?.also {
                         result.add(
@@ -89,7 +93,11 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                     }
                 }
             } else if (element is KtClass) {
-                val immutableType = element.toImmutable()
+                val immutableType = try {
+                    element.toImmutable()
+                } catch (_: Throwable) {
+                    return
+                }
                 element.getProperties().forEach { property ->
                     property.identifyingElement?.also {
                         result.add(

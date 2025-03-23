@@ -8,10 +8,10 @@ A plugin that adds first-class support for Project Jimmer
 
 - Automatically generate class for immutable, error, dto etc.
 - List all Immutables and DTOs in the project.
-- Generate entity from database or ddl.
+- Generate entity from database or ddl and choose which table or columns to generate.
 - Jimmer Project Wizard.
 - Generate DTO file for immutable.
-- Inspection for immutable and prop.
+- Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Navigate to immutable or prop.
 
 ## Screenshots
@@ -22,7 +22,7 @@ A plugin that adds first-class support for Project Jimmer
 
 ![project wizard](https://s2.loli.net/2025/03/05/USP5VdZvlA6iNzO.png)
 
-![generate entity](https://s2.loli.net/2025/03/05/sWaZgDiRcblOw2x.png)
+![generate entity](https://s2.loli.net/2025/03/23/OnuVZMdpobcISx4.png)
 
 ![new dto file](https://s2.loli.net/2025/03/11/gjAWhY8DiOKT5vz.gif)
 
