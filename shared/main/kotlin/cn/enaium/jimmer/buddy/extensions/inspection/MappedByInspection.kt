@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.inspection
+package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.getTarget

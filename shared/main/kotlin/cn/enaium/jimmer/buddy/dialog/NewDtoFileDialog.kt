@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.panel.ImmutablePropsChoosePanel
-import cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile
+import cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utitlity.segmentedButtonText
 import com.intellij.diff.DiffContentFactory

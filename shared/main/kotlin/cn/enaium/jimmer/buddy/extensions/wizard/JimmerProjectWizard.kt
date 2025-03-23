@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.wizard
+package cn.enaium.jimmer.buddy.extensions.wizard
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.ide.wizard.GeneratorNewProjectWizard
 import com.intellij.ide.wizard.NewProjectWizardStep
-import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.observable.properties.PropertyGraph
 import javax.swing.Icon
 

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.wizard
+package cn.enaium.jimmer.buddy.extensions.wizard
 
-import cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile
+import cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.ide.wizard.GeneratorNewProjectWizardBuilderAdapter

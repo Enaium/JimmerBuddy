@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.template
+package cn.enaium.jimmer.buddy.extensions.template
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptor

@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.utility.*
-import cn.enaium.jimmer.buddy.wizard.JimmerProjectModel
+import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.ide.highlighter.JavaFileType

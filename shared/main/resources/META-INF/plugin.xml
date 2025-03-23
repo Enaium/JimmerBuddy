@@ -33,8 +33,8 @@
                     anchor="right" icon="/icons/logo.svg"/>
         <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.LogToolWindow" id="Jimmer Buddy Log"
                     anchor="bottom" icon="/icons/log.svg"/>
-        <moduleBuilder builderClass="cn.enaium.jimmer.buddy.wizard.JimmerProjectBuilderAdapter" order="first"/>
-        <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.template.JimmerProjectTemplateFile"/>
+        <moduleBuilder builderClass="cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectBuilderAdapter" order="first"/>
+        <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
         <codeInsight.lineMarkerProvider language="JAVA" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
@@ -48,7 +48,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.ImmutableAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.ImmutableAnnotationInspection"
         />
         <localInspection
                 displayName="Immutable annotation must be used on an interface"
@@ -58,7 +58,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.ImmutableAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.ImmutableAnnotationInspection"
         />
         <localInspection
                 displayName="Association annotation must be @ToOne or @ToMany"
@@ -68,7 +68,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.AssociationAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.AssociationAnnotationInspection"
         />
         <localInspection
                 displayName="Association annotation must be @ToOne or @ToMany"
@@ -78,7 +78,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.AssociationAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.AssociationAnnotationInspection"
         />
         <localInspection
                 displayName="IdView annotation"
@@ -88,7 +88,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.IdViewAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdViewAnnotationInspection"
         />
         <localInspection
                 displayName="IdView annotation"
@@ -98,7 +98,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.IdViewAnnotationInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdViewAnnotationInspection"
         />
         <localInspection
                 displayName="MappedBy"
@@ -108,7 +108,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.MappedByInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
         />
         <localInspection
                 displayName="MappedBy"
@@ -118,7 +118,7 @@
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.inspection.MappedByInspection"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
         />
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
