@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
+import cn.enaium.jimmer.buddy.utility.findPropertyByName
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.toAny
 import cn.enaium.jimmer.buddy.utility.toImmutable
@@ -28,8 +29,10 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
+import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.OneToMany
+import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
@@ -58,7 +61,17 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                         result.add(
                             NavigationGutterIconBuilder.create(JimmerBuddy.Icons.PROP)
                                 .also { nav ->
-                                    immutableType.declaredProps[method.name]?.let {
+                                    val targets = mutableListOf<PsiElement>()
+                                    immutableType.declaredProps[method.name]?.also {
+                                        targets.addAll((method.modifierList.annotations.find { it.qualifiedName == Formula::class.qualifiedName }
+                                            ?.findAttributeValue("dependencies")
+                                            ?.toAny(Array<String>::class.java) as? Array<*>)?.map {
+                                            element.findMethodsByName(
+                                                it.toString(),
+                                                true
+                                            ).toList()
+                                        }?.flatten()?.toList() ?: emptyList())
+                                    }?.let {
                                         if (it.context().getImmutableType(it.elementType)
                                                 ?.let { it.isEntity || it.isEmbeddable } == true
                                         ) {
@@ -74,19 +87,16 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         } else {
                                             it.element
                                         }
-                                    }?.also {
-                                        nav.setTargets(
-                                            listOfNotNull(
-                                                it,
-                                                it.methods.find {
-                                                    it.name == method.let {
-                                                        it.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName }
-                                                    }?.findAttributeValue("mappedBy")?.toAny(String::class.java)
-                                                        ?.toString()
-                                                }
-                                            )
-                                        )
-                                    } ?: nav.setTargets()
+                                    }?.also { psiClass ->
+                                        targets.add(psiClass)
+                                        method.let {
+                                            it.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName || it.qualifiedName == OneToOne::class.qualifiedName }
+                                        }?.findAttributeValue("mappedBy")?.toAny(String::class.java)
+                                            ?.toString()?.also {
+                                                targets.addAll(psiClass.findMethodsByName(it, false))
+                                            }
+                                    }
+                                    nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
                         )
@@ -103,7 +113,14 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                         result.add(
                             NavigationGutterIconBuilder.create(JimmerBuddy.Icons.PROP).setTargets()
                                 .also { nav ->
-                                    immutableType.declaredProperties[property.name]?.let {
+                                    val targets = mutableListOf<PsiElement>()
+                                    immutableType.declaredProperties[property.name]?.also {
+                                        targets.addAll(
+                                            (PSI_SHARED.annotations(property)
+                                                .find { it.fqName == Formula::class.qualifiedName }?.arguments?.find { it.name == "dependencies" }?.value as? List<*>)?.mapNotNull {
+                                                element.findPropertyByName(it.toString(), true)
+                                            } ?: emptyList())
+                                    }?.let {
                                         if (it.targetType?.let { it.isImmutable || it.isEntity || it.isEmbeddable } == true) {
                                             property.typeReference?.let { PSI_SHARED.type(it) }
                                         } else {
@@ -115,19 +132,17 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         } else {
                                             it.ktClass
                                         }
-                                    }?.also {
-                                        nav.setTargets(
-                                            listOfNotNull(
-                                                it,
-                                                it.getProperties().find {
-                                                    it.name == property.let {
-                                                        PSI_SHARED.annotations(it)
-                                                            .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName }
-                                                    }?.arguments?.find { it.name == "mappedBy" }?.value?.toString()
+                                    }?.also { ktClass ->
+                                        targets.add(ktClass)
+                                        PSI_SHARED.annotations(property)
+                                            .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }?.arguments?.find { it.name == "mappedBy" }?.value?.toString()
+                                            ?.also {
+                                                ktClass.findPropertyByName(it, false)?.also {
+                                                    targets.add(it)
                                                 }
-                                            )
-                                        )
-                                    } ?: nav.setTargets()
+                                            }
+                                    }
+                                    nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
                         )
