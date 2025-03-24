@@ -59,7 +59,15 @@ class GenerateEntityDialog(
 ) : DialogWrapper(false) {
 
     private val generateEntityModel = GenerateEntityModel()
-    private val tableTreeTable = TableTreeTable(getTables())
+    private val tableTreeTable = TableTreeTable(
+        try {
+            getTables()
+        } catch (e: Throwable) {
+            Messages.showErrorDialog("Failed to connect to database:\n${e.message}", "Error")
+            JimmerBuddy.LOG.error(e)
+            emptySet()
+        }
+    )
 
     init {
         title = "Generate Entity"
@@ -110,7 +118,10 @@ class GenerateEntityDialog(
             if (uri.startsWith("file:")) {
                 return@let JdbcDriver.H2
             } else {
-                Messages.showErrorDialog("Unsupported JDBC Driver", "Error")
+                Messages.showErrorDialog(
+                    "Unsupported JDBC Driver(${JdbcDriver.entries.joinToString(", ") { it.scheme }})",
+                    "Error"
+                )
                 return emptySet()
             }
         }
@@ -120,7 +131,7 @@ class GenerateEntityDialog(
         Path(System.getProperty("user.home")).resolve(
             ".m2/repository/${
                 jdbcDriver.group.split(".").joinToString("/")
-            }/${jdbcDriver.name}"
+            }/${jdbcDriver.artifact}"
         ).walk().findLast {
             it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
                 .not() && it.name.endsWith(".jar")
@@ -128,7 +139,7 @@ class GenerateEntityDialog(
             driverJarFile = it
         }
 
-        Path(System.getProperty("user.home")).resolve(".gradle/caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.name}")
+        Path(System.getProperty("user.home")).resolve(".gradle/caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.artifact}")
             .walk().findLast {
                 it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
                     .not() && it.name.endsWith(".jar")
@@ -137,7 +148,7 @@ class GenerateEntityDialog(
             }
 
         if (driverJarFile == null) {
-            Messages.showErrorDialog("Failed to find driver jar", "Error")
+            Messages.showErrorDialog("Failed to find driver jar, please check your maven or gradle cache", "Error")
             return emptySet()
         }
 
@@ -180,6 +191,12 @@ class GenerateEntityDialog(
     }
 
     override fun doOKAction() {
+
+        val result = tableTreeTable.getResult().takeIf { it.isNotEmpty() } ?: run {
+            Messages.showErrorDialog("Please select table", "Error")
+            return
+        }
+
         if (generateEntityModel.relativePath.isBlank()) {
             Messages.showErrorDialog("Relative Path cannot be empty", "Error")
             return
@@ -200,13 +217,13 @@ class GenerateEntityDialog(
             generate.generate(
                 projectDir.toNioPath(),
                 generateEntityModel,
-                tableTreeTable.getResult()
+                result
             )
         )
         super.doOKAction()
     }
 
-    enum class JdbcDriver(val className: String, val group: String, name: String, val scheme: String) {
+    enum class JdbcDriver(val className: String, val group: String, val artifact: String, val scheme: String) {
         POSTGRESQL("org.postgresql.Driver", "org.postgresql", "postgresql", "postgresql"),
         MARIADB("org.mariadb.jdbc.Driver", "org.mariadb.jdbc", "mariadb-java-client", "mariadb"),
         MYSQL("com.mysql.cj.jdbc.Driver", "com.mysql", "mysql-connector-j", "mysql"),
@@ -215,7 +232,7 @@ class GenerateEntityDialog(
     }
 
     private class DiverWrapper(private val driver: Driver) : Driver {
-        override fun connect(url: String, info: Properties): Connection {
+        override fun connect(url: String, info: Properties): Connection? {
             return driver.connect(url, info)
         }
 
