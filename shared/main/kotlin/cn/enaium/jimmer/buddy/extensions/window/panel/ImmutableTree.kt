@@ -67,13 +67,18 @@ class ImmutableTree(val project: Project) : JPanel() {
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 tree.lastSelectedPathComponent?.also { select ->
+
+                    fun navigate() {
+                        if (select is ImmutableNode) {
+                            (select.target as Navigatable).navigate(true)
+                        }
+                    }
+
                     if (SwingUtilities.isRightMouseButton(e)) {
                         JBPopupMenu().apply {
                             add(JMenuItem("Go To").apply {
                                 addActionListener {
-                                    if (select is ImmutableNode) {
-                                        (select.target as Navigatable).navigate(true)
-                                    }
+                                    navigate()
                                 }
                             })
                             if (select is ImmutableType) {
@@ -84,6 +89,10 @@ class ImmutableTree(val project: Project) : JPanel() {
                                 })
                             }
                         }.show(tree, e.x, e.y)
+                    } else if (e.clickCount == 2) {
+                        if (select is ImmutableProp) {
+                            navigate()
+                        }
                     }
                 }
             }
@@ -132,7 +141,6 @@ class ImmutableTree(val project: Project) : JPanel() {
                 }
             }
             (tree.model as DefaultTreeModel).nodeStructureChanged(root)
-            tree.expandRow(0)
         }
     }
 

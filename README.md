@@ -12,7 +12,7 @@ A plugin that adds first-class support for Project Jimmer
 - Jimmer Project Wizard.
 - Generate DTO file for immutable.
 - Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
-- Navigate to immutable or prop.
+- Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 
 ## Screenshots
 
