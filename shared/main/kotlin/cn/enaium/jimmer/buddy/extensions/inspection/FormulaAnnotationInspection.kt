@@ -1,6 +1,7 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
+import cn.enaium.jimmer.buddy.utility.findPropertyByName
 import cn.enaium.jimmer.buddy.utility.toAny
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
@@ -9,7 +10,6 @@ import com.intellij.psi.PsiMethod
 import org.babyfish.jimmer.Formula
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
-import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 
 /**
  * @author Enaium
@@ -56,7 +56,7 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
 
                             val containingClass = element.containingClass() ?: return@also
                             dependencies.forEach {
-                                if (containingClass.findPropertyByName(it) == null) {
+                                if (containingClass.findPropertyByName(it, true) == null) {
                                     holder.registerProblem(element, "The dependency '$it' does not exist")
                                     return@also
                                 }

@@ -25,7 +25,9 @@ import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 
 /**
  * @author Enaium
@@ -132,4 +134,18 @@ fun KtProperty.getTarget(): KtClass? {
             it.ktClass
         }
     }
+}
+
+fun KtClass.findPropertyByName(name: String, superType: Boolean): KtNamedDeclaration? {
+    val prop = this.findPropertyByName(name)
+    if (prop == null && superType) {
+        this.superTypeListEntries.forEach {
+            it.typeReference?.let { PSI_SHARED.type(it) }?.ktClass?.also {
+                if (it.hasJimmerAnnotation()) {
+                    return it.findPropertyByName(name, true)
+                }
+            }
+        }
+    }
+    return prop
 }
