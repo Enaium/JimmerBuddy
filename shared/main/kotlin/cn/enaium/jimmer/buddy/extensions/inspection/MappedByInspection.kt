@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.getTarget
+import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.toAny
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
@@ -37,7 +38,7 @@ class MappedByInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
-                if (element is PsiMethod) {
+                if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
                     element.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName || it.qualifiedName == OneToOne::class.qualifiedName }
                         ?.also {
                             val mappedBy = it.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
@@ -56,7 +57,7 @@ class MappedByInspection : LocalInspectionTool() {
                                 )
                             }
                         }
-                } else if (element is KtProperty) {
+                } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
                     PSI_SHARED.annotations(element)
                         .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }
                         ?.also {

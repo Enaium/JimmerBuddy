@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
+import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToManyAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToOneAnnotation
 import com.intellij.codeInspection.LocalInspectionTool
@@ -27,6 +28,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.containingClass
 
 /**
  * @author Enaium
@@ -39,7 +41,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                 val toManyProblem = "The prop type is a collection, but the annotation is @ToOne"
                 val toOneProblem = "The prop type is not a collection, but the annotation is @ToMany"
 
-                if (element is PsiMethod) {
+                if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
                     val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
                     if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY && listOf(
                             List::class.java.name,
@@ -55,7 +57,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                             holder.registerProblem(element, toOneProblem)
                         }
                     }
-                } else if (element is KtProperty) {
+                } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
                     val typeReference = element.typeReference?.let { PSI_SHARED.type(it) }
                     if (typeReference?.arguments?.isNotEmpty() == true && listOf(
                             List::class.qualifiedName,
