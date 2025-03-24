@@ -30,10 +30,12 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Formula
+import org.babyfish.jimmer.sql.IdView
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 
 /**
  * @author Enaium
@@ -63,7 +65,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                 .also { nav ->
                                     val targets = mutableListOf<PsiElement>()
                                     immutableType.declaredProps[method.name]?.also {
-                                        targets.addAll((method.modifierList.annotations.find { it.qualifiedName == Formula::class.qualifiedName }
+                                        val annotations = method.modifierList.annotations
+                                        targets.addAll((annotations.find { it.qualifiedName == Formula::class.qualifiedName }
                                             ?.findAttributeValue("dependencies")
                                             ?.toAny(Array<String>::class.java) as? Array<*>)?.map {
                                             element.findMethodsByName(
@@ -71,6 +74,21 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                                 true
                                             ).toList()
                                         }?.flatten()?.toList() ?: emptyList())
+                                        annotations.find { it.qualifiedName == IdView::class.qualifiedName }
+                                            ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
+                                            ?.takeIf { it.isNotBlank() }?.also {
+                                                targets.addAll(element.findMethodsByName(it, false).toList())
+                                            } ?: run {
+
+                                            method.name.takeIf { it.endsWith("Id") }?.also {
+                                                targets.addAll(
+                                                    element.findMethodsByName(
+                                                        it.substring(0, it.length - 2),
+                                                        false
+                                                    )
+                                                )
+                                            }
+                                        }
                                     }?.let {
                                         if (it.context().getImmutableType(it.elementType)
                                                 ?.let { it.isEntity || it.isEmbeddable } == true
@@ -115,11 +133,24 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                 .also { nav ->
                                     val targets = mutableListOf<PsiElement>()
                                     immutableType.declaredProperties[property.name]?.also {
+                                        val annotations = PSI_SHARED.annotations(property)
                                         targets.addAll(
-                                            (PSI_SHARED.annotations(property)
+                                            (annotations
                                                 .find { it.fqName == Formula::class.qualifiedName }?.arguments?.find { it.name == "dependencies" }?.value as? List<*>)?.mapNotNull {
                                                 element.findPropertyByName(it.toString(), true)
                                             } ?: emptyList())
+                                        annotations.find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }?.value?.toString()
+                                            ?.also {
+                                                element.findPropertyByName(it)?.also {
+                                                    targets.add(it)
+                                                }
+                                            } ?: run {
+                                            it.name.takeIf { it.endsWith("Id") }?.also {
+                                                element.findPropertyByName(it.substring(0, it.length - 2))?.also {
+                                                    targets.add(it)
+                                                }
+                                            }
+                                        }
                                     }?.let {
                                         if (it.targetType?.let { it.isImmutable || it.isEntity || it.isEmbeddable } == true) {
                                             property.typeReference?.let { PSI_SHARED.type(it) }
