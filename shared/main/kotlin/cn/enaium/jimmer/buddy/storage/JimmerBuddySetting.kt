@@ -21,6 +21,8 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import java.math.BigDecimal
+import java.util.*
 
 /**
  * @author Enaium
@@ -40,7 +42,65 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
     }
 
     data class Setting(
-        var databases: List<DatabaseItem> = listOf<DatabaseItem>()
+        var databases: List<DatabaseItem> = listOf<DatabaseItem>(),
+        var typeMapping: Map<String, JavaToKotlin> = mapOf(
+            "tinyint" to JavaToKotlin(java.lang.Byte::class.java.name, Byte::class.qualifiedName!!),
+            "smallint" to JavaToKotlin(
+                java.lang.Short::class.java.name,
+                Short::class.qualifiedName!!
+            ),
+            "integer" to JavaToKotlin(
+                Integer::class.java.name,
+                Int::class.qualifiedName!!
+            ),
+            "bigint" to JavaToKotlin(java.lang.Long::class.java.name, Long::class.qualifiedName!!),
+            "decimal" to JavaToKotlin(
+                BigDecimal::class.java.name,
+                BigDecimal::class.qualifiedName!!
+            ),
+            "numeric" to JavaToKotlin(
+                BigDecimal::class.java.name,
+                BigDecimal::class.qualifiedName!!
+            ),
+            "varchar" to JavaToKotlin(
+                java.lang.String::class.java.name,
+                String::class.qualifiedName!!
+            ),
+            "text" to JavaToKotlin(java.lang.String::class.java.name, String::class.qualifiedName!!),
+            "date" to JavaToKotlin(
+                java.time.LocalDateTime::class.java.name,
+                java.time.LocalDate::class.qualifiedName!!
+            ),
+            "time" to JavaToKotlin(
+                java.time.LocalTime::class.java.name,
+                java.time.LocalTime::class.qualifiedName!!
+            ),
+            "datetime" to JavaToKotlin(
+                java.time.LocalDateTime::class.java.name,
+                java.time.LocalDateTime::class.qualifiedName!!
+            ),
+            "timestamp" to JavaToKotlin(
+                java.time.LocalDateTime::class.java.name,
+                java.time.LocalDateTime::class.qualifiedName!!
+            ),
+            "bool" to JavaToKotlin(
+                java.lang.Boolean::class.java.name,
+                Boolean::class.qualifiedName!!
+            ),
+            "boolean" to JavaToKotlin(
+                java.lang.Boolean::class.java.name,
+                Boolean::class.qualifiedName!!
+            ),
+            "uuid" to JavaToKotlin(UUID::class.java.name, UUID::class.qualifiedName!!),
+            "int2" to JavaToKotlin(java.lang.Short::class.java.name, Short::class.qualifiedName!!),
+            "int4" to JavaToKotlin(Integer::class.java.name, Int::class.qualifiedName!!),
+            "int8" to JavaToKotlin(java.lang.Long::class.java.name, Long::class.qualifiedName!!),
+            "float4" to JavaToKotlin(java.lang.Float::class.java.name, Float::class.qualifiedName!!),
+            "float8" to JavaToKotlin(
+                java.lang.Double::class.java.name,
+                Double::class.qualifiedName!!
+            )
+        )
     )
 
     data class DatabaseItem(
@@ -50,6 +110,11 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
         var catalog: String = "",
         var schemaPattern: String = "",
         var tableNamePattern: String = ""
+    )
+
+    data class JavaToKotlin(
+        var javaType: String = "",
+        var kotlinType: String = ""
     )
 
     private var state = Setting()

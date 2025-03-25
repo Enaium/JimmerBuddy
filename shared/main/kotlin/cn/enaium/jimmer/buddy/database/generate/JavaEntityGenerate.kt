@@ -19,8 +19,8 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.firstCharLowercase
-import cn.enaium.jimmer.buddy.utility.javaTypeMappings
 import cn.enaium.jimmer.buddy.utility.snakeToCamelCase
 import cn.enaium.jimmer.buddy.utility.toPlural
 import com.squareup.javapoet.*
@@ -34,6 +34,9 @@ import javax.lang.model.element.Modifier
  * @author Enaium
  */
 class JavaEntityGenerate : EntityGenerate {
+
+    val javaTypeMappings = JimmerBuddySetting.INSTANCE.state.typeMapping.mapValues { it.value.javaType }
+
     override fun generate(
         projectDir: Path,
         generateEntity: GenerateEntityModel,

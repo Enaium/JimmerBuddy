@@ -119,52 +119,6 @@ internal fun DatabaseMetaData.getUniqueKeys(tableName: String): Set<UniqueKey> {
     }.toSet()
 }
 
-internal val kotlinTypeMappings = mutableMapOf(
-    "tinyint" to Byte::class.qualifiedName!!,
-    "smallint" to Short::class.qualifiedName!!,
-    "integer" to Int::class.qualifiedName!!,
-    "bigint" to Long::class.qualifiedName!!,
-    "decimal" to BigDecimal::class.qualifiedName!!,
-    "numeric" to BigDecimal::class.qualifiedName!!,
-    "varchar" to String::class.qualifiedName!!,
-    "text" to String::class.qualifiedName!!,
-    "date" to LocalDate::class.qualifiedName!!,
-    "time" to LocalTime::class.qualifiedName!!,
-    "datetime" to LocalDateTime::class.qualifiedName!!,
-    "timestamp" to LocalDateTime::class.qualifiedName!!,
-    "bool" to Boolean::class.qualifiedName!!,
-    "boolean" to Boolean::class.qualifiedName!!,
-    "uuid" to UUID::class.qualifiedName!!,
-    "int2" to Short::class.qualifiedName!!,
-    "int4" to Int::class.qualifiedName!!,
-    "int8" to Long::class.qualifiedName!!,
-    "float4" to Float::class.qualifiedName!!,
-    "float8" to Double::class.qualifiedName!!,
-)
-
-internal val javaTypeMappings = mutableMapOf(
-    "tinyint" to java.lang.Byte::class.java.name,
-    "smallint" to java.lang.Short::class.java.name,
-    "integer" to java.lang.Integer::class.java.name,
-    "bigint" to java.lang.Long::class.java.name,
-    "decimal" to BigDecimal::class.java.name,
-    "numeric" to BigDecimal::class.java.name,
-    "varchar" to java.lang.String::class.java.name,
-    "text" to java.lang.String::class.java.name,
-    "date" to LocalDate::class.java.name,
-    "time" to LocalTime::class.java.name,
-    "datetime" to LocalDateTime::class.java.name,
-    "timestamp" to LocalDateTime::class.java.name,
-    "bool" to java.lang.Boolean::class.java.name,
-    "boolean" to java.lang.Boolean::class.java.name,
-    "uuid" to UUID::class.java.name,
-    "int2" to java.lang.Short::class.java.name,
-    "int4" to java.lang.Integer::class.java.name,
-    "int8" to java.lang.Long::class.java.name,
-    "float4" to java.lang.Float::class.java.name,
-    "float8" to java.lang.Double::class.java.name,
-)
-
 internal enum class ColumnType {
     TINYINT,
     SMALLINT,

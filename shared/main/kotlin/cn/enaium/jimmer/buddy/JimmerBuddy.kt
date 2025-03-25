@@ -80,6 +80,7 @@ object JimmerBuddy {
             val COLUMN = IconLoader.getIcon("/icons/database/column.svg", JimmerBuddy::class.java)
             val COLUMN_GOLD_KEY = IconLoader.getIcon("/icons/database/columnGoldKey.svg", JimmerBuddy::class.java)
             val COLUMN_BLUE_KEY = IconLoader.getIcon("/icons/database/columnBlueKey.svg", JimmerBuddy::class.java)
+            val INDEX = IconLoader.getIcon("/icons/database/index.svg", JimmerBuddy::class.java)
         }
     }
 

@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.AddDatabase
 import cn.enaium.jimmer.buddy.dialog.GenerateEntityDialog
+import cn.enaium.jimmer.buddy.dialog.TypeMappingDialog
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.invokeLater
@@ -99,6 +100,11 @@ class DatabaseList(val project: Project) : JPanel() {
                             }
                         }
                     }, null, "Add", Dimension(24, 24)))
+                    add(ActionButton(object : AnAction(AllIcons.General.Settings) {
+                        override fun actionPerformed(e: AnActionEvent) {
+                            TypeMappingDialog().show()
+                        }
+                    }, null, "Setting", Dimension(24, 24)))
                 }, BorderLayout.EAST)
             }, BorderLayout.NORTH
         )

@@ -1,8 +1,8 @@
 package cn.enaium.jimmer.buddy.dialog.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.database.model.Column
-import cn.enaium.jimmer.buddy.database.model.Table
+import cn.enaium.jimmer.buddy.database.model.*
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTreeTable
@@ -14,10 +14,7 @@ import com.intellij.ui.treeStructure.treetable.TreeColumnInfo
 import com.intellij.util.ui.ColumnInfo
 import java.awt.BorderLayout
 import java.awt.Component
-import javax.swing.DefaultCellEditor
-import javax.swing.JPanel
-import javax.swing.JTable
-import javax.swing.JTree
+import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.table.TableCellEditor
@@ -33,8 +30,33 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
         layout = BorderLayout()
         tables.forEach { table ->
             val tableNode = TableNode(table)
-            table.columns.forEach { column ->
-                tableNode.add(ColumnNode(column))
+            table.columns.takeIf { it.isNotEmpty() }?.also { columns ->
+                tableNode.add(FolderNode(FolderNode.Type.COLUMN).apply {
+                    columns.forEach { column ->
+                        add(ColumnNode(column))
+                    }
+                })
+            }
+            table.primaryKeys.takeIf { it.isNotEmpty() }?.also { keys ->
+                tableNode.add(FolderNode(FolderNode.Type.KEY).apply {
+                    keys.forEach { key ->
+                        add(KeyNode(key))
+                    }
+                })
+            }
+            table.foreignKeys.takeIf { it.isNotEmpty() }?.also { foreignKeys ->
+                tableNode.add(FolderNode(FolderNode.Type.FOREIGN_KEY).apply {
+                    foreignKeys.forEach { foreignKey ->
+                        add(ForeignKeyNode(foreignKey))
+                    }
+                })
+            }
+            table.uniqueKeys.takeIf { it.isNotEmpty() }?.also { indexes ->
+                tableNode.add(FolderNode(FolderNode.Type.INDEX).apply {
+                    indexes.forEach { index ->
+                        add(IndexNode(index))
+                    }
+                })
             }
             root.add(tableNode)
         }
@@ -84,7 +106,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
         }
 
         override fun isCellEditable(item: Any): Boolean {
-            return item is DefaultNode
+            return item is TableNode || item is ColumnNode
         }
 
         override fun getEditor(item: Any): TableCellEditor? {
@@ -139,6 +161,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
             return if (item is ColumnNode) {
                 DefaultCellEditor(JBCheckBox().apply {
                     isSelected = item.column.nullable
+                    horizontalAlignment = SwingUtilities.CENTER
                     addActionListener {
                         item.column.nullable = isSelected
                     }
@@ -161,10 +184,15 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                     ): Component {
                         return JBCheckBox().apply {
                             this.isSelected = value as Boolean
+                            horizontalAlignment = SwingUtilities.CENTER
                         }
                     }
                 }
             }
+        }
+
+        override fun getWidth(table: JTable?): Int {
+            return 70
         }
     }
 
@@ -180,6 +208,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
         ) {
             textRenderer.icon = when (value) {
                 is TableNode -> JimmerBuddy.Icons.Database.TABLE
+                is FolderNode -> AllIcons.Modules.SourceRoot
                 is ColumnNode -> if (tables.find { it.name == value.column.tableName }?.primaryKeys?.any { it.column.name == value.column.name } == true) {
                     JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
                 } else if (tables.find { it.name == value.column.tableName }?.foreignKeys?.any { it.column.name == value.column.name } == true) {
@@ -188,6 +217,9 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                     JimmerBuddy.Icons.Database.COLUMN
                 }
 
+                is KeyNode -> JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
+                is ForeignKeyNode -> JimmerBuddy.Icons.Database.COLUMN_BLUE_KEY
+                is IndexNode -> JimmerBuddy.Icons.Database.INDEX
                 else -> null
             }
             textRenderer.append(value.toString())
@@ -199,10 +231,29 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
             root.children().toList().filterIsInstance<TableNode>()
                 .find { it.table.name == table.name && it.isChecked() }
                 ?.let { tableNode ->
-                    table.copy(columns = table.columns.filter { column ->
-                        tableNode.children().toList().filterIsInstance<ColumnNode>()
-                            .any { it.column.name == column.name && it.isChecked() }
-                    }.toSet())
+                    val children = tableNode.children().toList()
+                    table.copy(
+                        columns = table.columns.filter { column ->
+                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.COLUMN }
+                                ?.children()?.toList()?.filterIsInstance<ColumnNode>()
+                                ?.any { it.column.name == column.name && it.isChecked() } == true
+                        }.toSet(),
+                        primaryKeys = table.primaryKeys.filter { key ->
+                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.KEY }
+                                ?.children()?.toList()?.filterIsInstance<KeyNode>()
+                                ?.any { it.primaryKey.name == key.name && it.isChecked() } == true
+                        }.toSet(),
+                        foreignKeys = table.foreignKeys.filter { foreignKey ->
+                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.FOREIGN_KEY }
+                                ?.children()?.toList()?.filterIsInstance<ForeignKeyNode>()
+                                ?.any { it.foreignKey.name == foreignKey.name && it.isChecked() } == true
+                        }.toMutableSet(),
+                        uniqueKeys = table.uniqueKeys.filter { index ->
+                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.INDEX }
+                                ?.children()?.toList()?.filterIsInstance<IndexNode>()
+                                ?.any { it.uniqueKey.name == index.name && it.isChecked() } == true
+                        }.toSet()
+                    )
                 }
         }.toSet()
     }
@@ -210,6 +261,16 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
     private open class DefaultNode() : CheckedTreeNode() {
         init {
             isChecked = true
+        }
+    }
+
+    private class FolderNode(val type: Type) : DefaultNode() {
+        enum class Type(val title: String) {
+            COLUMN("columns"), KEY("keys"), FOREIGN_KEY("foreign keys"), INDEX("indexes")
+        }
+
+        override fun toString(): String {
+            return type.title
         }
     }
 
@@ -222,6 +283,24 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
     private class ColumnNode(val column: Column) : DefaultNode() {
         override fun toString(): String {
             return column.name
+        }
+    }
+
+    private class KeyNode(val primaryKey: PrimaryKey) : DefaultNode() {
+        override fun toString(): String {
+            return primaryKey.name
+        }
+    }
+
+    private class ForeignKeyNode(val foreignKey: ForeignKey) : DefaultNode() {
+        override fun toString(): String {
+            return foreignKey.name
+        }
+    }
+
+    private class IndexNode(val uniqueKey: UniqueKey) : DefaultNode() {
+        override fun toString(): String {
+            return uniqueKey.name
         }
     }
 }
