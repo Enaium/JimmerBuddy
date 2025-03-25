@@ -23,9 +23,9 @@ data class Column(
     val name: String,
     val tableName: String,
     var type: String,
-    val remark: String?,
+    var remark: String?,
     val defaultValue: String?,
-    val nullable: Boolean,
+    var nullable: Boolean,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

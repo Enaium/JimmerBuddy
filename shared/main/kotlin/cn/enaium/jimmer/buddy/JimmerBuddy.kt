@@ -16,8 +16,8 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
+import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.ide.highlighter.JavaFileType
@@ -64,9 +64,8 @@ import kotlin.io.path.*
 object JimmerBuddy {
 
     const val NAME = "JimmerBuddy"
-    const val MODULE_TYPE_ID = "JimmerModuleType"
     const val JIMMER_NAME = "Jimmer"
-    val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("vaadin_project_model")
+    val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("jimmer_project_model")
 
     object Icons {
         val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)

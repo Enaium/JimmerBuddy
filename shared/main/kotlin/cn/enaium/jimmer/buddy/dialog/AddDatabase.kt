@@ -22,6 +22,7 @@ import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
@@ -34,29 +35,28 @@ class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
 
     init {
         title = "Add Database"
-        isResizable = false
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return panel {
             row("URI:") {
-                textField().bindText(databaseModel.uriProperty)
+                textField().align(Align.FILL).bindText(databaseModel.uriProperty)
             }
             row("Username:") {
-                textField().bindText(databaseModel.usernameProperty)
+                textField().align(Align.FILL).bindText(databaseModel.usernameProperty)
             }
             row("Password:") {
-                passwordField().bindText(databaseModel.passwordProperty)
+                passwordField().align(Align.FILL).bindText(databaseModel.passwordProperty)
             }
             row("Catalog:") {
-                textField().bindText(databaseModel.catalogProperty)
+                textField().align(Align.FILL).bindText(databaseModel.catalogProperty)
             }
             row("Schema Pattern:") {
-                textField().bindText(databaseModel.schemaPatternProperty)
+                textField().align(Align.FILL).bindText(databaseModel.schemaPatternProperty)
             }
             row("Table Name Pattern:") {
-                textField().bindText(databaseModel.tableNamePatternProperty)
+                textField().align(Align.FILL).bindText(databaseModel.tableNamePatternProperty)
             }
         }
     }

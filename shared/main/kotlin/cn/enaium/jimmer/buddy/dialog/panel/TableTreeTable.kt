@@ -7,15 +7,21 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTreeTable
 import com.intellij.ui.CheckedTreeNode
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.treeStructure.treetable.TreeColumnInfo
 import com.intellij.util.ui.ColumnInfo
 import java.awt.BorderLayout
-import javax.swing.ComboBoxModel
+import java.awt.Component
 import javax.swing.DefaultCellEditor
 import javax.swing.JPanel
+import javax.swing.JTable
 import javax.swing.JTree
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import javax.swing.table.TableCellEditor
+import javax.swing.table.TableCellRenderer
 
 /**
  * @author Enaium
@@ -32,15 +38,15 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
             }
             root.add(tableNode)
         }
-        val treeTable = CheckboxTreeTable(root, DefaultNodeCell(), arrayOf(TreeColumnInfo("Name"), ColumnType("Type")))
+        val treeTable = CheckboxTreeTable(
+            root,
+            DefaultNodeCell(),
+            arrayOf(TreeColumnInfo("Name"), ColumnType("Type"), ColumnNullable("Nullable"), ColumnComment("Comment"))
+        )
         add(JBScrollPane(treeTable), BorderLayout.CENTER)
     }
 
     private class ColumnType(name: String) : ColumnInfo<Any, Any>(name) {
-        override fun getColumnClass(): Class<*> {
-            return ComboBoxModel::class.java
-        }
-
         override fun valueOf(p0: Any): Any? {
             return (p0 as? ColumnNode)?.column?.type
         }
@@ -64,6 +70,100 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                 })
             } else {
                 null
+            }
+        }
+    }
+
+    private class ColumnComment(name: String) : ColumnInfo<Any, Any>(name) {
+        override fun valueOf(p0: Any?): Any? {
+            return when (p0) {
+                is TableNode -> p0.table.remark
+                is ColumnNode -> p0.column.remark
+                else -> null
+            }
+        }
+
+        override fun isCellEditable(item: Any): Boolean {
+            return item is DefaultNode
+        }
+
+        override fun getEditor(item: Any): TableCellEditor? {
+            return if (item is TableNode) {
+                DefaultCellEditor(JBTextField().apply {
+                    document.addDocumentListener(object : DocumentListener {
+                        override fun insertUpdate(e: DocumentEvent) {
+                            item.table.remark = text
+                        }
+
+                        override fun removeUpdate(e: DocumentEvent) {
+                            item.table.remark = text
+                        }
+
+                        override fun changedUpdate(e: DocumentEvent) {
+                            item.table.remark = text
+                        }
+                    })
+                })
+            } else if (item is ColumnNode) {
+                DefaultCellEditor(JBTextField().apply {
+                    document.addDocumentListener(object : DocumentListener {
+                        override fun insertUpdate(e: DocumentEvent) {
+                            item.column.remark = text
+                        }
+
+                        override fun removeUpdate(e: DocumentEvent) {
+                            item.column.remark = text
+                        }
+
+                        override fun changedUpdate(e: DocumentEvent) {
+                            item.column.remark = text
+                        }
+                    })
+                })
+            } else {
+                null
+            }
+        }
+    }
+
+    private class ColumnNullable(name: String) : ColumnInfo<Any, Any>(name) {
+        override fun valueOf(p0: Any?): Any? {
+            return (p0 as? ColumnNode)?.column?.nullable
+        }
+
+        override fun isCellEditable(item: Any): Boolean {
+            return item is ColumnNode
+        }
+
+        override fun getEditor(item: Any): TableCellEditor? {
+            return if (item is ColumnNode) {
+                DefaultCellEditor(JBCheckBox().apply {
+                    isSelected = item.column.nullable
+                    addActionListener {
+                        item.column.nullable = isSelected
+                    }
+                })
+            } else {
+                null
+            }
+        }
+
+        override fun getRenderer(item: Any): TableCellRenderer? {
+            return (item as? ColumnNode)?.column?.nullable?.let {
+                object : TableCellRenderer {
+                    override fun getTableCellRendererComponent(
+                        table: JTable,
+                        value: Any,
+                        isSelected: Boolean,
+                        hasFocus: Boolean,
+                        row: Int,
+                        column: Int
+                    ): Component {
+                        return JBCheckBox().apply {
+                            this.isSelected = value as Boolean
+                        }
+                    }
+                }
             }
         }
     }

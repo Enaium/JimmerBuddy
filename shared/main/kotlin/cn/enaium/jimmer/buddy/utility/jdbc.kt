@@ -53,11 +53,12 @@ internal fun DatabaseMetaData.getTables(
         val tables = mutableSetOf<Table>()
         while (tableResult.next()) {
             val tableName = tableResult.getString(ColumnLabel.TABLE_NAME.name)
+            val remark = tableResult.getString(ColumnLabel.REMARKS.name)
             val columns = getColumns(tableName)
             val primaryKeys = getPrimaryKeys(tableName)
             val foreignKeys = getForeignKeys(tableName)
             val uniqueKeys = getUniqueKeys(tableName)
-            tables.add(Table(tableName, columns, primaryKeys, foreignKeys, uniqueKeys))
+            tables.add(Table(tableName, remark, columns, primaryKeys, foreignKeys, uniqueKeys))
         }
         tables
     }

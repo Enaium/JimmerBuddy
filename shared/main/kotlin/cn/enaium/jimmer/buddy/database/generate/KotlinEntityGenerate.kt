@@ -100,6 +100,13 @@ class KotlinEntityGenerate : EntityGenerate {
 
             val typeName = table.name.snakeToCamelCase()
             TypeSpec.interfaceBuilder(ClassName(packageName, typeName)).let { type ->
+
+                if (generateEntity.comment) {
+                    table.remark?.also {
+                        type.addKdoc(it)
+                    }
+                }
+
                 if (commonColumns.isNotEmpty()) type.addSuperinterface(ClassName(packageName, BASE_ENTITY))
                 // Add table columns
                 type.addProperties(

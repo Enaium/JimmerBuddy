@@ -21,6 +21,7 @@ package cn.enaium.jimmer.buddy.database.model
  */
 data class Table(
     val name: String,
+    var remark: String?,
     val columns: Set<Column>,
     val primaryKeys: Set<PrimaryKey>,
     val foreignKeys: MutableSet<ForeignKey>,

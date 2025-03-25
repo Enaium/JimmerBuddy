@@ -101,6 +101,13 @@ class JavaEntityGenerate : EntityGenerate {
 
             val typeName = table.name.snakeToCamelCase()
             TypeSpec.interfaceBuilder(ClassName.get(packageName, typeName)).let { type ->
+
+                if (generateEntity.comment) {
+                    table.remark?.also {
+                        type.addJavadoc(it)
+                    }
+                }
+
                 if (commonColumns.isNotEmpty()) type.addSuperinterface(ClassName.get(packageName, BASE_ENTITY))
                 // Add table columns
                 type.addMethods(

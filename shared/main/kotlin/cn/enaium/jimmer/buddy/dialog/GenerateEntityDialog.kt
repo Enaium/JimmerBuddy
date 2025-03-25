@@ -71,6 +71,7 @@ class GenerateEntityDialog(
 
     init {
         title = "Generate Entity"
+        setSize(800, 600)
         init()
     }
 
