@@ -144,12 +144,12 @@
         />
         <intentionAction>
             <language>JAVA</language>
-            <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
+            <className>cn.enaium.jimmer.buddy.extensions.intention.JavaDraftSetIntentionAction</className>
             <category>Jimmer</category>
         </intentionAction>
         <intentionAction>
             <language>kotlin</language>
-            <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
+            <className>cn.enaium.jimmer.buddy.extensions.intention.KotlinDraftSetIntentionAction</className>
             <category>Jimmer</category>
         </intentionAction>
     </extensions>
