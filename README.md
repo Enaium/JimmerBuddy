@@ -13,6 +13,7 @@ A plugin that adds first-class support for Project Jimmer
 - Generate DTO file for immutable.
 - Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
+- Generate all set of Draft
 
 ## Screenshots
 
@@ -22,7 +23,7 @@ A plugin that adds first-class support for Project Jimmer
 
 ![project wizard](https://s2.loli.net/2025/03/05/USP5VdZvlA6iNzO.png)
 
-![generate entity](https://s2.loli.net/2025/03/23/OnuVZMdpobcISx4.png)
+![generate entity](https://s2.loli.net/2025/03/26/uLvkng5bNHhqeaw.png)
 
 ![new dto file](https://s2.loli.net/2025/03/11/gjAWhY8DiOKT5vz.gif)
 
@@ -31,3 +32,5 @@ A plugin that adds first-class support for Project Jimmer
 ![inspection](https://s2.loli.net/2025/03/19/WSbH2kPVGIwZ4Lr.png)
 
 ![nav](https://s2.loli.net/2025/03/20/Kp6ErJH1aNvk8Sl.png)
+
+![generate all set](https://s2.loli.net/2025/03/26/oK5duRqIs2Hb8mj.gif)
