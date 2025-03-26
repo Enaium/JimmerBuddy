@@ -180,7 +180,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                         isSelected: Boolean,
                         hasFocus: Boolean,
                         row: Int,
-                        column: Int
+                        column: Int,
                     ): Component {
                         return JBCheckBox().apply {
                             this.isSelected = value as Boolean
@@ -204,7 +204,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
             expanded: Boolean,
             leaf: Boolean,
             row: Int,
-            hasFocus: Boolean
+            hasFocus: Boolean,
         ) {
             textRenderer.icon = when (value) {
                 is TableNode -> JimmerBuddy.Icons.Database.TABLE
@@ -229,29 +229,29 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
     fun getResult(): Set<Table> {
         return tables.mapNotNull { table ->
             root.children().toList().filterIsInstance<TableNode>()
-                .find { it.table.name == table.name && it.isChecked() }
+                .find { it.table.name == table.name && it.choose() }
                 ?.let { tableNode ->
                     val children = tableNode.children().toList()
                     table.copy(
                         columns = table.columns.filter { column ->
                             children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.COLUMN }
                                 ?.children()?.toList()?.filterIsInstance<ColumnNode>()
-                                ?.any { it.column.name == column.name && it.isChecked() } == true
+                                ?.any { it.column.name == column.name && it.choose() } == true
                         }.toSet(),
                         primaryKeys = table.primaryKeys.filter { key ->
                             children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.KEY }
                                 ?.children()?.toList()?.filterIsInstance<KeyNode>()
-                                ?.any { it.primaryKey.name == key.name && it.isChecked() } == true
+                                ?.any { it.primaryKey.name == key.name && it.choose() } == true
                         }.toSet(),
                         foreignKeys = table.foreignKeys.filter { foreignKey ->
                             children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.FOREIGN_KEY }
                                 ?.children()?.toList()?.filterIsInstance<ForeignKeyNode>()
-                                ?.any { it.foreignKey.name == foreignKey.name && it.isChecked() } == true
+                                ?.any { it.foreignKey.name == foreignKey.name && it.choose() } == true
                         }.toMutableSet(),
                         uniqueKeys = table.uniqueKeys.filter { index ->
                             children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.INDEX }
                                 ?.children()?.toList()?.filterIsInstance<IndexNode>()
-                                ?.any { it.uniqueKey.name == index.name && it.isChecked() } == true
+                                ?.any { it.uniqueKey.name == index.name && it.choose() } == true
                         }.toSet()
                     )
                 }
@@ -261,6 +261,20 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
     private open class DefaultNode() : CheckedTreeNode() {
         init {
             isChecked = true
+        }
+
+        fun choose(parent: DefaultNode = this): Boolean {
+            if (parent.isChecked()) {
+                return true
+            }
+            val children = parent.children()
+            while (children.hasMoreElements()) {
+                val node = children.nextElement() as DefaultNode
+                if (choose(node)) {
+                    return true
+                }
+            }
+            return false
         }
     }
 
