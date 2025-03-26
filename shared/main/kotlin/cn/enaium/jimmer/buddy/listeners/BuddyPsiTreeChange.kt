@@ -18,8 +18,8 @@ package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.findProjectDir
-import cn.enaium.jimmer.buddy.utility.isGeneratedFile
 import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
+import cn.enaium.jimmer.buddy.utility.isGeneratedFile
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
