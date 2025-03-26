@@ -102,6 +102,12 @@ fun <T> runReadOnly(block: () -> T): T {
     })
 }
 
+fun <T> runWriteOnly(block: () -> T): T {
+    return ApplicationManager.getApplication().runWriteAction(Computable {
+        return@Computable block()
+    })
+}
+
 fun <T> thread(block: () -> T): T {
     return ApplicationManager.getApplication().executeOnPooledThread(Callable {
         return@Callable block()
@@ -112,4 +118,8 @@ fun invokeLater(block: () -> Unit) {
     ApplicationManager.getApplication().invokeLater {
         block()
     }
+}
+
+fun isK2Enable(): Boolean {
+    return System.getProperty("idea.kotlin.plugin.use.k2")?.toBoolean() == true
 }

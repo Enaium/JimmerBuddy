@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.utility
 
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
 
@@ -32,10 +33,11 @@ interface PsiShared {
         val fqName: String?,
         val nullable: Boolean,
         val ktClass: KtClass?,
-        val arguments: List<Type> = emptyList()
+        val arguments: List<Type> = emptyList(),
     )
 
     fun annotations(ktClass: KtClass): List<Annotation>
     fun annotations(ktProperty: KtProperty): List<Annotation>
     fun type(ktTypeReference: KtTypeReference): Type
+    fun receiver(ktLambdaExpression: KtLambdaExpression): KtClass?
 }

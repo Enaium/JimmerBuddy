@@ -14,6 +14,7 @@
             <li>Generate DTO file for immutable.</li>
             <li>Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.</li>
             <li>Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.</li>
+            <li>Generate all set of Draft</li>
         </ul>]]>
     </description>
     <change-notes>
@@ -141,6 +142,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
         />
+        <intentionAction>
+            <language>JAVA</language>
+            <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
+            <category>Jimmer</category>
+        </intentionAction>
+        <intentionAction>
+            <language>kotlin</language>
+            <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
+            <category>Jimmer</category>
+        </intentionAction>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

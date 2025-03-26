@@ -18,9 +18,11 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
+import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
@@ -148,4 +150,35 @@ fun KtClass.findPropertyByName(name: String, superType: Boolean): KtNamedDeclara
         }
     }
     return prop
+}
+
+fun PsiClass.isDraft(): Boolean {
+    superTypes.takeIf { it.isNotEmpty() }?.forEach {
+        if (PsiUtil.resolveGenericsClassInType(it).element?.isDraft() == true) {
+            return true
+        }
+    }
+
+    return this.qualifiedName == Draft::class.qualifiedName
+}
+
+fun KtClass.isDraft(): Boolean {
+    superTypeListEntries.takeIf { it.isNotEmpty() }?.forEach {
+        it.typeReference?.also {
+            PSI_SHARED.type(it).also {
+                if (it.ktClass?.isDraft() == true) {
+                    return true
+                } else if (it.fqName == Draft::class.qualifiedName) {
+                    return true
+                }
+            }
+        }
+    }
+
+    return this.fqName?.asString() == Draft::class.qualifiedName
+}
+
+fun PsiLambdaExpression.firstArg(): Pair<String, PsiClass?>? {
+    return parameterList.parameters.firstOrNull()
+        ?.let { it.name to PsiUtil.resolveGenericsClassInType(it.type).element }
 }

@@ -88,6 +88,17 @@ class PsiShared231 : PsiShared {
         }
     }
 
+    override fun receiver(ktLambdaExpression: KtLambdaExpression): KtClass? {
+        return (ktLambdaExpression.analyze().get(
+            BindingContext.EXPRESSION_TYPE_INFO,
+            ktLambdaExpression
+        )?.type?.arguments?.firstOrNull()?.type?.constructor?.declarationDescriptor as? ClassDescriptor)?.let {
+            DescriptorToSourceUtils.getSourceFromDescriptor(
+                it
+            ) as? KtClass
+        }
+    }
+
     fun KtAnnotationEntry.annotation(): AnnotationDescriptor? =
         this.analyze()[BindingContext.ANNOTATION, this]
 

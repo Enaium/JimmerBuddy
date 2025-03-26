@@ -16,14 +16,12 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.utility.PsiShared
-import cn.enaium.jimmer.buddy.utility.createKSClassDeclaration
-import cn.enaium.jimmer.buddy.utility.createKSName
-import cn.enaium.jimmer.buddy.utility.createKSType
+import cn.enaium.jimmer.buddy.utility.*
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.base.KaConstantValue
+import org.jetbrains.kotlin.analysis.api.types.KaFunctionType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
@@ -41,10 +39,6 @@ import org.jetbrains.kotlin.resolve.constants.KClassValue.Value.NormalClass
  * @author Enaium
  */
 class PsiShared242 : PsiShared {
-    private fun isK2Enable(): Boolean {
-        return System.getProperty("idea.kotlin.plugin.use.k2")?.toBoolean() == true
-    }
-
     override fun annotations(ktClass: KtClass): List<PsiShared.Annotation> {
         if (isK2Enable()) {
             analyze(ktClass) {
@@ -133,6 +127,24 @@ class PsiShared242 : PsiShared {
                         )
                     }
                 )
+            }
+        }
+    }
+
+    @OptIn(KaExperimentalApi::class)
+    override fun receiver(ktLambdaExpression: KtLambdaExpression): KtClass? {
+        return if (isK2Enable()) {
+            analyze(ktLambdaExpression) {
+                (ktLambdaExpression.expressionType as KaFunctionType).typeArguments.firstOrNull()?.type?.symbol?.psi as? KtClass
+            }
+        } else {
+            (ktLambdaExpression.analyze().get(
+                BindingContext.EXPRESSION_TYPE_INFO,
+                ktLambdaExpression
+            )?.type?.arguments?.firstOrNull()?.type?.constructor?.declarationDescriptor as? ClassDescriptor)?.let {
+                DescriptorToSourceUtils.getSourceFromDescriptor(
+                    it
+                ) as? KtClass
             }
         }
     }
