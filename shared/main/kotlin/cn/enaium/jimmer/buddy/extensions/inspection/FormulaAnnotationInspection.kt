@@ -2,6 +2,7 @@ package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.findPropertyByName
+import cn.enaium.jimmer.buddy.utility.getTarget
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.toAny
 import com.intellij.codeInspection.LocalInspectionTool
@@ -32,11 +33,17 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
                             }
                             return@also
                         }
-                        val containingClass = element.containingClass ?: return@also
-                        dependencies.forEach {
-                            if (containingClass.findMethodsByName(it, true).isEmpty()) {
-                                holder.registerProblem(element, "The dependency '$it' does not exist")
-                                return@also
+                        dependencies.forEach { dependency ->
+                            val trace = dependency.split(".")
+                            var containingClass = element.containingClass
+
+                            trace.forEach {
+                                containingClass?.findMethodsByName(it, true)?.takeIf { it.isNotEmpty() }?.also {
+                                    containingClass = it.first().getTarget()
+                                } ?: run {
+                                    holder.registerProblem(element, "The dependency '$it' does not exist")
+                                    return@also
+                                }
                             }
                         }
                     }
@@ -54,12 +61,16 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
                                         }
                                         return@also
                                     }
-
-                            val containingClass = element.containingClass() ?: return@also
-                            dependencies.forEach {
-                                if (containingClass.findPropertyByName(it, true) == null) {
-                                    holder.registerProblem(element, "The dependency '$it' does not exist")
-                                    return@also
+                            dependencies.forEach { dependency ->
+                                val trace = dependency.split(".")
+                                var containingClass = element.containingClass()
+                                trace.forEach {
+                                    containingClass?.findPropertyByName(it, true)?.also {
+                                        containingClass = (it as KtProperty).getTarget()
+                                    } ?: run {
+                                        holder.registerProblem(element, "The dependency '$it' does not exist")
+                                        return@also
+                                    }
                                 }
                             }
                         }
