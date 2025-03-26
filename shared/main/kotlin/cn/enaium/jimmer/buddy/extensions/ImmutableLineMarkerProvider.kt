@@ -18,15 +18,13 @@ package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
-import cn.enaium.jimmer.buddy.utility.findPropertyByName
-import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
-import cn.enaium.jimmer.buddy.utility.toAny
-import cn.enaium.jimmer.buddy.utility.toImmutable
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Formula
@@ -35,6 +33,9 @@ import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 
 /**
@@ -43,7 +44,7 @@ import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
     override fun collectNavigationMarkers(
         element: PsiElement,
-        result: MutableCollection<in RelatedItemLineMarkerInfo<*>>
+        result: MutableCollection<in RelatedItemLineMarkerInfo<*>>,
     ) {
         if (element is PsiClass && element.hasImmutableAnnotation() || element is KtClass && element.hasImmutableAnnotation()) {
             element.identifyingElement?.also {
@@ -69,10 +70,21 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         targets.addAll((annotations.find { it.qualifiedName == Formula::class.qualifiedName }
                                             ?.findAttributeValue("dependencies")
                                             ?.toAny(Array<String>::class.java) as? Array<*>)?.map {
-                                            element.findMethodsByName(
-                                                it.toString(),
-                                                true
-                                            ).toList()
+                                            val dependency = it.toString()
+                                            val trace = dependency.split(".")
+                                            var containingClass = method.containingClass
+                                            var methods = arrayOf<PsiMethod>()
+                                            trace.forEachIndexed { index, item ->
+                                                if (index != trace.size - 1) {
+                                                    containingClass?.findMethodsByName(item, true)
+                                                        ?.takeIf { it.isNotEmpty() }
+                                                        ?.also { containingClass = it.first().getTarget() }
+                                                } else {
+                                                    methods = containingClass?.findMethodsByName(item, true)
+                                                        ?: arrayOf<PsiMethod>()
+                                                }
+                                            }
+                                            methods.toList()
                                         }?.flatten()?.toList() ?: emptyList())
                                         annotations.find { it.qualifiedName == IdView::class.qualifiedName }
                                             ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
@@ -137,8 +149,23 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         targets.addAll(
                                             (annotations
                                                 .find { it.fqName == Formula::class.qualifiedName }?.arguments?.find { it.name == "dependencies" }?.value as? List<*>)?.mapNotNull {
-                                                element.findPropertyByName(it.toString(), true)
+                                                val dependency = it.toString()
+                                                val trace = dependency.split(".")
+                                                var containingClass = property.containingClass()
+                                                var ktProperty: KtNamedDeclaration? = null
+                                                trace.forEachIndexed { index, item ->
+                                                    if (index != trace.size - 1) {
+                                                        containingClass?.findPropertyByName(item, true)?.also {
+                                                            containingClass = (it as KtProperty).getTarget()
+                                                        }
+                                                    } else {
+                                                        ktProperty = containingClass?.findPropertyByName(item, true)
+                                                    }
+                                                }
+                                                ktProperty
                                             } ?: emptyList())
+
+
                                         annotations.find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }?.value?.toString()
                                             ?.also {
                                                 element.findPropertyByName(it)?.also {
