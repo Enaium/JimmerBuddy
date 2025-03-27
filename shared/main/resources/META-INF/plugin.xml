@@ -162,7 +162,7 @@
     </projectListeners>
     <actions>
         <action id="cn.enaium.jimmer.buddy.action.Initialize" class="cn.enaium.jimmer.buddy.action.Initialize"
-                text="Initialize" description="Clean all cache"/>
+                text="Initialize" description="Clean all cache" icon="AllIcons.Actions.Refresh"/>
         <group id="JimmerBuddy.New">
             <action id="JimmerBuddy.NewDtoFile" class="cn.enaium.jimmer.buddy.action.NewDtoFile"
                     text="New Jimmer DTO" description="New dto file based on Immutable" icon="/icons/dto.svg"/>
