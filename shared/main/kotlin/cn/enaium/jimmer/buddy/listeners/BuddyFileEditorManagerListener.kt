@@ -59,18 +59,29 @@ class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerLi
     }
 
     private fun fileChange(file: Path) {
-        val dtoFiles = listOf(file).filter { it.extension == "dto" }
-        dtoFiles.isEmpty() && return
+        val dtoFile = file.takeIf { it.extension == "dto" } ?: return
         JimmerBuddy.DEQ.schedule("EditorChange") {
             thread {
                 runReadOnly {
                     if (!DumbService.isDumb(project)) {
                         if (JimmerBuddy.isJavaProject(project)) {
                             JimmerBuddy.init()
-                            JimmerBuddy.dtoProcessJava(project, dtoFiles)
+                            JimmerBuddy.dtoProcessJava(
+                                project,
+                                JimmerBuddy.GenerateProject.generate(
+                                    dtoFile,
+                                    JimmerBuddy.GenerateProject.Language.DTO
+                                )
+                            )
                         } else if (JimmerBuddy.isKotlinProject(project)) {
                             JimmerBuddy.init()
-                            JimmerBuddy.dtoProcessKotlin(project, dtoFiles)
+                            JimmerBuddy.dtoProcessKotlin(
+                                project,
+                                JimmerBuddy.GenerateProject.generate(
+                                    dtoFile,
+                                    JimmerBuddy.GenerateProject.Language.DTO
+                                )
+                            )
                         }
                     }
                 }

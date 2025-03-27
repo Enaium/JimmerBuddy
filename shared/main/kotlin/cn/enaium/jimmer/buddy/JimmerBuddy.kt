@@ -112,22 +112,35 @@ object JimmerBuddy {
             ApplicationManager.getApplication().runReadAction {
                 if (!DumbService.isDumb(project)) {
                     if (isJavaProject(project)) {
-                        sourcesProcessJava(project, projects.map {
-                            it to it.resolve("src/main/java").walk().filter { it.extension == "java" }
-                                .toList()
-                        }.associate { it })
-                        dtoProcessJava(project, projects.map {
-                            it.resolve("src/main/dto").walk().filter { it.extension == "dto" }.toList()
-                        }.flatten())
-                    } else if (isKotlinProject(project)) {
-                        sourceProcessKotlin(project, projects.map {
-                            it to it.resolve("src/main/kotlin").walk().filter { it.extension == "kt" }
-                                .toList()
-                        }.associate { it })
-                        dtoProcessKotlin(
+                        sourcesProcessJava(
                             project,
-                            projects.map { it.resolve("src/main/dto").walk().filter { it.extension == "dto" }.toList() }
-                                .flatten()
+                            GenerateProject.generate(
+                                projects,
+                                setOf("main", "test"),
+                                GenerateProject.Language.JAVA
+                            )
+                        )
+                        dtoProcessJava(
+                            project, GenerateProject.generate(
+                                projects,
+                                setOf("main", "test"),
+                                GenerateProject.Language.DTO
+                            )
+                        )
+                    } else if (isKotlinProject(project)) {
+                        sourceProcessKotlin(
+                            project, GenerateProject.generate(
+                                projects,
+                                setOf("main", "test"),
+                                GenerateProject.Language.KOTLIN
+                            )
+                        )
+                        dtoProcessKotlin(
+                            project, GenerateProject.generate(
+                                projects,
+                                setOf("main", "test"),
+                                GenerateProject.Language.DTO
+                            )
                         )
                     }
                 }
@@ -147,10 +160,10 @@ object JimmerBuddy {
         isInit = false
     }
 
-    fun sourcesProcessJava(project: Project, projects: Map<Path, List<Path>>) {
-        LOG.info("SourcesProcessJava Project:${projects.map { it.key.name }}")
+    fun sourcesProcessJava(project: Project, projects: Set<GenerateProject>) {
+        LOG.info("SourcesProcessJava Project:${projects.map { it.projectDir.name }}")
         val needRefresh = mutableListOf<Pair<Source, Path>>()
-        projects.forEach { (projectDir, sourceFiles) ->
+        projects.forEach { (projectDir, sourceFiles, src) ->
             sourceFiles.isEmpty() && return@forEach
             val psiCaches = CopyOnWriteArraySet<PsiClass>()
             sourceFiles.forEach {
@@ -169,7 +182,7 @@ object JimmerBuddy {
 
             LOG.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${javaImmutablePsiClassCache.size}")
 
-            val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
+            val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
 
             val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
             val context = createContext(
@@ -223,9 +236,9 @@ object JimmerBuddy {
         }
     }
 
-    fun dtoProcessJava(project: Project, dtoFiles: List<Path>) {
+    fun dtoProcessJava(project: Project, projects: Set<GenerateProject>) {
         val needRefresh = mutableListOf<Pair<Source, Path>>()
-        LOG.info("DtoProcessJava Project:${dtoFiles.joinToString(", ") { it.name }}")
+        LOG.info("DtoProcessJava Project:${projects.map { it.projectDir.name }}")
         val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
         val context = createContext(
             pe.elementUtils,
@@ -240,41 +253,42 @@ object JimmerBuddy {
             null,
             false
         )
-        dtoFiles.forEach {
-            val elements = pe.elementUtils
-            val dtoFile = DtoFile(object : OsFile {
-                override fun getAbsolutePath(): String {
-                    return it.absolutePathString()
-                }
+        projects.forEach { (projectDir, sourceFiles, src) ->
+            sourceFiles.forEach {
+                val elements = pe.elementUtils
+                val dtoFile = DtoFile(object : OsFile {
+                    override fun getAbsolutePath(): String {
+                        return it.absolutePathString()
+                    }
 
-                override fun openReader(): Reader {
-                    return it.readText().reader()
+                    override fun openReader(): Reader {
+                        return it.readText().reader()
+                    }
+                }, projectDir.absolutePathString() ?: "", "", emptyList(), it.name)
+                val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
+                val typeElement: TypeElement =
+                    elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
+                try {
+                    val compile = compiler.compile(context.getImmutableType(typeElement))
+                    compile.forEach {
+                        DtoGenerator(context, DocMetadata(context), it).generate()
+                    }
+                    val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
+                    sources.forEach {
+                        needRefresh.add(it to generatedDir)
+                    }
+                } catch (e: Throwable) {
+                    LOG.error(e)
                 }
-            }, findProjectDir(it)?.absolutePathString() ?: "", "", emptyList(), it.name)
-            val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
-            val typeElement: TypeElement =
-                elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
-            try {
-                val compile = compiler.compile(context.getImmutableType(typeElement))
-                compile.forEach {
-                    DtoGenerator(context, DocMetadata(context), it).generate()
-                }
-                val projectDir = findProjectDir(it) ?: return@forEach
-                val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                sources.forEach {
-                    needRefresh.add(it to generatedDir)
-                }
-            } catch (e: Throwable) {
-                LOG.error(e)
             }
         }
         asyncRefreshSources(needRefresh)
     }
 
-    fun sourceProcessKotlin(project: Project, projects: Map<Path, List<Path>>) {
+    fun sourceProcessKotlin(project: Project, projects: Set<GenerateProject>) {
         val needRefresh = mutableListOf<Pair<Source, Path>>()
-        LOG.info("SourceProcessKotlin Project:${projects.map { it.key.name }}")
-        projects.forEach { projectDir, sourceFiles ->
+        LOG.info("SourceProcessKotlin Project:${projects.map { it.projectDir.name }}")
+        projects.forEach { (projectDir, sourceFiles, src) ->
             sourceFiles.isEmpty() && return@forEach
             val ktClassCaches = CopyOnWriteArraySet<KtClass>()
             sourceFiles.forEach {
@@ -291,7 +305,7 @@ object JimmerBuddy {
 
             LOG.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${kotlinImmutableKtClassCache.size}")
 
-            val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
+            val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
 
             val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
             try {
@@ -309,45 +323,46 @@ object JimmerBuddy {
         asyncRefreshSources(needRefresh)
     }
 
-    fun dtoProcessKotlin(project: Project, dtoFiles: List<Path>) {
+    fun dtoProcessKotlin(project: Project, projects: Set<GenerateProject>) {
         val needRefresh = mutableListOf<Pair<Source, Path>>()
-        LOG.info("DtoProcessKotlin Project:${dtoFiles.joinToString(", ") { it.name }}")
+        LOG.info("DtoProcessKotlin Project:${projects.map { it.projectDir.name }}")
         val (resolver, environment, sources) = ktClassToKsp(
             CopyOnWriteArraySet(),
             kotlinImmutableKtClassCache
         )
         val context = Context(resolver, environment)
-        dtoFiles.forEach {
-            val dtoFile = DtoFile(object : OsFile {
-                override fun getAbsolutePath(): String {
-                    return it.absolutePathString()
-                }
+        projects.forEach { (projectDir, sourceFiles, src) ->
+            sourceFiles.forEach {
+                val dtoFile = DtoFile(object : OsFile {
+                    override fun getAbsolutePath(): String {
+                        return it.absolutePathString()
+                    }
 
-                override fun openReader(): Reader {
-                    return it.readText().reader()
+                    override fun openReader(): Reader {
+                        return it.readText().reader()
+                    }
+                }, projectDir.absolutePathString(), "", emptyList(), it.name)
+                val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
+                val classDeclarationByName =
+                    resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
+                try {
+                    val compile = compiler.compile(context.typeOf(classDeclarationByName))
+                    compile.forEach {
+                        org.babyfish.jimmer.ksp.dto.DtoGenerator(
+                            context,
+                            org.babyfish.jimmer.ksp.client.DocMetadata(context),
+                            false,
+                            it,
+                            context.environment.codeGenerator
+                        ).generate(emptyList())
+                    }
+                    val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
+                    sources.forEach {
+                        needRefresh.add(it to generatedDir)
+                    }
+                } catch (e: Throwable) {
+                    LOG.error(e)
                 }
-            }, findProjectDir(it)?.absolutePathString() ?: "", "", emptyList(), it.name)
-            val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
-            val classDeclarationByName =
-                resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
-            try {
-                val compile = compiler.compile(context.typeOf(classDeclarationByName))
-                compile.forEach {
-                    org.babyfish.jimmer.ksp.dto.DtoGenerator(
-                        context,
-                        org.babyfish.jimmer.ksp.client.DocMetadata(context),
-                        false,
-                        it,
-                        context.environment.codeGenerator
-                    ).generate(emptyList())
-                }
-                val projectDir = findProjectDir(it) ?: return@forEach
-                val generatedDir = getGeneratedDir(project, projectDir) ?: return@forEach
-                sources.forEach {
-                    needRefresh.add(it to generatedDir)
-                }
-            } catch (e: Throwable) {
-                LOG.error(e)
             }
         }
         asyncRefreshSources(needRefresh)
@@ -410,20 +425,20 @@ object JimmerBuddy {
         }
     }
 
-    private fun getGeneratedDir(project: Project, projectDir: Path): Path? {
+    private fun getGeneratedDir(project: Project, projectDir: Path, src: String): Path? {
         if (isJavaProject(project)) {
             return if (isMavenProject(projectDir)) {
                 projectDir.resolve("target/generated-sources/annotations")
             } else if (isGradleProject(projectDir)) {
-                projectDir.resolve("build/generated/sources/annotationProcessor/java/main")
+                projectDir.resolve("build/generated/sources/annotationProcessor/${src}/main")
             } else {
                 null
             }
         } else if (isKotlinProject(project)) {
             return if (isGradleProject(projectDir)) {
-                projectDir.resolve("build/generated/ksp/main/kotlin")
+                projectDir.resolve("build/generated/ksp/${src}/kotlin")
             } else if (isMavenProject(projectDir)) {
-                projectDir.resolve("target/generated/ksp/main/kotlin")
+                projectDir.resolve("target/generated/ksp/${src}/kotlin")
             } else {
                 null
             }
@@ -450,6 +465,43 @@ object JimmerBuddy {
                 LOG.info("Refreshed ${files.joinToString(", ") { it.name }}")
             } catch (_: Throwable) {
             }
+        }
+    }
+
+    data class GenerateProject(
+        val projectDir: Path,
+        val sourceFiles: List<Path>,
+        val src: String
+    ) {
+        companion object {
+            fun generate(projects: Set<Path>, srcSets: Set<String>, language: Language): Set<GenerateProject> {
+                return projects.map { project ->
+                    srcSets.map { src ->
+                        GenerateProject(
+                            projectDir = project,
+                            project.resolve("src/${src}/${language.dir}").walk()
+                                .filter { it.extension == language.extension }
+                                .toList(),
+                            src
+                        )
+                    }
+                }.flatten().toSet()
+            }
+
+            fun generate(sourceFile: Path, language: Language): Set<GenerateProject> {
+                return setOfNotNull(findProjectDir(sourceFile)?.let { project ->
+                    project.resolve("src").toFile().walk().maxDepth(1)
+                        .find { sourceFile.startsWith(it.toPath().resolve(language.dir)) }?.name?.let { src ->
+                            GenerateProject(project, listOf(sourceFile), src)
+                        }
+                })
+            }
+        }
+
+        enum class Language(val dir: String, val extension: String) {
+            JAVA("java", "java"),
+            KOTLIN("kotlin", "kt"),
+            DTO("dto", "dto")
         }
     }
 }

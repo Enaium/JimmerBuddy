@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.findProjectDir
 import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
 import cn.enaium.jimmer.buddy.utility.isGeneratedFile
 import com.intellij.openapi.application.ApplicationManager
@@ -77,10 +76,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                             JimmerBuddy.init()
                             JimmerBuddy.sourcesProcessJava(
                                 project,
-                                mapOf(
-                                    (findProjectDir(path)
-                                        ?: return@runReadAction) to listOf(path).filter { it.extension == "java" }
-                                        .also { if (it.isEmpty()) return@runReadAction })
+                                JimmerBuddy.GenerateProject.generate(path, JimmerBuddy.GenerateProject.Language.JAVA)
                             )
                         } else if (JimmerBuddy.isKotlinProject(project) && psiFile.getChildOfType<KtClass>()
                                 ?.hasJimmerAnnotation() == true
@@ -88,10 +84,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                             JimmerBuddy.init()
                             JimmerBuddy.sourceProcessKotlin(
                                 project,
-                                mapOf(
-                                    (findProjectDir(path)
-                                        ?: return@runReadAction) to listOf(path).filter { it.extension == "kt" }
-                                        .also { if (it.isEmpty()) return@runReadAction })
+                                JimmerBuddy.GenerateProject.generate(path, JimmerBuddy.GenerateProject.Language.KOTLIN)
                             )
                         }
                     }
