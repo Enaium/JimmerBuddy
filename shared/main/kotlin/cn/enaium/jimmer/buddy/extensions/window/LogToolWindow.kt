@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.window
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -30,13 +31,12 @@ class LogToolWindow : ToolWindowFactory {
         toolWindow: ToolWindow
     ) {
         try {
-            toolWindow.component.add(JimmerBuddy.LOG.component)
+            toolWindow.component.add(JimmerBuddy.getWorkspace(project).log.component)
         } catch (_: Throwable) {
-
         }
     }
 
     override fun shouldBeAvailable(project: Project): Boolean {
-        return JimmerBuddy.isJimmerProject(project)
+        return project.isJimmerProject()
     }
 }

@@ -25,6 +25,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
  */
 class Initialize : AnAction() {
     override fun actionPerformed(p0: AnActionEvent) {
-        JimmerBuddy.initialize()
+        p0.project?.also {
+            JimmerBuddy.getWorkspace(it).initialize()
+        }
     }
 }

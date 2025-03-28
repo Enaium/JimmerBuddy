@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.status
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -57,6 +58,6 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
     }
 
     override fun isEnabledForFile(file: VirtualFile?): Boolean {
-        return JimmerBuddy.isJimmerProject(project)
+        return project.isJimmerProject()
     }
 }

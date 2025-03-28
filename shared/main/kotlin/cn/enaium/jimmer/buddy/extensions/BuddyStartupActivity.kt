@@ -29,7 +29,7 @@ class BuddyStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
         ApplicationManager.getApplication().executeOnPooledThread {
             DumbService.getInstance(project).runWhenSmart {
-                JimmerBuddy.init()
+                JimmerBuddy.getWorkspace(project).init()
             }
         }
     }

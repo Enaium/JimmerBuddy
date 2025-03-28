@@ -19,9 +19,9 @@ package cn.enaium.jimmer.buddy.dialog.panel
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.isDumb
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTree.CheckboxTreeCellRenderer
@@ -56,7 +56,7 @@ class ImmutablePropsChoosePanel(
             override fun treeWillExpand(event: TreeExpansionEvent) {
                 thread {
                     return@thread runReadOnly {
-                        if (DumbService.isDumb(project)) return@runReadOnly null
+                        if (project.isDumb()) return@runReadOnly null
                         val node = event.path.lastPathComponent as DefaultMutableTreeNode
                         node.childCount > 0 && return@runReadOnly null
                         node.removeAllChildren()

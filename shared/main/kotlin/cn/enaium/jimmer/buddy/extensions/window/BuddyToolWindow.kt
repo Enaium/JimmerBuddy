@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
 import cn.enaium.jimmer.buddy.utility.findProjects
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -146,6 +147,6 @@ class BuddyToolWindow : ToolWindowFactory {
     }
 
     override fun shouldBeAvailable(project: Project): Boolean {
-        return JimmerBuddy.isJimmerProject(project)
+        return project.isJimmerProject()
     }
 }

@@ -64,7 +64,7 @@ class GenerateEntityDialog(
             getTables()
         } catch (e: Throwable) {
             Messages.showErrorDialog("Failed to connect to database:\n${e.message}", "Error")
-            JimmerBuddy.LOG.error(e)
+            JimmerBuddy.getWorkspace(project).log.error(e)
             emptySet()
         }
     )
@@ -214,7 +214,7 @@ class GenerateEntityDialog(
         }
 
         val projectDir = project.guessProjectDir() ?: return
-        JimmerBuddy.asyncRefresh(
+        JimmerBuddy.getWorkspace(project).asyncRefresh(
             generate.generate(
                 projectDir.toNioPath(),
                 generateEntityModel,

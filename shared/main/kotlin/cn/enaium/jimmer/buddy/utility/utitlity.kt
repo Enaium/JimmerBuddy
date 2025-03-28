@@ -16,8 +16,15 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.modules
+import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.vfs.LocalFileSystem
+import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArraySet
@@ -122,4 +129,37 @@ fun invokeLater(block: () -> Unit) {
 
 fun isK2Enable(): Boolean {
     return System.getProperty("idea.kotlin.plugin.use.k2")?.toBoolean() == true
+}
+
+fun Project.isDumb(): Boolean {
+    return isDisposed || DumbService.isDumb(this)
+}
+
+fun Project.isJimmerProject(): Boolean {
+    return isJavaProject() || isKotlinProject()
+}
+
+fun Project.isJavaProject(): Boolean {
+    if (isDisposed) {
+        return false
+    }
+
+    return modules.any { module ->
+        CompilerConfiguration.getInstance(this).getAnnotationProcessingConfiguration(module).processorPath.split(
+            File.pathSeparator
+        ).any { it.contains("jimmer-apt") }
+    }
+}
+
+fun Project.isKotlinProject(): Boolean {
+    if (isDisposed) {
+        return false
+    }
+
+    OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots.forEach {
+        if (it.name.startsWith("jimmer-core-kotlin")) {
+            return true
+        }
+    }
+    return false
 }

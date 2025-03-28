@@ -160,12 +160,11 @@ class NewDtoFileDialog(
                     }
                 }.showAndGet().ifTrue {
                     dtoFile.writeText("$oldDtoContent\n$dtoContent")
-                    JimmerBuddy.asyncRefresh(listOf(dtoFile))
                 }
             } else {
                 dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
             }
-            JimmerBuddy.asyncRefresh(listOf(dtoFile))
+            JimmerBuddy.getWorkspace(project).asyncRefresh(listOf(dtoFile))
         } ?: Notifications.Bus.notify(
             Notification(
                 JimmerBuddy.INFO_GROUP_ID,

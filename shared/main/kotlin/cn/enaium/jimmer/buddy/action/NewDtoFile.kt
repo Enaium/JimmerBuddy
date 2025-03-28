@@ -19,20 +19,19 @@ package cn.enaium.jimmer.buddy.action
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
+import cn.enaium.jimmer.buddy.utility.isDumb
 import cn.enaium.jimmer.buddy.utility.runReadOnly
+import cn.enaium.jimmer.buddy.utility.thread
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
-import java.util.concurrent.Callable
 import kotlin.io.path.extension
 
 /**
@@ -41,7 +40,7 @@ import kotlin.io.path.extension
 class NewDtoFile : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        if (DumbService.isDumb(project)) return
+        if (project.isDumb()) return
         val dataContext = e.dataContext
         dataContext.getData(CommonDataKeys.VIRTUAL_FILE)?.also { file ->
             val sourceFile = file.toNioPath().takeIf { it.toFile().isFile } ?: run {
@@ -55,21 +54,15 @@ class NewDtoFile : AnAction() {
                 return
             }
 
-            ApplicationManager.getApplication().executeOnPooledThread(Callable {
-                if (sourceFile.extension == "java") {
-                    runReadOnly {
-                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                            ?.takeIf { it.hasJimmerAnnotation() }?.qualifiedName
-                    }
-                } else if (sourceFile.extension == "kt") {
-                    runReadOnly {
-                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                            ?.takeIf { it.hasJimmerAnnotation() }?.fqName?.asString()
-                    }
-                } else {
-                    null
-                }
-            }).get()?.also { name ->
+            if (sourceFile.extension == "java") {
+                sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
+                    ?.takeIf { it.hasJimmerAnnotation() }?.qualifiedName
+            } else if (sourceFile.extension == "kt") {
+                sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                    ?.takeIf { thread { runReadOnly { it.hasJimmerAnnotation() } } }?.fqName?.asString()
+            } else {
+                null
+            }?.also { name ->
                 NewDtoFileDialog(project, sourceFile, name).show()
             } ?: Notifications.Bus.notify(
                 Notification(

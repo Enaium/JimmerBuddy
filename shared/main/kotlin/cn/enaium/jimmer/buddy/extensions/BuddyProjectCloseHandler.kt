@@ -25,7 +25,7 @@ import com.intellij.openapi.project.ProjectCloseHandler
  */
 class BuddyProjectCloseHandler : ProjectCloseHandler {
     override fun canClose(project: Project): Boolean {
-        JimmerBuddy.reset()
+        JimmerBuddy.getWorkspace(project).reset()
         return true
     }
 }

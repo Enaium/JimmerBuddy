@@ -17,12 +17,10 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.runReadOnly
-import cn.enaium.jimmer.buddy.utility.thread
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import java.nio.file.Path
@@ -63,20 +61,21 @@ class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerLi
         JimmerBuddy.DEQ.schedule("EditorChange") {
             thread {
                 runReadOnly {
-                    if (!DumbService.isDumb(project)) {
-                        if (JimmerBuddy.isJavaProject(project)) {
-                            JimmerBuddy.init()
-                            JimmerBuddy.dtoProcessJava(
-                                project,
+                    if (project.isDumb()) return@runReadOnly
+                    if (project.isJavaProject()) {
+                        JimmerBuddy.getWorkspace(project).also {
+                            it.init()
+                            it.dtoProcessJava(
                                 JimmerBuddy.GenerateProject.generate(
                                     dtoFile,
                                     JimmerBuddy.GenerateProject.Language.DTO
                                 )
                             )
-                        } else if (JimmerBuddy.isKotlinProject(project)) {
-                            JimmerBuddy.init()
-                            JimmerBuddy.dtoProcessKotlin(
-                                project,
+                        }
+                    } else if (project.isKotlinProject()) {
+                        JimmerBuddy.getWorkspace(project).also {
+                            it.init()
+                            it.dtoProcessKotlin(
                                 JimmerBuddy.GenerateProject.generate(
                                     dtoFile,
                                     JimmerBuddy.GenerateProject.Language.DTO
