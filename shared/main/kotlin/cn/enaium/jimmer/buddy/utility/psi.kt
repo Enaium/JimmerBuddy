@@ -26,14 +26,29 @@ import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtNamedDeclaration
-import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 
 /**
  * @author Enaium
  */
+
+fun KtClass.annotations(): List<PsiShared.Annotation> {
+    return PSI_SHARED.annotations(this)
+}
+
+fun KtProperty.annotations(): List<PsiShared.Annotation> {
+    return PSI_SHARED.annotations(this)
+}
+
+fun KtTypeReference.type(): PsiShared.Type {
+    return PSI_SHARED.type(this)
+}
+
+fun KtLambdaExpression.receiver(): KtClass? {
+    return PSI_SHARED.receiver(this)
+}
+
 fun PsiClass.hasImmutableAnnotation(): Boolean {
     return this.modifierList?.annotations?.any { annotation ->
         annotation.hasQualifiedName(Immutable::class.qualifiedName!!)
@@ -54,7 +69,7 @@ fun PsiClass.hasJimmerAnnotation(): Boolean {
 }
 
 fun KtClass.hasImmutableAnnotation(): Boolean {
-    return PSI_SHARED.annotations(this).any { annotation ->
+    return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == Immutable::class.qualifiedName!!
                 || fqName == Entity::class.qualifiedName!!
@@ -64,7 +79,7 @@ fun KtClass.hasImmutableAnnotation(): Boolean {
 }
 
 fun KtClass.hasErrorFamilyAnnotation(): Boolean {
-    return PSI_SHARED.annotations(this).any { annotation ->
+    return this.annotations().any { annotation ->
         annotation.fqName == ErrorFamily::class.qualifiedName!!
     } == true
 }
@@ -94,7 +109,7 @@ fun PsiMethod.hasIdViewAnnotation(): Boolean {
 }
 
 fun KtProperty.hasToManyAnnotation(): Boolean {
-    return PSI_SHARED.annotations(this).any { annotation ->
+    return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == OneToMany::class.qualifiedName!!
                 || fqName == ManyToMany::class.qualifiedName!!
@@ -102,7 +117,7 @@ fun KtProperty.hasToManyAnnotation(): Boolean {
 }
 
 fun KtProperty.hasToOneAnnotation(): Boolean {
-    return PSI_SHARED.annotations(this).any { annotation ->
+    return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == OneToOne::class.qualifiedName!!
                 || fqName == ManyToOne::class.qualifiedName!!
@@ -110,7 +125,7 @@ fun KtProperty.hasToOneAnnotation(): Boolean {
 }
 
 fun KtProperty.hasIdViewAnnotation(): Boolean {
-    return PSI_SHARED.annotations(this).any { annotation ->
+    return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == IdView::class.qualifiedName!!
     } == true
@@ -129,7 +144,7 @@ fun PsiMethod.getTarget(): PsiClass? {
 }
 
 fun KtProperty.getTarget(): KtClass? {
-    return this.typeReference?.let { PSI_SHARED.type(it) }?.let {
+    return this.typeReference?.type()?.let {
         if (it.arguments.isNotEmpty()) {
             it.arguments.firstOrNull()?.ktClass
         } else {
@@ -142,7 +157,7 @@ fun KtClass.findPropertyByName(name: String, superType: Boolean): KtNamedDeclara
     val prop = this.findPropertyByName(name)
     if (prop == null && superType) {
         this.superTypeListEntries.forEach {
-            it.typeReference?.let { PSI_SHARED.type(it) }?.ktClass?.also {
+            it.typeReference?.let { it.type() }?.ktClass?.also {
                 if (it.hasJimmerAnnotation()) {
                     return it.findPropertyByName(name, true)
                 }
@@ -165,7 +180,7 @@ fun PsiClass.isDraft(): Boolean {
 fun KtClass.isDraft(): Boolean {
     superTypeListEntries.takeIf { it.isNotEmpty() }?.forEach {
         it.typeReference?.also {
-            PSI_SHARED.type(it).also {
+            it.type().also {
                 if (it.ktClass?.isDraft() == true) {
                     return true
                 } else if (it.fqName == Draft::class.qualifiedName) {

@@ -101,20 +101,20 @@ class ImmutableTree(val project: Project) : JPanel() {
             JPanel(BorderLayout()).apply {
                 add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
                     override fun actionPerformed(e: AnActionEvent) {
-                        loadImmutables()
+                        thread { loadImmutables() }
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
-        loadImmutables()
+        thread { loadImmutables() }
     }
 
     fun loadImmutables() {
         DumbService.getInstance(project).runWhenSmart {
             root.removeAllChildren()
             findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
-                listOf("src/main/java", "src/main/kotlin").forEach { src ->
+                listOf("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin").forEach { src ->
                     it.resolve(src).toFile().walk().forEach { file ->
                         if (file.extension == "java") {
                             file.toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also { psiClass ->

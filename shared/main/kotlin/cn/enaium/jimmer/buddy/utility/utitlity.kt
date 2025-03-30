@@ -23,7 +23,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
-import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.Callable

@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.utility
 
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -48,7 +47,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         simpleName = { createKSName(name!!) },
         superTypes = {
             superTypeListEntries.mapNotNull {
-                val superClass = it.typeReference?.let { PSI_SHARED.type(it) }?.ktClass ?: return@mapNotNull null
+                val superClass = it.typeReference?.type()?.ktClass ?: return@mapNotNull null
                 createKSTypeReference(
                     resolve = {
                         createKSType(
@@ -63,7 +62,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
         parentDeclaration = { null },
         annotations = {
-            PSI_SHARED.annotations(this).mapNotNull { annotation ->
+            this.annotations().mapNotNull { annotation ->
                 val fqName = annotation.fqName ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType = createKSTypeReference(
@@ -98,7 +97,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         declarations = {
             if (this.isInterface()) {
                 this.getProperties().mapNotNull { property ->
-                    val typeReference = property.typeReference?.let { PSI_SHARED.type(it) } ?: return@mapNotNull null
+                    val typeReference = property.typeReference?.type() ?: return@mapNotNull null
                     val typeReferenceClass = typeReference.ktClass
                     val fqName = typeReference.fqName ?: return@mapNotNull null
                     createKSPropertyDeclaration(
@@ -109,7 +108,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                             createKSName(property.name!!)
                         },
                         annotations = {
-                            PSI_SHARED.annotations(property).mapNotNull { annotation ->
+                            property.annotations().mapNotNull { annotation ->
                                 val fqName = annotation.fqName ?: return@mapNotNull null
                                 createKSAnnotation(
                                     annotationType = createKSTypeReference(

@@ -16,11 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
-import cn.enaium.jimmer.buddy.utility.findPropertyByName
-import cn.enaium.jimmer.buddy.utility.getTarget
-import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
-import cn.enaium.jimmer.buddy.utility.toAny
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
@@ -64,7 +60,7 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
                         }
                     }
                 } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    PSI_SHARED.annotations(element).find { it.fqName == Formula::class.qualifiedName }
+                    element.annotations().find { it.fqName == Formula::class.qualifiedName }
                         ?.also {
                             val dependencies =
                                 (it.arguments.find { argument -> argument.name == "dependencies" }?.value as? List<*>)?.map { it.toString() }

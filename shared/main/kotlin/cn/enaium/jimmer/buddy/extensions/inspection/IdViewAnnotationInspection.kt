@@ -16,9 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
+import cn.enaium.jimmer.buddy.utility.annotations
 import cn.enaium.jimmer.buddy.utility.hasIdViewAnnotation
 import cn.enaium.jimmer.buddy.utility.toAny
+import cn.enaium.jimmer.buddy.utility.type
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
@@ -81,7 +82,7 @@ class IdViewAnnotationInspection : LocalInspectionTool() {
                         }
                     }
                 } else if (element is KtProperty && element.hasIdViewAnnotation()) {
-                    val typeReference = element.typeReference?.let { PSI_SHARED.type(it) }
+                    val typeReference = element.typeReference?.type()
                     if (typeReference?.arguments?.isNotEmpty() == true) {
                         if (!listOf(
                                 List::class.qualifiedName,
@@ -91,7 +92,7 @@ class IdViewAnnotationInspection : LocalInspectionTool() {
                         ) {
                             holder.registerProblem(element, propNotCollection)
                         }
-                        PSI_SHARED.annotations(element)
+                        element.annotations()
                             .find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }
                             ?.also {
                                 val value = it.value?.toString() ?: ""
@@ -110,7 +111,7 @@ class IdViewAnnotationInspection : LocalInspectionTool() {
 
                         var baseProp: String? = null
 
-                        baseProp = PSI_SHARED.annotations(element)
+                        baseProp = element.annotations()
                             .find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }?.value?.toString()
 
                         if (baseProp == null && element.name?.endsWith("Id") == true) {

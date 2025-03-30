@@ -16,7 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
+import cn.enaium.jimmer.buddy.utility.annotations
 import cn.enaium.jimmer.buddy.utility.getTarget
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.toAny
@@ -58,7 +58,7 @@ class MappedByInspection : LocalInspectionTool() {
                             }
                         }
                 } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    PSI_SHARED.annotations(element)
+                    element.annotations()
                         .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }
                         ?.also {
                             val mappedBy =

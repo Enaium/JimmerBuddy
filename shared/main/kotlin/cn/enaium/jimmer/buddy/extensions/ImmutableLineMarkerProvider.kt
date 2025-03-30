@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
@@ -145,7 +144,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                 .also { nav ->
                                     val targets = mutableListOf<PsiElement>()
                                     immutableType.declaredProperties[property.name]?.also {
-                                        val annotations = PSI_SHARED.annotations(property)
+                                        val annotations = property.annotations()
                                         targets.addAll(
                                             (annotations
                                                 .find { it.fqName == Formula::class.qualifiedName }?.arguments?.find { it.name == "dependencies" }?.value as? List<*>)?.mapNotNull {
@@ -180,7 +179,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         }
                                     }?.let {
                                         if (it.targetType?.let { it.isImmutable || it.isEntity || it.isEmbeddable } == true) {
-                                            property.typeReference?.let { PSI_SHARED.type(it) }
+                                            property.typeReference?.type()
                                         } else {
                                             null
                                         }
@@ -192,7 +191,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         }
                                     }?.also { ktClass ->
                                         targets.add(ktClass)
-                                        PSI_SHARED.annotations(property)
+                                        property.annotations()
                                             .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }?.arguments?.find { it.name == "mappedBy" }?.value?.toString()
                                             ?.also {
                                                 ktClass.findPropertyByName(it, false)?.also {

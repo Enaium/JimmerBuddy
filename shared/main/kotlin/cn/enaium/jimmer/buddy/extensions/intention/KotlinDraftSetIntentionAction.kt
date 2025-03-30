@@ -16,8 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.intention
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.isDraft
+import cn.enaium.jimmer.buddy.utility.receiver
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
 import com.intellij.openapi.editor.Editor
@@ -45,7 +45,7 @@ class KotlinDraftSetIntentionAction : DraftSetIntentionAction() {
                 caches[it.caretModel.offset]?.also { cache ->
                     results.addAll(cache)
                 } ?: run {
-                    val ktClass = thread { runReadOnly { JimmerBuddy.PSI_SHARED.receiver(lambda) } } ?: return@also
+                    val ktClass = thread { runReadOnly { lambda.receiver() } } ?: return@also
                     ktClass.getProperties().forEach {
                         if (it.isOverridable && it.isVar) {
                             results += "${it.name} = TODO()"
@@ -66,7 +66,7 @@ class KotlinDraftSetIntentionAction : DraftSetIntentionAction() {
         element: PsiElement,
     ): Boolean {
         return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>()?.let {
-            thread { runReadOnly { JimmerBuddy.PSI_SHARED.receiver(it)?.isDraft() } }
+            thread { runReadOnly { it.receiver()?.isDraft() } }
         } == true
     }
 }

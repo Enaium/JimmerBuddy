@@ -16,10 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToManyAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToOneAnnotation
+import cn.enaium.jimmer.buddy.utility.type
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
@@ -58,7 +58,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                         }
                     }
                 } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    val typeReference = element.typeReference?.let { PSI_SHARED.type(it) }
+                    val typeReference = element.typeReference?.type()
                     if (typeReference?.arguments?.isNotEmpty() == true && listOf(
                             List::class.qualifiedName,
                             Set::class.qualifiedName,
