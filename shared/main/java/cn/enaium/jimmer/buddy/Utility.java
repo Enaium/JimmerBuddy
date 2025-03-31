@@ -296,6 +296,25 @@ public class Utility {
         };
     }
 
+    public static ManyToManyView manyToManyView() {
+        return new ManyToManyView() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return ManyToManyView.class;
+            }
+
+            @Override
+            public String prop() {
+                return "";
+            }
+
+            @Override
+            public String deeperProp() {
+                return "";
+            }
+        };
+    }
+
     public static Column column() {
         return new Column() {
             @Override

@@ -65,7 +65,7 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                             val returnType = method.returnType ?: throw IllegalStateException("Return type is null")
                             val generic = PsiUtil.resolveGenericsClassInType(returnType)
 
-                            when (returnType.canonicalText) {
+                            when (returnType.canonicalText.substringBefore("[")) {
                                 "long" -> createPrimitiveType(getKind = { TypeKind.LONG })
                                 "int" -> createPrimitiveType(getKind = { TypeKind.INT })
                                 "short" -> createPrimitiveType(getKind = { TypeKind.SHORT })
@@ -76,10 +76,21 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                                 "boolean" -> createPrimitiveType(getKind = { TypeKind.BOOLEAN })
                                 "void" -> createPrimitiveType(getKind = { TypeKind.VOID })
                                 else -> null
-                            }?.also { return@createExecutableElement it }
+                            }?.also {
+                                return@createExecutableElement if (returnType.canonicalText.endsWith("]")) {
+                                    createArrayType(
+                                        getComponentType = {
+                                            it
+                                        }
+                                    )
+                                } else {
+                                    it
+                                }
+                            }
 
                             val genericElement =
-                                generic.element ?: throw IllegalStateException("Generic element is null")
+                                generic.element
+                                    ?: throw IllegalStateException("The generic '${returnType.canonicalText}' element is null")
 
                             createDeclaredType(
                                 getQualifiedName = { genericElement.qualifiedName!! },
@@ -676,6 +687,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     OneToMany::class.qualifiedName -> Utility.oneToMany()
     ManyToOne::class.qualifiedName -> Utility.manyToOne()
     ManyToMany::class.qualifiedName -> Utility.manyToMany()
+    ManyToManyView::class.qualifiedName -> Utility.manyToManyView()
     Column::class.qualifiedName -> Utility.column()
     GeneratedValue::class.qualifiedName -> Utility.generatedValue()
     JoinColumn::class.qualifiedName -> Utility.joinColumn()
@@ -889,6 +901,42 @@ private fun createPackageElement(
             p: P?
         ): R? {
             return v?.visitPackage(this, p)
+        }
+    }
+}
+
+private fun createArrayType(
+    getComponentType: () -> TypeMirror,
+    getAnnotationMirrors: () -> List<AnnotationMirror> = { emptyList() },
+    getAnnotation: (Class<Annotation>) -> Annotation? = { null },
+    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { emptyArray() },
+): ArrayType {
+    return object : ArrayType {
+        override fun getComponentType(): TypeMirror {
+            return getComponentType()
+        }
+
+        override fun getKind(): TypeKind {
+            return TypeKind.ARRAY
+        }
+
+        override fun getAnnotationMirrors(): List<AnnotationMirror?>? {
+            return getAnnotationMirrors()
+        }
+
+        override fun <A : Annotation?> getAnnotation(annotationType: Class<A?>?): A? {
+            return getAnnotation.invoke(annotationType as Class<Annotation>) as A?
+        }
+
+        override fun <A : Annotation?> getAnnotationsByType(annotationType: Class<A>): Array<out A> {
+            return getAnnotationsByType.invoke(annotationType as Class<Annotation>) as Array<out A>
+        }
+
+        override fun <R : Any?, P : Any?> accept(
+            v: TypeVisitor<R, P>?,
+            p: P?
+        ): R? {
+            return v?.visitArray(this, p)
         }
     }
 }
