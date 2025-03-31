@@ -400,6 +400,11 @@ public class Utility {
             }
 
             @Override
+            public String schema() {
+                return "";
+            }
+
+            @Override
             public String joinColumnName() {
                 return "";
             }

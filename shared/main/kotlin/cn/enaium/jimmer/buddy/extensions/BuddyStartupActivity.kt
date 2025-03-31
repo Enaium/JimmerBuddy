@@ -17,8 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 
@@ -27,10 +25,6 @@ import com.intellij.openapi.startup.ProjectActivity
  */
 class BuddyStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
-        ApplicationManager.getApplication().executeOnPooledThread {
-            DumbService.getInstance(project).runWhenSmart {
-                JimmerBuddy.getWorkspace(project).init()
-            }
-        }
+        JimmerBuddy.getWorkspace(project).init()
     }
 }

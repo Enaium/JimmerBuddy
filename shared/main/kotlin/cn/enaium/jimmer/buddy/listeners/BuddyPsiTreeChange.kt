@@ -64,34 +64,30 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
         isGeneratedFile(path) && return
         listOf<String>("java", "kt").any { path.extension == it }.not() && return
         JimmerBuddy.DEQ.schedule("PsiChange") {
-            thread {
-                runReadOnly {
-                    if (project.isDumb()) return@runReadOnly
-                    if (project.isJavaProject() && psiFile.getChildOfType<PsiClass>()
-                            ?.hasJimmerAnnotation() == true
-                    ) {
-                        JimmerBuddy.getWorkspace(project).also {
-                            it.init()
-                            it.sourcesProcessJava(
-                                JimmerBuddy.GenerateProject.generate(
-                                    path,
-                                    JimmerBuddy.GenerateProject.Language.JAVA
-                                )
-                            )
-                        }
-                    } else if (project.isKotlinProject() && psiFile.getChildOfType<KtClass>()
-                            ?.hasJimmerAnnotation() == true
-                    ) {
-                        JimmerBuddy.getWorkspace(project).also {
-                            it.init()
-                            it.sourcesProcessJava(
-                                JimmerBuddy.GenerateProject.generate(
-                                    path,
-                                    JimmerBuddy.GenerateProject.Language.KOTLIN
-                                )
-                            )
-                        }
-                    }
+            if (project.isJavaProject() && runReadOnly {
+                    psiFile.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
+                } == true) {
+                JimmerBuddy.getWorkspace(project).also {
+                    it.init()
+                    it.sourcesProcessJava(
+                        JimmerBuddy.GenerateProject.generate(
+                            path,
+                            JimmerBuddy.GenerateProject.Language.JAVA
+                        )
+                    )
+                }
+            } else if (project.isKotlinProject() && runReadOnly {
+                    psiFile.getChildOfType<KtClass>()?.hasJimmerAnnotation()
+                } == true
+            ) {
+                JimmerBuddy.getWorkspace(project).also {
+                    it.init()
+                    it.sourceProcessKotlin(
+                        JimmerBuddy.GenerateProject.generate(
+                            path,
+                            JimmerBuddy.GenerateProject.Language.KOTLIN
+                        )
+                    )
                 }
             }
         }

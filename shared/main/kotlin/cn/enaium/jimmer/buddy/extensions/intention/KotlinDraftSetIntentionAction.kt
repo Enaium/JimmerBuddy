@@ -26,7 +26,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.kotlin.idea.core.isOverridable
 import org.jetbrains.kotlin.psi.KtLambdaExpression
-import training.featuresSuggester.getParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 
 /**
@@ -40,7 +40,7 @@ class KotlinDraftSetIntentionAction : DraftSetIntentionAction() {
     ) {
 
         var results = mutableListOf<String>()
-        element.getParentOfType<KtLambdaExpression>()?.also { lambda ->
+        element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
             editor?.also {
                 caches[it.caretModel.offset]?.also { cache ->
                     results.addAll(cache)
@@ -65,7 +65,7 @@ class KotlinDraftSetIntentionAction : DraftSetIntentionAction() {
         editor: Editor?,
         element: PsiElement,
     ): Boolean {
-        return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>()?.let {
+        return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>(true)?.let {
             thread { runReadOnly { it.receiver()?.isDraft() } }
         } == true
     }

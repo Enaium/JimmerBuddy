@@ -23,7 +23,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiWhiteSpace
-import training.featuresSuggester.getParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 
 /**
@@ -37,7 +37,7 @@ class JavaDraftSetIntentionAction : DraftSetIntentionAction() {
     ) {
 
         var results = mutableListOf<String>()
-        element.getParentOfType<PsiLambdaExpression>()?.also { lambda ->
+        element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
             val (name, psiClass) = lambda.firstArg() ?: return@also
             psiClass?.methods?.forEach {
                 if (it.name.startsWith("set")) {
@@ -55,7 +55,7 @@ class JavaDraftSetIntentionAction : DraftSetIntentionAction() {
         editor: Editor?,
         element: PsiElement,
     ): Boolean {
-        return element is PsiWhiteSpace && element.getParentOfType<PsiLambdaExpression>()
+        return element is PsiWhiteSpace && element.getParentOfType<PsiLambdaExpression>(true)
             ?.firstArg()?.second?.isDraft() == true
     }
 }

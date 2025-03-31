@@ -17,7 +17,9 @@
 package cn.enaium.jimmer.buddy.listeners
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.isDumb
+import cn.enaium.jimmer.buddy.utility.isJavaProject
+import cn.enaium.jimmer.buddy.utility.isKotlinProject
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -59,30 +61,26 @@ class BuddyFileEditorManagerListener(val project: Project) : FileEditorManagerLi
     private fun fileChange(file: Path) {
         val dtoFile = file.takeIf { it.extension == "dto" } ?: return
         JimmerBuddy.DEQ.schedule("EditorChange") {
-            thread {
-                runReadOnly {
-                    if (project.isDumb()) return@runReadOnly
-                    if (project.isJavaProject()) {
-                        JimmerBuddy.getWorkspace(project).also {
-                            it.init()
-                            it.dtoProcessJava(
-                                JimmerBuddy.GenerateProject.generate(
-                                    dtoFile,
-                                    JimmerBuddy.GenerateProject.Language.DTO
-                                )
-                            )
-                        }
-                    } else if (project.isKotlinProject()) {
-                        JimmerBuddy.getWorkspace(project).also {
-                            it.init()
-                            it.dtoProcessKotlin(
-                                JimmerBuddy.GenerateProject.generate(
-                                    dtoFile,
-                                    JimmerBuddy.GenerateProject.Language.DTO
-                                )
-                            )
-                        }
-                    }
+            if (project.isDumb()) return@schedule
+            if (project.isJavaProject()) {
+                JimmerBuddy.getWorkspace(project).also {
+                    it.init()
+                    it.dtoProcessJava(
+                        JimmerBuddy.GenerateProject.generate(
+                            dtoFile,
+                            JimmerBuddy.GenerateProject.Language.DTO
+                        )
+                    )
+                }
+            } else if (project.isKotlinProject()) {
+                JimmerBuddy.getWorkspace(project).also {
+                    it.init()
+                    it.dtoProcessKotlin(
+                        JimmerBuddy.GenerateProject.generate(
+                            dtoFile,
+                            JimmerBuddy.GenerateProject.Language.DTO
+                        )
+                    )
                 }
             }
         }

@@ -162,3 +162,15 @@ fun Project.isKotlinProject(): Boolean {
     }
     return false
 }
+
+fun Project.runWhenSmart(block: () -> Unit) {
+    DumbService.getInstance(this).runWhenSmart {
+        block()
+    }
+}
+
+fun Project.runReadActionSmart(block: () -> Unit) {
+    DumbService.getInstance(this).runReadActionInSmartMode {
+        block()
+    }
+}

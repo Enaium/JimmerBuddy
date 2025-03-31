@@ -20,13 +20,12 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.findProjects
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
-import cn.enaium.jimmer.buddy.utility.runReadOnly
-import cn.enaium.jimmer.buddy.utility.thread
+import cn.enaium.jimmer.buddy.utility.runReadActionSmart
+import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.JBPopupMenu
@@ -37,6 +36,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
@@ -47,10 +49,13 @@ import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
+import kotlin.io.path.extension
+import kotlin.io.path.walk
 
 /**
  * @author Enaium
@@ -101,24 +106,34 @@ class ImmutableTree(val project: Project) : JPanel() {
             JPanel(BorderLayout()).apply {
                 add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
                     override fun actionPerformed(e: AnActionEvent) {
-                        thread { loadImmutables() }
+                        loadImmutables()
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
-        thread { loadImmutables() }
+        loadImmutables()
     }
 
     fun loadImmutables() {
-        DumbService.getInstance(project).runWhenSmart {
-            root.removeAllChildren()
-            findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
-                listOf("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin").forEach { src ->
-                    it.resolve(src).toFile().walk().forEach { file ->
-                        if (file.extension == "java") {
+        project.runWhenSmart {
+            CoroutineScope(Dispatchers.IO).launch {
+                val files = mutableSetOf<File>()
+                root.removeAllChildren()
+                findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
+                    listOf("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin").forEach { src ->
+                        it.resolve(src).walk().forEach { file ->
+                            if (file.extension == "java" || file.extension == "kt") {
+                                files.add(file.toFile())
+                            }
+                        }
+                    }
+                }
+                files.forEach { file ->
+                    if (file.extension == "java") {
+                        project.runReadActionSmart {
                             file.toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also { psiClass ->
-                                if (thread { runReadOnly { psiClass.hasImmutableAnnotation() } }) {
+                                if (psiClass.hasImmutableAnnotation()) {
                                     val newChild = ImmutableType(psiClass)
                                     psiClass.methods.forEach {
                                         newChild.add(ImmutableProp(it))
@@ -126,9 +141,11 @@ class ImmutableTree(val project: Project) : JPanel() {
                                     root.add(newChild)
                                 }
                             }
-                        } else if (file.extension == "kt") {
+                        }
+                    } else if (file.extension == "kt") {
+                        project.runReadActionSmart {
                             file.toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
-                                if (thread { runReadOnly { ktClass.hasImmutableAnnotation() } }) {
+                                if (ktClass.hasImmutableAnnotation()) {
                                     val newChild = ImmutableType(ktClass)
                                     ktClass.getProperties().forEach {
                                         newChild.add(ImmutableProp(it))
@@ -139,8 +156,8 @@ class ImmutableTree(val project: Project) : JPanel() {
                         }
                     }
                 }
+                project.runReadActionSmart { (tree.model as DefaultTreeModel).nodeStructureChanged(root) }
             }
-            (tree.model as DefaultTreeModel).nodeStructureChanged(root)
         }
     }
 
