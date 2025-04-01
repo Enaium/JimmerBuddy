@@ -152,6 +152,7 @@
             <className>cn.enaium.jimmer.buddy.extensions.intention.KotlinDraftSetIntentionAction</className>
             <category>Jimmer</category>
         </intentionAction>
+        <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.DtoFolderIconProvider" order="first"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
