@@ -1,0 +1,8 @@
+Author {
+    id = TODO()
+    firstName = TODO()
+    lastName = TODO()
+    gender = TODO()
+    books = TODO()
+    test = TODO()
+}

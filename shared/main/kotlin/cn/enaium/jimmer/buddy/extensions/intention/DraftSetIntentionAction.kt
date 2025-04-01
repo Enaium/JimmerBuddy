@@ -16,13 +16,21 @@
 
 package cn.enaium.jimmer.buddy.extensions.intention
 
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiLambdaExpression
+import com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.idea.core.isOverridable
+import org.jetbrains.kotlin.psi.KtLambdaExpression
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
  */
-abstract class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
+class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
 
     companion object {
         val caches = mutableMapOf<Int, List<String>>()
@@ -33,7 +41,7 @@ abstract class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
     }
 
     override fun getFamilyName(): String {
-        return "Jimmer"
+        return "Generate all set of the draft"
     }
 
     fun Editor.insertLines(lines: List<String>) {
@@ -49,5 +57,57 @@ abstract class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
             caches[caretOffset] = lines
         }
         document.insertString(caretOffset, indentedResults)
+    }
+
+    override fun invoke(
+        project: Project,
+        editor: Editor?,
+        element: PsiElement
+    ) {
+        var results = mutableListOf<String>()
+        element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
+            editor?.also {
+                caches[it.caretModel.offset]?.also { cache ->
+                    results.addAll(cache)
+                } ?: run {
+                    val ktClass = thread { runReadOnly { lambda.receiver() } } ?: return@also
+                    ktClass.getProperties().forEach {
+                        if (it.isOverridable && it.isVar) {
+                            results += "${it.name} = TODO()"
+                        }
+                    }
+                }
+            }
+        }
+        element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
+            val (name, psiClass) = lambda.firstArg() ?: return@also
+            psiClass?.methods?.forEach {
+                if (it.name.startsWith("set")) {
+                    results.add("${name}.${it.name}();")
+                }
+            }
+        }
+        if (results.isNotEmpty()) {
+            editor?.insertLines(results)
+        }
+    }
+
+    fun isJavaAvailable(element: PsiElement): Boolean {
+        return element is PsiWhiteSpace && element.getParentOfType<PsiLambdaExpression>(true)
+            ?.firstArg()?.second?.isDraft() == true
+    }
+
+    fun isKotlinAvailable(element: PsiElement): Boolean {
+        return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>(true)?.let {
+            thread { runReadOnly { it.receiver()?.isDraft() } }
+        } == true
+    }
+
+    override fun isAvailable(
+        p0: Project,
+        p1: Editor?,
+        element: PsiElement
+    ): Boolean {
+        return isJavaAvailable(element) || isKotlinAvailable(element)
     }
 }

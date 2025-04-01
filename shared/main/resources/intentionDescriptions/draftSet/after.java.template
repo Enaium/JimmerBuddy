@@ -1,0 +1,8 @@
+Immutables.createAuthor(draft -> {
+    draft.setId();
+    draft.setSuperProp();
+    draft.setFirstName();
+    draft.setLastName();
+    draft.setGender();
+    draft.setBooks();
+});

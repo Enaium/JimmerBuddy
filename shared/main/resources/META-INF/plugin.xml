@@ -38,25 +38,13 @@
                        order="first"/>
         <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
-        <codeInsight.lineMarkerProvider language="JAVA" id="JimmerBuddy.JavaLineMark"
-                                        implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
-        <codeInsight.lineMarkerProvider language="kotlin" id="JimmerBuddy.KotlinLineMark"
+        <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
         <localInspection
                 displayName="Immutable annotation must be used on an interface"
-                shortName="JavaImmutableAnnotation"
+                shortName="ImmutableAnnotation"
                 groupName="Jimmer"
-                language="JAVA"
-                enabledByDefault="true"
-                level="ERROR"
-                hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.ImmutableAnnotationInspection"
-        />
-        <localInspection
-                displayName="Immutable annotation must be used on an interface"
-                shortName="KotlinImmutableAnnotation"
-                groupName="Jimmer"
-                language="kotlin"
+                language="UAST"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
@@ -64,19 +52,9 @@
         />
         <localInspection
                 displayName="Association annotation must be @ToOne or @ToMany"
-                shortName="JavaAssociationAnnotation"
+                shortName="AssociationAnnotation"
                 groupName="Jimmer"
-                language="JAVA"
-                enabledByDefault="true"
-                level="ERROR"
-                hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.AssociationAnnotationInspection"
-        />
-        <localInspection
-                displayName="Association annotation must be @ToOne or @ToMany"
-                shortName="KotlinAssociationAnnotation"
-                groupName="Jimmer"
-                language="kotlin"
+                language="UAST"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
@@ -84,73 +62,42 @@
         />
         <localInspection
                 displayName="IdView annotation"
-                shortName="JavaIdViewAnnotation"
+                shortName="IdViewAnnotation"
                 groupName="Jimmer"
-                language="JAVA"
+                language="UAST"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdViewAnnotationInspection"
         />
-        <localInspection
-                displayName="IdView annotation"
-                shortName="KotlinIdViewAnnotation"
-                groupName="Jimmer"
-                language="kotlin"
-                enabledByDefault="true"
-                level="ERROR"
-                hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdViewAnnotationInspection"
-        />
+
         <localInspection
                 displayName="MappedBy"
-                shortName="JavaMappedBy"
+                shortName="MappedBy"
                 groupName="Jimmer"
-                language="JAVA"
+                language="UAST"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
         />
-        <localInspection
-                displayName="MappedBy"
-                shortName="KotlinMappedBy"
-                groupName="Jimmer"
-                language="kotlin"
-                enabledByDefault="true"
-                level="ERROR"
-                hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
-        />
+
         <localInspection
                 displayName="FormulaAnnotation"
-                shortName="JavaFormulaAnnotation"
+                shortName="FormulaAnnotation"
                 groupName="Jimmer"
-                language="JAVA"
+                language="UAST"
                 enabledByDefault="true"
                 level="ERROR"
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
         />
-        <localInspection
-                displayName="FormulaAnnotation"
-                shortName="KotlinFormulaAnnotation"
-                groupName="Jimmer"
-                language="kotlin"
-                enabledByDefault="true"
-                level="ERROR"
-                hasStaticDescription="true"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
-        />
+
         <intentionAction>
-            <language>JAVA</language>
-            <className>cn.enaium.jimmer.buddy.extensions.intention.JavaDraftSetIntentionAction</className>
+            <language>UAST</language>
+            <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
             <category>Jimmer</category>
-        </intentionAction>
-        <intentionAction>
-            <language>kotlin</language>
-            <className>cn.enaium.jimmer.buddy.extensions.intention.KotlinDraftSetIntentionAction</className>
-            <category>Jimmer</category>
+            <descriptionDirectoryName>draftSet</descriptionDirectoryName>
         </intentionAction>
         <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.DtoFolderIconProvider" order="first"/>
     </extensions>
