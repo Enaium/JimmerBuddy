@@ -30,7 +30,7 @@ import javax.swing.Icon
 /**
  * @author Enaium
  */
-class DtoFolderIconProvider : IconProvider() {
+class JimmerIconProvider : IconProvider() {
     override fun getIcon(p0: PsiElement, p1: Int): Icon? {
         when (p0) {
             is PsiDirectory -> {

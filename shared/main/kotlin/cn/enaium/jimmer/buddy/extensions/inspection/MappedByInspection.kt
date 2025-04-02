@@ -38,8 +38,13 @@ class MappedByInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
+                val mappedByAnnotations = listOf(
+                    OneToMany::class.qualifiedName,
+                    ManyToMany::class.qualifiedName,
+                    OneToOne::class.qualifiedName
+                )
                 if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
-                    element.modifierList.annotations.find { it.qualifiedName == OneToMany::class.qualifiedName || it.qualifiedName == ManyToMany::class.qualifiedName || it.qualifiedName == OneToOne::class.qualifiedName }
+                    element.modifierList.annotations.find { mappedByAnnotations.contains(it.qualifiedName) }
                         ?.also {
                             val mappedBy = it.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
                                 ?.takeIf { it.isNotBlank() } ?: return@also
@@ -58,8 +63,7 @@ class MappedByInspection : LocalInspectionTool() {
                             }
                         }
                 } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    element.annotations()
-                        .find { it.fqName == OneToMany::class.qualifiedName || it.fqName == ManyToMany::class.qualifiedName || it.fqName == OneToOne::class.qualifiedName }
+                    element.annotations().find { mappedByAnnotations.contains(it.fqName) }
                         ?.also {
                             val mappedBy =
                                 it.arguments.find { argument -> argument.name == "mappedBy" }?.value?.toString()

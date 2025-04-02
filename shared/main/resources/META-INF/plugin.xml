@@ -70,7 +70,6 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdViewAnnotationInspection"
         />
-
         <localInspection
                 displayName="MappedBy"
                 shortName="MappedBy"
@@ -81,7 +80,6 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.MappedByInspection"
         />
-
         <localInspection
                 displayName="FormulaAnnotation"
                 shortName="FormulaAnnotation"
@@ -92,14 +90,18 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
         />
-
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
             <category>Jimmer</category>
             <descriptionDirectoryName>draftSet</descriptionDirectoryName>
         </intentionAction>
-        <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.DtoFolderIconProvider" order="first"/>
+        <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconProvider" order="first"/>
+        <completion.confidence language="UAST"
+                               implementationClass="cn.enaium.jimmer.buddy.extensions.completion.EnableCompletionInString"
+                               order="first"/>
+        <psi.referenceContributor language="UAST"
+                                  implementation="cn.enaium.jimmer.buddy.extensions.reference.JimmerReferenceContributor"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

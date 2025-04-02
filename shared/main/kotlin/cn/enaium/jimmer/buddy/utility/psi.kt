@@ -17,10 +17,7 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiLambdaExpression
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiSubstitutor
+import com.intellij.psi.*
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Immutable
@@ -28,6 +25,7 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
@@ -58,6 +56,10 @@ fun PsiClass.hasImmutableAnnotation(): Boolean {
     } == true
 }
 
+fun PsiClass.isImmutable(): Boolean {
+    return hasImmutableAnnotation() && isInterface
+}
+
 fun PsiClass.hasErrorFamilyAnnotation(): Boolean {
     return this.modifierList?.annotations?.any { annotation ->
         annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
@@ -76,6 +78,10 @@ fun KtClass.hasImmutableAnnotation(): Boolean {
                 || fqName == MappedSuperclass::class.qualifiedName!!
                 || fqName == Embeddable::class.qualifiedName!!
     } == true
+}
+
+fun KtClass.isImmutable(): Boolean {
+    return hasImmutableAnnotation() && isInterface()
 }
 
 fun KtClass.hasErrorFamilyAnnotation(): Boolean {
@@ -196,4 +202,17 @@ fun KtClass.isDraft(): Boolean {
 fun PsiLambdaExpression.firstArg(): Pair<String, PsiClass?>? {
     return parameterList.parameters.firstOrNull()
         ?.let { it.name to PsiUtil.resolveGenericsClassInType(it.type).element }
+}
+
+fun PsiAnnotation.method(): PsiMethod? {
+    return ((this.parent as? PsiModifierList)?.parent as? PsiMethod)
+}
+
+fun KtAnnotationEntry.property(): KtProperty? {
+    return ((this.parent as? KtModifierList)?.parent as? KtProperty)
+}
+
+fun PsiElement.annotArgName(): String? {
+    return (this.parent as? PsiNameValuePair)?.nameIdentifier?.text
+        ?: this.getParentOfType<KtValueArgument>(true)?.text?.substringBefore(" ")
 }
