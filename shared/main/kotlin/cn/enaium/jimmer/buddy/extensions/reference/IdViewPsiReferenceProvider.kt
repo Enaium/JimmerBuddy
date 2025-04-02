@@ -17,20 +17,19 @@
 package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.annotArgName
+import cn.enaium.jimmer.buddy.utility.annotName
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.OneToMany
-import org.babyfish.jimmer.sql.OneToOne
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.babyfish.jimmer.sql.IdView
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
  */
-object MappedByPsiReferenceProvider : PsiReferenceProvider() {
+object IdViewPsiReferenceProvider : PsiReferenceProvider() {
     override fun getReferencesByElement(
         element: PsiElement,
         context: ProcessingContext
@@ -39,7 +38,6 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
     }
 
     private class Reference(val e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
-
         val props = getProps(e)
 
         override fun resolve(): PsiElement? {
@@ -52,26 +50,23 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
         }
 
         private fun getProps(element: PsiElement): Map<String, PsiElement> {
-            val mappedByAnnotations = listOf(
-                OneToMany::class.qualifiedName,
-                ManyToMany::class.qualifiedName,
-                OneToOne::class.qualifiedName
-            )
-            if (!mappedByAnnotations.contains(element.annotName())) {
+            if (element.annotName() != IdView::class.qualifiedName) {
                 return emptyMap()
             }
 
-            if (element.annotArgName() != "mappedBy") {
+            if (element.annotArgName() != "value") {
                 return emptyMap()
             }
 
             val result = mutableMapOf<String, PsiElement>()
-            element.getParentOfType<PsiAnnotation>(true)?.method()?.getTarget()?.methods?.forEach {
-                result[it.name] = it
+            element.getParentOfType<PsiClass>(true)?.methods?.forEach { method ->
+                result[method.name] = method
             }
-            element.getParentOfType<KtAnnotationEntry>(true)?.property()?.getTarget()?.getProperties()?.forEach {
-                result[it.name ?: "Unknown name"] = it
+
+            element.getParentOfType<KtClass>(true)?.getProperties()?.forEach { property ->
+                result[property.name ?: "Unknown name"] = property
             }
+
             return result
         }
     }

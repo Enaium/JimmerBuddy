@@ -26,6 +26,8 @@ import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * @author Enaium
@@ -212,7 +214,19 @@ fun KtAnnotationEntry.property(): KtProperty? {
     return ((this.parent as? KtModifierList)?.parent as? KtProperty)
 }
 
+fun PsiElement.annotName(): String? {
+    return (this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
+        true
+    )).toUElementOfType<UAnnotation>()?.qualifiedName
+}
+
 fun PsiElement.annotArgName(): String? {
-    return (this.parent as? PsiNameValuePair)?.nameIdentifier?.text
-        ?: this.getParentOfType<KtValueArgument>(true)?.text?.substringBefore(" ")
+    val parent = this.parent
+    return if (parent is PsiNameValuePair) {
+        parent.nameIdentifier?.text ?: "value"
+    } else if (parent is KtValueArgument) {
+        parent.text.takeIf { it.contains("=") }?.substringBefore(" ") ?: "value"
+    } else {
+        null
+    }
 }
