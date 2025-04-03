@@ -129,24 +129,38 @@ class GenerateEntityDialog(
 
         var driverJarFile: Path? = null
 
-        Path(System.getProperty("user.home")).resolve(
-            ".m2/repository/${
-                jdbcDriver.group.split(".").joinToString("/")
-            }/${jdbcDriver.artifact}"
-        ).walk().findLast {
-            it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
-                .not() && it.name.endsWith(".jar")
-        }?.also {
-            driverJarFile = it
-        }
-
-        Path(System.getProperty("user.home")).resolve(".gradle/caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.artifact}")
-            .walk().findLast {
-                it.isDirectory().not() && it.name.endsWith("-sources.jar").not() && it.name.endsWith("-javadoc.jar")
-                    .not() && it.name.endsWith(".jar")
+        listOfNotNull(
+            Path(System.getProperty("user.home")).resolve(".m2"),
+            System.getenv("M2_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
+        ).forEach { path ->
+            path.resolve(
+                "repository/${
+                    jdbcDriver.group.split(".").joinToString("/")
+                }/${jdbcDriver.artifact}"
+            ).walk().findLast {
+                it.isDirectory().not()
+                        && it.name.endsWith("-sources.jar").not()
+                        && it.name.endsWith("-javadoc.jar").not()
+                        && it.name.endsWith(".jar")
             }?.also {
                 driverJarFile = it
             }
+        }
+
+        listOfNotNull(
+            Path(System.getProperty("user.home")).resolve(".gradle"),
+            System.getenv("GRADLE_USER_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
+        ).forEach { path ->
+            path.resolve("caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.artifact}")
+                .walk().findLast {
+                    it.isDirectory().not()
+                            && it.name.endsWith("-sources.jar").not()
+                            && it.name.endsWith("-javadoc.jar").not()
+                            && it.name.endsWith(".jar")
+                }?.also {
+                    driverJarFile = it
+                }
+        }
 
         if (driverJarFile == null) {
             Messages.showErrorDialog("Failed to find driver jar, please check your maven or gradle cache", "Error")
