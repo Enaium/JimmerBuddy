@@ -16,18 +16,12 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.utility.annotations
-import cn.enaium.jimmer.buddy.utility.getTarget
-import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
-import cn.enaium.jimmer.buddy.utility.toAny
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethod
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.OneToMany
-import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 
@@ -38,11 +32,6 @@ class MappedByInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
-                val mappedByAnnotations = listOf(
-                    OneToMany::class.qualifiedName,
-                    ManyToMany::class.qualifiedName,
-                    OneToOne::class.qualifiedName
-                )
                 if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
                     element.modifierList.annotations.find { mappedByAnnotations.contains(it.qualifiedName) }
                         ?.also {

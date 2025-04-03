@@ -23,6 +23,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
+import org.babyfish.jimmer.sql.ManyToMany
+import org.babyfish.jimmer.sql.OneToMany
+import org.babyfish.jimmer.sql.OneToOne
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.Callable
@@ -174,3 +177,9 @@ fun Project.runReadActionSmart(block: () -> Unit) {
         block()
     }
 }
+
+val mappedByAnnotations = listOfNotNull(
+    OneToMany::class.qualifiedName,
+    ManyToMany::class.qualifiedName,
+    OneToOne::class.qualifiedName
+)

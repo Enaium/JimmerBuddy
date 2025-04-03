@@ -52,11 +52,6 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
         }
 
         private fun getProps(element: PsiElement): Map<String, PsiElement> {
-            val mappedByAnnotations = listOf(
-                OneToMany::class.qualifiedName,
-                ManyToMany::class.qualifiedName,
-                OneToOne::class.qualifiedName
-            )
             if (!mappedByAnnotations.contains(element.annotName())) {
                 return emptyMap()
             }
