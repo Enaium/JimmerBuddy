@@ -100,7 +100,8 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
                 java.lang.Double::class.java.name,
                 Double::class.qualifiedName!!
             )
-        )
+        ),
+        var logo: Boolean = true
     )
 
     data class DatabaseItem(

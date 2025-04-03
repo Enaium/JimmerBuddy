@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.icon
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.ide.IconProvider
 import com.intellij.psi.PsiClass
@@ -32,6 +33,10 @@ import javax.swing.Icon
  */
 class JimmerIconProvider : IconProvider() {
     override fun getIcon(p0: PsiElement, p1: Int): Icon? {
+        if (!JimmerBuddySetting.INSTANCE.state.logo) {
+            return null
+        }
+
         when (p0) {
             is PsiDirectory -> {
                 if (p0.name == "dto" && (p0.parent?.name == "main" || p0.parent?.name == "test") && p0.parent?.parent?.name == "src") {

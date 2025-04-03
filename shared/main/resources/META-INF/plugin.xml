@@ -102,6 +102,10 @@
                                order="first"/>
         <psi.referenceContributor language="UAST"
                                   implementation="cn.enaium.jimmer.buddy.extensions.reference.JimmerReferenceContributor"/>
+        <applicationConfigurable parentId="tools"
+                                 instance="cn.enaium.jimmer.buddy.extensions.BuddySettingUI"
+                                 id="JimmerBuddy.Setting"
+                                 displayName="Jimmer Buddy"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
