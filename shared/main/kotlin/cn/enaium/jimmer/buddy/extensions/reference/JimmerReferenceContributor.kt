@@ -27,5 +27,6 @@ class JimmerReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(register: PsiReferenceRegistrar) {
         register.registerReferenceProvider(PlatformPatterns.psiElement(), MappedByPsiReferenceProvider)
         register.registerReferenceProvider(PlatformPatterns.psiElement(), IdViewPsiReferenceProvider)
+        register.registerReferenceProvider(PlatformPatterns.psiElement(), FormulaPsiReferenceProvider)
     }
 }

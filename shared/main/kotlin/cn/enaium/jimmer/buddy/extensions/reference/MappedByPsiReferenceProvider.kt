@@ -21,9 +21,6 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.OneToMany
-import org.babyfish.jimmer.sql.OneToOne
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 

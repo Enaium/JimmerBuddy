@@ -165,14 +165,31 @@ fun KtClass.findPropertyByName(name: String, superType: Boolean): KtNamedDeclara
     val prop = this.findPropertyByName(name)
     if (prop == null && superType) {
         this.superTypeListEntries.forEach {
-            it.typeReference?.let { it.type() }?.ktClass?.also {
-                if (it.hasJimmerAnnotation()) {
-                    return it.findPropertyByName(name, true)
+            it.typeReference?.type()?.ktClass?.also {
+                if (it.isImmutable()) {
+                    it.findPropertyByName(name, true)?.also {
+                        return it
+                    }
                 }
             }
         }
     }
     return prop
+}
+
+fun KtClass.getAllProperties(): List<KtProperty> {
+    val result = mutableListOf<KtProperty>()
+    this.getProperties().forEach {
+        result.add(it)
+    }
+    this.superTypeListEntries.forEach {
+        it.typeReference?.type()?.ktClass?.also {
+            if (it.isImmutable()) {
+                result.addAll(it.getAllProperties())
+            }
+        }
+    }
+    return result
 }
 
 fun PsiClass.isDraft(): Boolean {
@@ -221,12 +238,11 @@ fun PsiElement.annotName(): String? {
 }
 
 fun PsiElement.annotArgName(): String? {
-    val parent = this.parent
-    return if (parent is PsiNameValuePair) {
-        parent.nameIdentifier?.text ?: "value"
-    } else if (parent is KtValueArgument) {
-        parent.text.takeIf { it.contains("=") }?.substringBefore(" ") ?: "value"
-    } else {
-        null
+    this.getParentOfType<PsiNameValuePair>(true)?.also {
+        return it.nameIdentifier?.text ?: "value"
     }
+    this.getParentOfType<KtValueArgument>(true)?.also {
+        return it.text.takeIf { it.contains("=") }?.substringBefore(" ") ?: "value"
+    }
+    return null
 }
