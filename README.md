@@ -2,7 +2,7 @@
 
 A plugin that adds first-class support for Project Jimmer
 
-![](https://s2.loli.net/2025/03/19/bChkJ7Sidp2QOXy.png)
+![](https://s2.loli.net/2025/04/05/2RNcPghd1AeB8Fs.png)
 
 ## Features
 
