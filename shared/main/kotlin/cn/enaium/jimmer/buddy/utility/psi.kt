@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy.PSI_SHARED
 import com.intellij.psi.*
+import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Immutable
@@ -27,6 +28,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.toUElementOfType
 
 /**
@@ -235,6 +237,13 @@ fun PsiElement.annotName(): String? {
     return (this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
         true
     )).toUElementOfType<UAnnotation>()?.qualifiedName
+}
+
+fun PsiElement.annotClassLiteral(name: String): String? {
+    return (((this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
+        true
+    )).toUElementOfType<UAnnotation>()
+        ?.findAttributeValue(name) as? UClassLiteralExpression)?.type as? PsiClassReferenceType)?.canonicalText
 }
 
 fun PsiElement.annotArgName(): String? {

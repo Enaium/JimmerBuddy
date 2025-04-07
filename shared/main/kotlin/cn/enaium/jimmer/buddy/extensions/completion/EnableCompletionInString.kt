@@ -25,6 +25,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ThreeState
 import org.babyfish.jimmer.Immutable
+import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.Entity
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
@@ -35,16 +36,15 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 class EnableCompletionInString : CompletionConfidence() {
     private val jimmerAnnotationPrefixes = listOf(
         Immutable::class.qualifiedName!!.substringBeforeLast("."),
-        Entity::class.qualifiedName!!.substringBeforeLast(".")
+        Entity::class.qualifiedName!!.substringBeforeLast("."),
+        FetchBy::class.qualifiedName!!.substringBeforeLast("."),
     )
 
     override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState {
         val inString = SkipAutopopupInStrings.isInStringLiteral(contextElement)
-        val inImmutable = (psiFile.getChildOfType<PsiClass>()?.isImmutable() ?: psiFile.getChildOfType<KtClass>()
-            ?.isImmutable()) == true
         val inJimmerAnnotation = jimmerAnnotationPrefixes.any { contextElement.annotName()?.startsWith(it) == true }
 
-        return if (inString && inImmutable && inJimmerAnnotation) {
+        return if (inString && inJimmerAnnotation) {
             ThreeState.NO
         } else {
             ThreeState.UNSURE

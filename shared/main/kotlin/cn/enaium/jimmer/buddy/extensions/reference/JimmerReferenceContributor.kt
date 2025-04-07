@@ -35,5 +35,6 @@ class JimmerReferenceContributor : PsiReferenceContributor() {
         register.registerReferenceProvider(pattern, MappedByPsiReferenceProvider)
         register.registerReferenceProvider(pattern, IdViewPsiReferenceProvider)
         register.registerReferenceProvider(pattern, FormulaPsiReferenceProvider)
+        register.registerReferenceProvider(pattern, FetchByPsiReferenceProvider)
     }
 }
