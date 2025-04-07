@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClassLiteralExpression
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.toUElementOfType
 
 /**
@@ -239,11 +240,23 @@ fun PsiElement.annotName(): String? {
     )).toUElementOfType<UAnnotation>()?.qualifiedName
 }
 
-fun PsiElement.annotClassLiteral(name: String): String? {
-    return (((this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
+fun PsiElement.annotValue(attribute: String): UExpression? {
+    return (this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
         true
     )).toUElementOfType<UAnnotation>()
-        ?.findAttributeValue(name) as? UClassLiteralExpression)?.type as? PsiClassReferenceType)?.canonicalText
+        ?.findAttributeValue(attribute)
+}
+
+fun UExpression.text() {
+
+}
+
+fun UExpression.string(): String? {
+    return this.evaluate()?.toString()
+}
+
+fun UExpression.classLiteral(): String? {
+    return ((this as? UClassLiteralExpression)?.type as? PsiClassReferenceType)?.canonicalText
 }
 
 fun PsiElement.annotArgName(): String? {

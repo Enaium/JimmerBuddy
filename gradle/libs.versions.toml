@@ -2,13 +2,14 @@
 kotlin = "2.1.20"
 ksp = "2.1.20+"
 intellij = "2.5.0"
-jimmer = "0.9.69"
+jimmer = "0.9.71"
 byteBuddy = "1.17.1"
 kotlinpoet = "2.0.0"
 javapoet = "1.13.0"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
+jimmer-sql = { module = "org.babyfish.jimmer:jimmer-sql", version.ref = "jimmer" }
 jimmer-apt = { module = "org.babyfish.jimmer:jimmer-apt", version.ref = "jimmer" }
 jimmer-ksp = { module = "org.babyfish.jimmer:jimmer-ksp", version.ref = "jimmer" }
 jimmer-dto-compiler = { module = "org.babyfish.jimmer:jimmer-dto-compiler", version.ref = "jimmer" }

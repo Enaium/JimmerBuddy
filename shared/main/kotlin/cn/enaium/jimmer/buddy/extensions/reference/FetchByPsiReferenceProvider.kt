@@ -18,17 +18,21 @@ package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.annotArgName
-import cn.enaium.jimmer.buddy.utility.annotClassLiteral
 import cn.enaium.jimmer.buddy.utility.annotName
+import cn.enaium.jimmer.buddy.utility.annotValue
+import cn.enaium.jimmer.buddy.utility.classLiteral
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.lang.jvm.JvmModifier
 import com.intellij.psi.*
+import com.intellij.refactoring.extractMethod.newImpl.ExtractMethodHelper.hasExplicitModifier
 import com.intellij.util.ProcessingContext
 import org.babyfish.jimmer.client.FetchBy
+import org.babyfish.jimmer.client.meta.DefaultFetcherOwner
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * @author Enaium
@@ -51,7 +55,7 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
         }
 
         override fun getVariants(): Array<out Any> {
-            return props.keys.map { LookupElementBuilder.create(it).withIcon(JimmerBuddy.Icons.PROP) }.toTypedArray()
+            return props.keys.map { LookupElementBuilder.create(it).withIcon(JimmerBuddy.Icons.DTO) }.toTypedArray()
         }
 
         private fun getProps(element: PsiElement): Map<String, PsiElement> {
@@ -63,22 +67,36 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
                 return emptyMap()
             }
 
-            val ownerType = element.annotClassLiteral("ownerType")
+            var ownerType = element.annotValue("ownerType")?.classLiteral()
 
             val result = mutableMapOf<String, PsiElement>()
 
             element.getParentOfType<PsiClass>(true)?.also { klass ->
+
+                if (ownerType == null) {
+                    ownerType =
+                        (klass.annotations.find { it.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
+                            ?.findAttributeValue("value")?.classLiteral()
+                }
+
                 if (ownerType == null) {
                     klass
                 } else {
                     JavaPsiFacade.getInstance(element.project).findClass(ownerType, element.project.allScope())
                 }?.fields?.forEach { field ->
-                    if (field.hasModifier(JvmModifier.STATIC)) {
+                    if (field.hasExplicitModifier(PsiModifier.STATIC)) {
                         result[field.name] = field
                     }
                 }
             }
             element.getParentOfType<KtClass>(true)?.also { ktClass ->
+
+                if (ownerType == null) {
+                    ownerType =
+                        (ktClass.annotationEntries.find { it.toUElementOfType<UAnnotation>()?.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
+                            ?.findAttributeValue("value")?.classLiteral()
+                }
+
                 if (ownerType == null) {
                     ktClass
                 } else {

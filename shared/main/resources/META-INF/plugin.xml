@@ -91,6 +91,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FormulaAnnotationInspection"
         />
+        <localInspection
+                displayName="FetchByAnnotation"
+                shortName="FetchByAnnotation"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FetchByAnnotationInspection"
+        />
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
