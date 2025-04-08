@@ -42,7 +42,7 @@
         <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
         <localInspection
-                displayName="Immutable annotation must be used on an interface"
+                displayName="ImmutableAnnotation"
                 shortName="ImmutableAnnotation"
                 groupName="Jimmer"
                 language="UAST"
@@ -52,7 +52,7 @@
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.ImmutableAnnotationInspection"
         />
         <localInspection
-                displayName="Association annotation must be @ToOne or @ToMany"
+                displayName="AssociationAnnotation"
                 shortName="AssociationAnnotation"
                 groupName="Jimmer"
                 language="UAST"
@@ -62,7 +62,7 @@
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.AssociationAnnotationInspection"
         />
         <localInspection
-                displayName="IdView annotation"
+                displayName="IdViewAnnotation"
                 shortName="IdViewAnnotation"
                 groupName="Jimmer"
                 language="UAST"
