@@ -27,10 +27,9 @@ import org.babyfish.jimmer.client.meta.DefaultFetcherOwner
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
-import org.jetbrains.kotlin.j2k.getContainingClass
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtTypeReference
-import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.*
 
@@ -49,7 +48,7 @@ class FetchByAnnotationInspection : LocalInspectionTool() {
                 val value = u?.findAttributeValue("value")?.string() ?: return
                 var ownerType = u.findAttributeValue("ownerType")?.classLiteral()
                 if (element is PsiAnnotation) {
-                    element.getContainingClass()?.also { klass ->
+                    element.getParentOfType<PsiClass>(true)?.also { klass ->
 
                         if (ownerType == null) {
                             ownerType =
@@ -76,7 +75,7 @@ class FetchByAnnotationInspection : LocalInspectionTool() {
                         }
                     }
                 } else if (element is KtAnnotationEntry) {
-                    element.containingClass()?.also { ktClass ->
+                    element.getParentOfType<KtClass>(true)?.also { ktClass ->
 
                         if (ownerType == null) {
                             ownerType =
