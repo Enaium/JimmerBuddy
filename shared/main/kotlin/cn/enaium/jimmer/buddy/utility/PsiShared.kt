@@ -27,6 +27,10 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 interface PsiShared {
     data class Annotation(val fqName: String?, val arguments: List<Argument>) {
         data class Argument(val name: String, val value: Any?)
+
+        fun findArgument(name: String): Argument? {
+            return arguments.find { it.name == name }
+        }
     }
 
     data class Type(

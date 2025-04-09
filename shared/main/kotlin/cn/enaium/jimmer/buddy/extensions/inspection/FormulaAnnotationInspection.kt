@@ -63,7 +63,7 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
                     element.annotations().find { it.fqName == Formula::class.qualifiedName }
                         ?.also {
                             val dependencies =
-                                (it.arguments.find { argument -> argument.name == "dependencies" }?.value as? List<*>)?.map { it.toString() }
+                                (it.findArgument("dependencies")?.value as? List<*>)?.map { it.toString() }
                                     ?: run {
                                         element.getter?.also {
                                             holder.registerProblem(

@@ -130,7 +130,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                     val annotations = property.annotations()
                                     targets.addAll(
                                         (annotations
-                                            .find { it.fqName == Formula::class.qualifiedName }?.arguments?.find { it.name == "dependencies" }?.value as? List<*>)?.mapNotNull {
+                                            .find { it.fqName == Formula::class.qualifiedName }
+                                            ?.findArgument("dependencies")?.value as? List<*>)?.mapNotNull {
                                             val dependency = it.toString()
                                             val trace = dependency.split(".")
                                             var containingClass = property.containingClass()
@@ -148,7 +149,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         } ?: emptyList())
 
 
-                                    annotations.find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }?.value?.toString()
+                                    annotations.find { it.fqName == IdView::class.qualifiedName }
+                                        ?.findArgument("value")?.value?.toString()
                                         ?.also {
                                             element.findPropertyByName(it)?.also {
                                                 targets.add(it)
@@ -173,7 +175,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                     }?.also { ktClass ->
                                         targets.add(ktClass)
                                         property.annotations()
-                                            .find { mappedByAnnotations.contains(it.fqName) }?.arguments?.find { it.name == "mappedBy" }?.value?.toString()
+                                            .find { mappedByAnnotations.contains(it.fqName) }
+                                            ?.findArgument("mappedBy")?.value?.toString()
                                             ?.also {
                                                 ktClass.findPropertyByName(it, false)?.also {
                                                     targets.add(it)

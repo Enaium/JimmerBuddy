@@ -93,7 +93,7 @@ class IdViewAnnotationInspection : LocalInspectionTool() {
                             holder.registerProblem(element, propNotCollection)
                         }
                         element.annotations()
-                            .find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }
+                            .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")
                             ?.also {
                                 val value = it.value?.toString() ?: ""
 
@@ -112,7 +112,7 @@ class IdViewAnnotationInspection : LocalInspectionTool() {
                         var baseProp: String? = null
 
                         baseProp = element.annotations()
-                            .find { it.fqName == IdView::class.qualifiedName }?.arguments?.find { it.name == "value" }?.value?.toString()
+                            .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")?.value?.toString()
 
                         if (baseProp == null && element.name?.endsWith("Id") == true) {
                             baseProp = element.name!!.substring(0, element.name!!.length - 2)

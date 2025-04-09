@@ -55,7 +55,7 @@ class MappedByInspection : LocalInspectionTool() {
                     element.annotations().find { mappedByAnnotations.contains(it.fqName) }
                         ?.also {
                             val mappedBy =
-                                it.arguments.find { argument -> argument.name == "mappedBy" }?.value?.toString()
+                                it.findArgument("mappedBy")?.value?.toString()
                                     ?: return@also
                             element.getTarget()?.also {
                                 it.getProperties().find { property -> property.name == mappedBy }?.also {
