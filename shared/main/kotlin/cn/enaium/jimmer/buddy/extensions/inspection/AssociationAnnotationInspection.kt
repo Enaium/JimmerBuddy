@@ -16,9 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToManyAnnotation
 import cn.enaium.jimmer.buddy.utility.hasToOneAnnotation
+import cn.enaium.jimmer.buddy.utility.inImmutable
 import cn.enaium.jimmer.buddy.utility.type
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
@@ -28,7 +28,6 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
 import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.psiUtil.containingClass
 
 /**
  * @author Enaium
@@ -38,10 +37,14 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
 
+                if (!element.inImmutable()) {
+                    return
+                }
+
                 val toManyProblem = "The prop type is a collection, but the annotation is @ToOne"
                 val toOneProblem = "The prop type is not a collection, but the annotation is @ToMany"
 
-                if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
+                if (element is PsiMethod) {
                     val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
                     if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY && listOf(
                             List::class.java.name,
@@ -57,7 +60,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                             holder.registerProblem(element, toOneProblem)
                         }
                     }
-                } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
+                } else if (element is KtProperty) {
                     val typeReference = element.typeReference?.type()
                     if (typeReference?.arguments?.isNotEmpty() == true && listOf(
                             List::class.qualifiedName,

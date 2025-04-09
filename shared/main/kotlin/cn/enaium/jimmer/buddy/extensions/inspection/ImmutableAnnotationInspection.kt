@@ -17,34 +17,32 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
  * @author Enaium
  */
-class ImmutableAnnotationInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                val problem = if (element is PsiClass && element.hasImmutableAnnotation() && !element.isInterface) {
-                    true
-                } else if (element is KtClass && element.hasImmutableAnnotation() && !element.isInterface()) {
-                    true
-                } else {
-                    false
-                }
-                if (problem) {
-                    holder.registerProblem(
-                        element,
-                        "You can not use @Immutable annotation on here because Immutable must be an interface."
-                    )
-                }
-            }
+class ImmutableAnnotationInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        val problem = if (element is PsiClass && element.hasImmutableAnnotation() && !element.isInterface) {
+            true
+        } else if (element is KtClass && element.hasImmutableAnnotation() && !element.isInterface()) {
+            true
+        } else {
+            false
+        }
+        if (problem) {
+            holder.registerProblem(
+                element,
+                "You can not use @Immutable annotation on here because Immutable must be an interface."
+            )
         }
     }
 }

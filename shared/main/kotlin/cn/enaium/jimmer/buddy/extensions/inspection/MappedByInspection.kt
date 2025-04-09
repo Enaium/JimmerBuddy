@@ -17,62 +17,69 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.*
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethod
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
  */
-class MappedByInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
-                    element.modifierList.annotations.find { mappedByAnnotations.contains(it.qualifiedName) }
-                        ?.also {
-                            val mappedBy = it.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
-                                ?.takeIf { it.isNotBlank() } ?: return@also
-                            element.getTarget()?.also {
-                                it.methods.find { method -> method.name == mappedBy }?.also {
-                                    if (it.getTarget() != element.containingClass) {
-                                        holder.registerProblem(
-                                            element,
-                                            "The mappedBy prop type is not match"
-                                        )
-                                    }
-                                } ?: holder.registerProblem(
-                                    element,
-                                    "The mappedBy prop is not found"
-                                )
-                            }
+class MappedByInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        if (!element.inImmutable()) {
+            return
+        }
+
+        if (!mappedByAnnotations.any { element.isAnnotation(it) }) return
+
+        element.getParentOfType<PsiMethod>(true)?.also { methodElement ->
+            if (element is PsiAnnotation) {
+                val mappedBy = element.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
+                    ?.takeIf { it.isNotBlank() } ?: return@also
+                methodElement.getTarget()?.also {
+                    it.methods.find { method -> method.name == mappedBy }?.also {
+                        if (it.getTarget() != methodElement.containingClass) {
+                            holder.registerProblem(
+                                element,
+                                "The mappedBy prop type is not match"
+                            )
                         }
-                } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    element.annotations().find { mappedByAnnotations.contains(it.fqName) }
-                        ?.also {
-                            val mappedBy =
-                                it.findArgument("mappedBy")?.value?.toString()
-                                    ?: return@also
-                            element.getTarget()?.also {
-                                it.getProperties().find { property -> property.name == mappedBy }?.also {
-                                    if (it.getTarget() != element.containingClass()) {
-                                        holder.registerProblem(
-                                            element,
-                                            "The mappedBy prop type is not match"
-                                        )
-                                    }
-                                } ?: holder.registerProblem(
-                                    element,
-                                    "The mappedBy prop is not found"
-                                )
-                            }
-                        }
+                    } ?: holder.registerProblem(
+                        element,
+                        "The mappedBy prop is not found"
+                    )
                 }
             }
+        }
+
+        element.getParentOfType<KtProperty>(true)?.also { propertyElement ->
+            propertyElement.annotations().find { mappedByAnnotations.contains(it.fqName) }
+                ?.also {
+                    val mappedBy =
+                        it.findArgument("mappedBy")?.value?.toString()
+                            ?: return@also
+                    propertyElement.getTarget()?.also {
+                        it.getProperties().find { property -> property.name == mappedBy }?.also {
+                            if (it.getTarget() != propertyElement.containingClass()) {
+                                holder.registerProblem(
+                                    element,
+                                    "The mappedBy prop type is not match"
+                                )
+                            }
+                        } ?: holder.registerProblem(
+                            element,
+                            "The mappedBy prop is not found"
+                        )
+                    }
+                }
         }
     }
 }

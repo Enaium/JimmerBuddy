@@ -17,27 +17,68 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.*
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import org.babyfish.jimmer.Formula
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
  */
-class FormulaAnnotationInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: com.intellij.psi.PsiElement) {
-                if (element is PsiMethod && element.containingClass?.hasImmutableAnnotation() == true) {
-                    element.annotations.find { it.qualifiedName == Formula::class.qualifiedName }?.also {
-                        val dependencies = (it.findAttributeValue("dependencies")
-                            ?.toAny(Array<String>::class.java) as? Array<*>)?.map { it.toString() }
-                            ?.takeIf { it.isNotEmpty() } ?: run {
-                            element.body?.also {
+class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        if (!element.inImmutable()) {
+            return
+        }
+
+        if (!element.isAnnotation(Formula::class.qualifiedName!!)) return
+
+        if (element is PsiAnnotation) {
+            element.getParentOfType<PsiMethod>(true).also { methodElement ->
+                val dependencies = (element.findAttributeValue("dependencies")
+                    ?.toAny(Array<String>::class.java) as? Array<*>)?.map { it.toString() }
+                    ?.takeIf { it.isNotEmpty() } ?: run {
+                    methodElement?.body?.also {
+                        holder.registerProblem(
+                            element,
+                            "The dependencies is empty"
+                        )
+                    }
+                    return
+                }
+
+                dependencies.forEach { dependency ->
+                    val trace = dependency.split(".")
+                    var containingClass = methodElement?.containingClass
+
+                    trace.forEach {
+                        containingClass?.findMethodsByName(it, true)?.takeIf { it.isNotEmpty() }?.also {
+                            containingClass = it.first().getTarget()
+                        } ?: run {
+                            holder.registerProblem(element, "The dependency '$it' does not exist")
+                            return@also
+                        }
+                    }
+                }
+            }
+        }
+
+        if (element is KtAnnotationEntry) {
+            element.getParentOfType<KtProperty>(true)?.also { propertyElement ->
+                val dependencies =
+                    (propertyElement.annotations().find { it.fqName == Formula::class.qualifiedName }
+                        ?.findArgument("dependencies")?.value as? List<*>)?.map { it.toString() }
+                        ?: run {
+                            propertyElement.getter?.also {
                                 holder.registerProblem(
                                     element,
                                     "The dependencies is empty"
@@ -45,47 +86,17 @@ class FormulaAnnotationInspection : LocalInspectionTool() {
                             }
                             return@also
                         }
-                        dependencies.forEach { dependency ->
-                            val trace = dependency.split(".")
-                            var containingClass = element.containingClass
-
-                            trace.forEach {
-                                containingClass?.findMethodsByName(it, true)?.takeIf { it.isNotEmpty() }?.also {
-                                    containingClass = it.first().getTarget()
-                                } ?: run {
-                                    holder.registerProblem(element, "The dependency '$it' does not exist")
-                                    return@also
-                                }
-                            }
+                dependencies.forEach { dependency ->
+                    val trace = dependency.split(".")
+                    var containingClass = element.containingClass()
+                    trace.forEach {
+                        containingClass?.findPropertyByName(it, true)?.also {
+                            containingClass = (it as KtProperty).getTarget()
+                        } ?: run {
+                            holder.registerProblem(element, "The dependency '$it' does not exist")
+                            return@also
                         }
                     }
-                } else if (element is KtProperty && element.containingClass()?.hasImmutableAnnotation() == true) {
-                    element.annotations().find { it.fqName == Formula::class.qualifiedName }
-                        ?.also {
-                            val dependencies =
-                                (it.findArgument("dependencies")?.value as? List<*>)?.map { it.toString() }
-                                    ?: run {
-                                        element.getter?.also {
-                                            holder.registerProblem(
-                                                element,
-                                                "The dependencies is empty"
-                                            )
-                                        }
-                                        return@also
-                                    }
-                            dependencies.forEach { dependency ->
-                                val trace = dependency.split(".")
-                                var containingClass = element.containingClass()
-                                trace.forEach {
-                                    containingClass?.findPropertyByName(it, true)?.also {
-                                        containingClass = (it as KtProperty).getTarget()
-                                    } ?: run {
-                                        holder.registerProblem(element, "The dependency '$it' does not exist")
-                                        return@also
-                                    }
-                                }
-                            }
-                        }
                 }
             }
         }

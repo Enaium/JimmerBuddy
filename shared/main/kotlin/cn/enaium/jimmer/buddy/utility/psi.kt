@@ -268,3 +268,12 @@ fun PsiElement.annotArgName(): String? {
     }
     return null
 }
+
+fun PsiElement.inImmutable(): Boolean {
+    return this.getParentOfType<PsiClass>(true)?.isImmutable() != true || this.getParentOfType<KtClass>(true)
+        ?.isImmutable() != true
+}
+
+fun PsiElement.isAnnotation(name: String): Boolean {
+    return (this is PsiAnnotation || this is KtAnnotationEntry || this is KtCallExpression) && this.toUElementOfType<UAnnotation>()?.qualifiedName == name
+}

@@ -16,113 +16,114 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.utility.annotations
-import cn.enaium.jimmer.buddy.utility.hasIdViewAnnotation
-import cn.enaium.jimmer.buddy.utility.toAny
-import cn.enaium.jimmer.buddy.utility.type
-import com.intellij.codeInspection.LocalInspectionTool
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.sql.IdView
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 /**
  * @author Enaium
  */
-class IdViewAnnotationInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                val noValue = "The prop type is a collection, but the annotation hasn't value"
-                val basePropNotExists = "The base prop doesn't exists"
-                val propNotCollection = "The prop type has generic, but the prop type isn't a collection"
+class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        if (!element.inImmutable()) {
+            return
+        }
 
-                if (element is PsiMethod && element.hasIdViewAnnotation()) {
-                    val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
-                    if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY) {
-                        if (!listOf(
-                                List::class.java.name,
-                                Set::class.java.name,
-                                Collection::class.java.name
-                            ).any { it == returnPsiClass?.element?.qualifiedName }
-                        ) {
-                            holder.registerProblem(element, propNotCollection)
-                        }
-                        element.modifierList.annotations.find { it.qualifiedName == IdView::class.qualifiedName }
-                            ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
-                            ?.takeIf { it.isNotBlank() }?.also { value ->
-                                element.containingClass?.also { c ->
-                                    if (c.methods.none { it.name == value }) {
-                                        holder.registerProblem(element, basePropNotExists)
-                                    }
-                                }
-                            } ?: holder.registerProblem(element, noValue)
-                    } else {
+        val noValue = "The prop type is a collection, but the annotation hasn't value"
+        val basePropNotExists = "The base prop doesn't exists"
+        val propNotCollection = "The prop type has generic, but the prop type isn't a collection"
 
-                        var baseProp: String? = null
-
-                        baseProp =
-                            element.modifierList.annotations.find { it.qualifiedName == IdView::class.qualifiedName }
-                                ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
-                                ?.takeIf { it.isNotBlank() }
-
-                        if (baseProp == null && element.name.endsWith("Id")) {
-                            baseProp = element.name.substring(0, element.name.length - 2)
-                        }
-
-                        element.containingClass?.also { c ->
-                            if (c.methods.none { it.name == baseProp }) {
-                                holder.registerProblem(element, basePropNotExists)
+        if (!element.isAnnotation(IdView::class.qualifiedName!!)) return
+        element.getParentOfType<PsiMethod>(true)?.also { methodElement ->
+            val returnPsiClass = methodElement.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
+            if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY) {
+                if (!listOf(
+                        List::class.java.name,
+                        Set::class.java.name,
+                        Collection::class.java.name
+                    ).any { it == returnPsiClass?.element?.qualifiedName }
+                ) {
+                    holder.registerProblem(methodElement, propNotCollection)
+                }
+                methodElement.modifierList.annotations.find { it.qualifiedName == IdView::class.qualifiedName }
+                    ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
+                    ?.takeIf { it.isNotBlank() }?.also { value ->
+                        methodElement.containingClass?.also { c ->
+                            if (c.methods.none { it.name == value }) {
+                                holder.registerProblem(methodElement, basePropNotExists)
                             }
                         }
+                    } ?: holder.registerProblem(element, noValue)
+            } else {
+                var baseProp: String? = null
+
+                baseProp =
+                    methodElement.modifierList.annotations.find { it.qualifiedName == IdView::class.qualifiedName }
+                        ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
+                        ?.takeIf { it.isNotBlank() }
+
+                if (baseProp == null && methodElement.name.endsWith("Id")) {
+                    baseProp = methodElement.name.substring(0, methodElement.name.length - 2)
+                }
+
+                methodElement.containingClass?.also { c ->
+                    if (c.methods.none { it.name == baseProp }) {
+                        holder.registerProblem(element, basePropNotExists)
                     }
-                } else if (element is KtProperty && element.hasIdViewAnnotation()) {
-                    val typeReference = element.typeReference?.type()
-                    if (typeReference?.arguments?.isNotEmpty() == true) {
-                        if (!listOf(
-                                List::class.qualifiedName,
-                                Set::class.qualifiedName,
-                                Collection::class.qualifiedName
-                            ).any { it == typeReference.ktClass?.fqName?.asString() }
-                        ) {
-                            holder.registerProblem(element, propNotCollection)
-                        }
-                        element.annotations()
-                            .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")
-                            ?.also {
-                                val value = it.value?.toString() ?: ""
+                }
+            }
+        }
 
-                                if (value.isBlank()) {
-                                    holder.registerProblem(element, noValue)
-                                }
+        element.getParentOfType<KtProperty>(true)?.also { propertyElement ->
+            val typeReference = propertyElement.typeReference?.type()
+            if (typeReference?.arguments?.isNotEmpty() == true) {
+                if (!listOf(
+                        List::class.qualifiedName,
+                        Set::class.qualifiedName,
+                        Collection::class.qualifiedName
+                    ).any { it == typeReference.ktClass?.fqName?.asString() }
+                ) {
+                    holder.registerProblem(element, propNotCollection)
+                }
+                propertyElement.annotations()
+                    .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")
+                    ?.also {
+                        val value = it.value?.toString() ?: ""
 
-                                element.containingClass()?.also { c ->
-                                    if (c.getProperties().none { it.name == value }) {
-                                        holder.registerProblem(element, basePropNotExists)
-                                    }
-                                }
-                            } ?: holder.registerProblem(element, noValue)
-                    } else {
-
-                        var baseProp: String? = null
-
-                        baseProp = element.annotations()
-                            .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")?.value?.toString()
-
-                        if (baseProp == null && element.name?.endsWith("Id") == true) {
-                            baseProp = element.name!!.substring(0, element.name!!.length - 2)
+                        if (value.isBlank()) {
+                            holder.registerProblem(element, noValue)
                         }
 
-                        element.containingClass()?.also { c ->
-                            if (c.getProperties().none { it.name == baseProp }) {
+                        propertyElement.containingClass()?.also { c ->
+                            if (c.getProperties().none { it.name == value }) {
                                 holder.registerProblem(element, basePropNotExists)
                             }
                         }
+                    } ?: holder.registerProblem(element, noValue)
+            } else {
+                var baseProp: String? = null
+
+                baseProp = propertyElement.annotations()
+                    .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")?.value?.toString()
+
+                if (baseProp == null && propertyElement.name?.endsWith("Id") == true) {
+                    baseProp = propertyElement.name!!.substring(0, propertyElement.name!!.length - 2)
+                }
+
+                propertyElement.containingClass()?.also { c ->
+                    if (c.getProperties().none { it.name == baseProp }) {
+                        holder.registerProblem(element, basePropNotExists)
                     }
                 }
             }

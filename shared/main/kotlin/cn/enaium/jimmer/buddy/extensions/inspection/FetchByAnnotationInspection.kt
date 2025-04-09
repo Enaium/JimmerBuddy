@@ -18,7 +18,6 @@ package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.classLiteral
 import cn.enaium.jimmer.buddy.utility.string
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.*
 import com.intellij.refactoring.extractMethod.newImpl.ExtractMethodHelper.hasExplicitModifier
@@ -36,73 +35,73 @@ import org.jetbrains.uast.*
 /**
  * @author Enaium
  */
-class FetchByAnnotationInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                val u = element.toUElementOfType<UAnnotation>()
-                if (u?.qualifiedName != FetchBy::class.qualifiedName) {
-                    return
+class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        val u = element.toUElementOfType<UAnnotation>()
+        if (u?.qualifiedName != FetchBy::class.qualifiedName) {
+            return
+        }
+
+        val value = u?.findAttributeValue("value")?.string() ?: return
+        var ownerType = u.findAttributeValue("ownerType")?.classLiteral()
+        if (element is PsiAnnotation) {
+            element.getParentOfType<PsiClass>(true)?.also { klass ->
+
+                if (ownerType == null) {
+                    ownerType =
+                        (klass.annotations.find { it.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
+                            ?.findAttributeValue("value")?.classLiteral()
                 }
 
-                val value = u?.findAttributeValue("value")?.string() ?: return
-                var ownerType = u.findAttributeValue("ownerType")?.classLiteral()
-                if (element is PsiAnnotation) {
-                    element.getParentOfType<PsiClass>(true)?.also { klass ->
-
-                        if (ownerType == null) {
-                            ownerType =
-                                (klass.annotations.find { it.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
-                                    ?.findAttributeValue("value")?.classLiteral()
+                if (ownerType == null) {
+                    klass
+                } else {
+                    JavaPsiFacade.getInstance(element.project).findClass(ownerType, element.project.allScope())
+                }?.fields?.firstOrNull { field -> field.hasExplicitModifier(PsiModifier.STATIC) && field.name == value }
+                    ?.also {
+                        val canonicalText = it.type.canonicalText
+                        if (canonicalText.startsWith(Fetcher::class.qualifiedName!!) == false) {
+                            holder.registerProblem(element, "The property type is not a fetcher")
+                        } else if (canonicalText.substringAfter("<")
+                                .substringBefore(">") != (element.parent as? PsiTypeElement)?.type?.canonicalText
+                        ) {
+                            holder.registerProblem(element, "The fetcher type is not match")
                         }
+                    } ?: run {
+                    holder.registerProblem(element, "The fetch field is not found")
+                }
+            }
+        } else if (element is KtAnnotationEntry) {
+            element.getParentOfType<KtClass>(true)?.also { ktClass ->
 
-                        if (ownerType == null) {
-                            klass
-                        } else {
-                            JavaPsiFacade.getInstance(element.project).findClass(ownerType, element.project.allScope())
-                        }?.fields?.firstOrNull { field -> field.hasExplicitModifier(PsiModifier.STATIC) && field.name == value }
-                            ?.also {
-                                val canonicalText = it.type.canonicalText
-                                if (canonicalText.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                                    holder.registerProblem(element, "The property type is not a fetcher")
-                                } else if (canonicalText.substringAfter("<")
-                                        .substringBefore(">") != (element.parent as? PsiTypeElement)?.type?.canonicalText
-                                ) {
-                                    holder.registerProblem(element, "The fetcher type is not match")
-                                }
-                            } ?: run {
-                            holder.registerProblem(element, "The fetch field is not found")
-                        }
-                    }
-                } else if (element is KtAnnotationEntry) {
-                    element.getParentOfType<KtClass>(true)?.also { ktClass ->
+                if (ownerType == null) {
+                    ownerType =
+                        (ktClass.annotationEntries.find { it.toUElementOfType<UAnnotation>()?.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
+                            ?.findAttributeValue("value")?.classLiteral()
+                }
 
-                        if (ownerType == null) {
-                            ownerType =
-                                (ktClass.annotationEntries.find { it.toUElementOfType<UAnnotation>()?.qualifiedName == DefaultFetcherOwner::class.qualifiedName })?.toUElementOfType<UAnnotation>()
-                                    ?.findAttributeValue("value")?.classLiteral()
+                if (ownerType == null) {
+                    ktClass
+                } else {
+                    KotlinFullClassNameIndex[ownerType, element.project, element.project.allScope()].firstOrNull()
+                }?.companionObjects?.firstOrNull { companionObject ->
+                    companionObject.body?.properties?.firstOrNull { property -> property.name == value }.also {
+                        val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
+                        if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
+                            holder.registerProblem(element, "The property type is not a fetcher")
+                        } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
+                            != element.getParentOfType<KtTypeReference>(true)
+                                .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
+                        ) {
+                            holder.registerProblem(element, "The fetcher type is not match")
                         }
-
-                        if (ownerType == null) {
-                            ktClass
-                        } else {
-                            KotlinFullClassNameIndex[ownerType, element.project, element.project.allScope()].firstOrNull()
-                        }?.companionObjects?.firstOrNull { companionObject ->
-                            companionObject.body?.properties?.firstOrNull { property -> property.name == value }.also {
-                                val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
-                                if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                                    holder.registerProblem(element, "The property type is not a fetcher")
-                                } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
-                                    != element.getParentOfType<KtTypeReference>(true)
-                                        .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
-                                ) {
-                                    holder.registerProblem(element, "The fetcher type is not match")
-                                }
-                            } !== null
-                        } ?: run {
-                            holder.registerProblem(element, "The fetch property is not found")
-                        }
-                    }
+                    } !== null
+                } ?: run {
+                    holder.registerProblem(element, "The fetch property is not found")
                 }
             }
         }
