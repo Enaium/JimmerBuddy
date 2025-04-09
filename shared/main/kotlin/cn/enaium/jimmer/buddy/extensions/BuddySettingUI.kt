@@ -40,7 +40,7 @@ class BuddySettingUI : Configurable {
     override fun createComponent(): JComponent {
         return panel {
             row {
-                checkBox("Logo").bindSelected(model.logoProperty)
+                checkBox("Icon").bindSelected(model.logoProperty)
             }
         }
     }

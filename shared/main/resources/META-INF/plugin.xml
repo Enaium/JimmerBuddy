@@ -101,6 +101,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.FetchByAnnotationInspection"
         />
+        <localInspection
+                displayName="OrderedPropAnnotation"
+                shortName="OrderedPropAnnotation"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.OrderedPropAnnotationInspection"
+        />
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
