@@ -303,7 +303,7 @@ object JimmerBuddy {
                         }
                     }
 
-                    log.info("SourcesProcessJava Project:${projectDir.name} PsiCaches:${javaImmutablePsiClassCache.size}")
+                    log.info("SourcesProcessJava Project:${projectDir.name}:${src} PsiCaches:${javaImmutablePsiClassCache.size}")
 
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
@@ -426,7 +426,7 @@ object JimmerBuddy {
                         }
                     }
 
-                    log.info("SourceProcessKotlin Project:${projectDir.name} KtClassCaches:${kotlinImmutableKtClassCache.size}")
+                    log.info("SourceProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size}")
 
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 

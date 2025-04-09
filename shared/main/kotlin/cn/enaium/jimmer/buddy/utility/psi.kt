@@ -235,9 +235,8 @@ fun KtAnnotationEntry.property(): KtProperty? {
 }
 
 fun PsiElement.annotName(): String? {
-    return (this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtAnnotationEntry>(
-        true
-    )).toUElementOfType<UAnnotation>()?.qualifiedName
+    return (this.getParentOfType<PsiAnnotation>(true) ?: this.getParentOfType<KtCallExpression>(true)
+    ?: this.getParentOfType<KtAnnotationEntry>(true)).toUElementOfType<UAnnotation>()?.qualifiedName
 }
 
 fun PsiElement.annotValue(attribute: String): UExpression? {
