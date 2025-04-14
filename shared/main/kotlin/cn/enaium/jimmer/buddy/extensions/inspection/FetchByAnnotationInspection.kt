@@ -28,8 +28,10 @@ import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 import org.jetbrains.uast.*
 
 /**
@@ -61,7 +63,7 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                     klass
                 } else {
                     JavaPsiFacade.getInstance(element.project).findClass(ownerType, element.project.allScope())
-                }?.fields?.firstOrNull { field -> field.hasExplicitModifier(PsiModifier.STATIC) && field.name == value }
+                }?.fields?.firstOrNull { field -> (field.hasExplicitModifier(PsiModifier.STATIC) || field.containingClass?.isInterface == true) && field.name == value }
                     ?.also {
                         val canonicalText = it.type.canonicalText
                         if (canonicalText.startsWith(Fetcher::class.qualifiedName!!) == false) {
@@ -88,20 +90,20 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                     ktClass
                 } else {
                     KotlinFullClassNameIndex[ownerType, element.project, element.project.allScope()].firstOrNull()
-                }?.companionObjects?.firstOrNull { companionObject ->
-                    companionObject.body?.properties?.firstOrNull { property -> property.name == value }.also {
-                        val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
-                        if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                            holder.registerProblem(element, "The property type is not a fetcher")
-                        } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
-                            != element.getParentOfType<KtTypeReference>(true)
-                                .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
-                        ) {
-                            holder.registerProblem(element, "The fetcher type is not match")
-                        }
-                    } !== null
-                } ?: run {
-                    holder.registerProblem(element, "The fetch property is not found")
+                }?.also { ktClass ->
+                    (ktClass.companionObjects.firstOrNull()?.body?.properties
+                        ?: ktClass.takeIf { it is KtObjectDeclaration }?.body?.properties)?.firstOrNull { property -> property.name == value }
+                        .also {
+                            val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
+                            if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
+                                holder.registerProblem(element, "The property type is not a fetcher")
+                            } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
+                                != element.getParentOfType<KtTypeReference>(true)
+                                    .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
+                            ) {
+                                holder.registerProblem(element, "The fetcher type is not match")
+                            }
+                        } ?: holder.registerProblem(element, "The fetch property is not found")
                 }
             }
         }

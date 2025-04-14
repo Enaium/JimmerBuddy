@@ -30,7 +30,9 @@ import org.babyfish.jimmer.client.meta.DefaultFetcherOwner
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.toUElementOfType
 
@@ -84,7 +86,7 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
                 } else {
                     JavaPsiFacade.getInstance(element.project).findClass(ownerType, element.project.allScope())
                 }?.fields?.forEach { field ->
-                    if (field.hasExplicitModifier(PsiModifier.STATIC)) {
+                    if (field.hasExplicitModifier(PsiModifier.STATIC) || field.containingClass?.isInterface == true) {
                         result[field.name] = field
                     }
                 }
@@ -101,8 +103,9 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
                     ktClass
                 } else {
                     KotlinFullClassNameIndex[ownerType, element.project, element.project.allScope()].firstOrNull()
-                }?.companionObjects?.forEach { companionObject ->
-                    companionObject.body?.properties?.forEach { property ->
+                }?.also { ktClass ->
+                    (ktClass.companionObjects.firstOrNull()?.body?.properties
+                        ?: ktClass.takeIf { it is KtObjectDeclaration }?.body?.properties)?.forEach { property ->
                         result[property.name ?: "Unknown name"] = property
                     }
                 }
