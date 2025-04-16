@@ -348,39 +348,22 @@ fun psiClassesToApt(
                     }
 
                     override fun getTypeElement(name: CharSequence): TypeElement? {
-                        return typeElementCaches[name.toString()] ?: if (name == "java.lang.Number") {
-                            val numberTypeElement =
-                                createTypeElement(getQualifiedName = { createName("java.lang.Number") })
-                            createTypeElement(
-                                getQualifiedName = { createName("java.lang.Number") },
-                                asType = {
-                                    createDeclaredType(
-                                        getQualifiedName = { "java.lang.Number" },
-                                        asElement = { numberTypeElement })
-                                })
-                        } else if (name == "java.lang.Object") {
-                            val objectTypeElement =
-                                createTypeElement(getQualifiedName = { createName("java.lang.Object") })
-                            createTypeElement(
-                                getQualifiedName = { createName("java.lang.Object") },
-                                asType = {
-                                    createDeclaredType(
-                                        getQualifiedName = { "java.lang.Object" },
-                                        asElement = { objectTypeElement })
-                                })
-                        } else {
-                            createTypeElement(
-                                getKind = { ElementKind.CLASS },
-                                getQualifiedName = { createName(name.toString()) },
-                                getSimpleName = { createName(name.toString().substringAfterLast(".")) },
-                                getEnclosingElement = {
-                                    createPackageElement(
-                                        getQualifiedName = { createName(name.toString().substringBeforeLast(".")) }
-                                    )
-                                },
-                                getEnclosedElements = { emptyList() }
-                            )
-                        }
+                        return typeElementCaches[name.toString()] ?: createTypeElement(
+                            getKind = { ElementKind.CLASS },
+                            getQualifiedName = { createName(name.toString()) },
+                            getSimpleName = { createName(name.toString().substringAfterLast(".")) },
+                            getEnclosingElement = {
+                                createPackageElement(
+                                    getQualifiedName = { createName(name.toString().substringBeforeLast(".")) }
+                                )
+                            },
+                            getEnclosedElements = { emptyList() },
+                            asType = {
+                                createDeclaredType(
+                                    getQualifiedName = { name.toString() },
+                                    asElement = { createTypeElement(getQualifiedName = { createName(name.toString()) }) })
+                            }
+                        )
                     }
 
                     override fun getElementValuesWithDefaults(a: AnnotationMirror): Map<out ExecutableElement, AnnotationValue> {

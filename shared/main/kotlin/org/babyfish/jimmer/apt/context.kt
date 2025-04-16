@@ -17,6 +17,7 @@
 package org.babyfish.jimmer.apt
 
 import javax.annotation.processing.Filer
+import javax.lang.model.element.Modifier
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 
@@ -48,6 +49,7 @@ fun createContext(
         tableExesTypeName,
         fetchersTypeName,
         hibernateValidatorEnhancement,
-        true
+        true,
+        Modifier.PRIVATE
     )
 }
