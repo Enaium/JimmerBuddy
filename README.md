@@ -41,3 +41,21 @@ A plugin that adds first-class support for Project Jimmer
 ![formula completion](https://s2.loli.net/2025/04/03/j2tM4JePk1hfSBT.gif)
 
 ![mapped by](https://s2.loli.net/2025/04/03/fpkjVF7tnSwIKlW.gif)
+
+## FAQ
+
+### Why is the plugin not available
+
+- Please wait for the project to be indexed, then reopen the project
+
+### What time will the plugin generate draft, props, etc.?
+
+- When you change the Java or Kotlin source, then wait 2 seconds
+
+### What time will the plugin generate the DTO view, input, etc.?
+
+- When you switch the open tab, then wait 2 seconds
+
+### Why does the plugin not generate source for Immutable and DTO
+
+- Please check the plugin log tool window on the bottom or the left bottom, then create an issue
