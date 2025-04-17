@@ -49,11 +49,12 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(val e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
+        val text = e.text.substringAfter("\"").substringBefore("\"")
+
         val props = getProps(e)
 
         override fun resolve(): PsiElement? {
-            val text = e.text
-            return props[text.substring(1, text.length - 1)]
+            return props[text]
         }
 
         override fun getVariants(): Array<out Any> {

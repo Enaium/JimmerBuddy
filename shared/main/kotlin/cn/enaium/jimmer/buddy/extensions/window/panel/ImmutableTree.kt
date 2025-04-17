@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.findProjects
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
+import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -185,7 +186,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 } else {
                     setBackground(this@ImmutableNodeCell.getBackground())
                 }
-                add(JLabel(value.toString()).apply {
+                add(JLabel(runReadOnly { value.toString() }).apply {
                     icon = this@ImmutableNodeCell.icon
                 }, BorderLayout.CENTER)
             }

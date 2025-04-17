@@ -62,11 +62,11 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
             return
         }
         isGeneratedFile(path) && return
-        listOf<String>("java", "kt").any { path.extension == it }.not() && return
+        listOf("java", "kt").any { path.extension == it }.not() && return
         JimmerBuddy.DEQ.schedule("PsiChange") {
             if (project.isJavaProject() && runReadOnly {
                     psiFile.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
-                } == true) {
+                } == true && !project.isDumb()) {
                 JimmerBuddy.getWorkspace(project).also {
                     it.init()
                     it.sourcesProcessJava(
@@ -78,7 +78,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                 }
             } else if (project.isKotlinProject() && runReadOnly {
                     psiFile.getChildOfType<KtClass>()?.hasJimmerAnnotation()
-                } == true
+                } == true && !project.isDumb()
             ) {
                 JimmerBuddy.getWorkspace(project).also {
                     it.init()
