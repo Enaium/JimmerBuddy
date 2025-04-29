@@ -334,6 +334,7 @@ object JimmerBuddy {
                             null
                         }?.let {
                             it.isAccessible = true
+                            @Suppress("UNCHECKED_CAST")
                             it.invoke(immutableProcessor, roundEnv) as Map<TypeElement, ImmutableType>
                         } ?: emptyMap()
 

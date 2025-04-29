@@ -59,3 +59,7 @@ A plugin that adds first-class support for Project Jimmer
 ### Why does the plugin not generate source for Immutable and DTO
 
 - Please check the plugin log tool window on the bottom or the left bottom, then create an issue
+
+### Why generated source is not same as the Jimmer's apt/ksp
+
+Do not worry, the Jimmer's apt/ksp will generate full source when your project builds.

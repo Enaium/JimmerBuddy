@@ -38,7 +38,7 @@ object OrderedPropPsiReferenceProvider : PsiReferenceProvider() {
         return arrayOf(Reference(element))
     }
 
-    private class Reference(val e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
+    private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
         val text = e.text.substringAfter("\"").substringBefore("\"")
 
