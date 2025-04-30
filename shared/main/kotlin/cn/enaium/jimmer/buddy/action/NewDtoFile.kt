@@ -20,11 +20,13 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
 import cn.enaium.jimmer.buddy.utility.isDumb
+import cn.enaium.jimmer.buddy.utility.isImmutable
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -56,10 +58,10 @@ class NewDtoFile : AnAction() {
 
             if (sourceFile.extension == "java") {
                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                    ?.takeIf { it.hasJimmerAnnotation() }?.qualifiedName
+                    ?.takeIf { it.isImmutable() }?.qualifiedName
             } else if (sourceFile.extension == "kt") {
                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                    ?.takeIf { thread { runReadOnly { it.hasJimmerAnnotation() } } }?.fqName?.asString()
+                    ?.takeIf { thread { runReadOnly { it.isImmutable() } } }?.fqName?.asString()
             } else {
                 null
             }?.also { name ->
@@ -72,5 +74,34 @@ class NewDtoFile : AnAction() {
                 )
             )
         }
+    }
+
+    override fun update(e: AnActionEvent) {
+        val project = e.project ?: return
+        val dataContext = e.dataContext
+        dataContext.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath()?.takeIf { it.toFile().isFile }
+            ?.also { sourceFile ->
+                e.presentation.isVisible = when (sourceFile.extension) {
+                    "java" -> {
+                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
+                            ?.takeIf { it.hasJimmerAnnotation() } != null
+                    }
+
+                    "kt" -> {
+                        sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                            ?.takeIf { thread { runReadOnly { it.hasJimmerAnnotation() } } } != null
+                    }
+
+                    else -> {
+                        false
+                    }
+                }
+            } ?: run {
+            e.presentation.isVisible = false
+        }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 }
