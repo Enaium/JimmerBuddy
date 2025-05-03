@@ -17,6 +17,8 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
+import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
+import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.openapi.observable.properties.GraphProperty
@@ -27,6 +29,7 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
+import com.intellij.util.indexing.ID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,7 +69,11 @@ object JimmerBuddy {
 
     const val NAME = "JimmerBuddy"
     const val JIMMER_NAME = "Jimmer"
+    const val DTO_NAME = "Jimmer DTO"
+    const val DTO_LANGUAGE_ID = "JimmerBuddy.DTO"
     val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("jimmer_project_model")
+    val ANNOTATION_CLASS_INDEX = ID.create<String, Void>(AnnotationClassIndex::class.qualifiedName!!)
+    val INTERFACE_CLASS_INDEX = ID.create<String, Void>(InterfaceClassIndex::class.qualifiedName!!)
 
     object Icons {
         val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
@@ -158,15 +165,16 @@ object JimmerBuddy {
 
         val log = Log(project)
 
-        private val javaImmutablePsiClassCache = CopyOnWriteArraySet<PsiClass>()
+        val javaImmutablePsiClassCache = CopyOnWriteArraySet<PsiClass>()
 
-        private val kotlinImmutableKtClassCache = CopyOnWriteArraySet<KtClass>()
+        val kotlinImmutableKtClassCache = CopyOnWriteArraySet<KtClass>()
 
-        var isInit = false
+        var init = false
+        var initialized = false
 
         fun init() {
-            if (isInit) return
-            isInit = true
+            if (init) return
+            init = true
             project.runWhenSmart {
                 val projects = findProjects(project.guessProjectDir()?.toNioPath()!!)
                 CoroutineScope(Dispatchers.Default).launch {
@@ -203,6 +211,7 @@ object JimmerBuddy {
                         )
                     }
                     log.info("Project ${project.name} is initialized")
+                    initialized = true
                 }
             }
         }
@@ -215,7 +224,7 @@ object JimmerBuddy {
         fun reset() {
             javaImmutablePsiClassCache.clear()
             kotlinImmutableKtClassCache.clear()
-            isInit = false
+            init = false
         }
 
         private fun getGeneratedDir(project: Project, projectDir: Path, src: String): Path? {

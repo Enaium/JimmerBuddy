@@ -64,7 +64,7 @@ class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
         editor: Editor?,
         element: PsiElement
     ) {
-        var results = mutableListOf<String>()
+        val results = mutableListOf<String>()
         element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
             editor?.also {
                 caches[it.caretModel.offset]?.also { cache ->

@@ -28,7 +28,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
         <projectCloseHandler implementation="cn.enaium.jimmer.buddy.extensions.BuddyProjectCloseHandler"/>
-        <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.listeners.BuddyPsiTreeChange"/>
+        <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.extensions.BuddyPsiTreeChange"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
         <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.BuddyToolWindow" id="Jimmer Buddy"
@@ -39,7 +39,7 @@
                        order="first"/>
         <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
-        <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.JavaLineMark"
+        <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.ImmutableLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.ImmutableLineMarkerProvider"/>
         <localInspection
                 displayName="ImmutableAnnotation"
@@ -127,14 +127,42 @@
                                  instance="cn.enaium.jimmer.buddy.extensions.BuddySettingUI"
                                  id="JimmerBuddy.Setting"
                                  displayName="Jimmer Buddy"/>
+        <fileType name="Jimmer DTO" implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoFileType"
+                  language="JimmerBuddy.DTO" extensions="dto" fieldName="INSTANCE"/>
+        <lang.parserDefinition language="JimmerBuddy.DTO"
+                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoParserDefinition"/>
+        <lang.syntaxHighlighter language="JimmerBuddy.DTO"
+                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoSyntaxHighlighter"/>
+        <localInspection
+                displayName="DtoInspection"
+                shortName="DtoInspection"
+                groupName="Jimmer"
+                language="JimmerBuddy.DTO"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.DtoInspection"
+        />
+        <annotator language="JimmerBuddy.DTO"
+                   implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoHighlightAnnotator"/>
+        <completion.contributor language="JimmerBuddy.DTO"
+                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.completion.DtoCompletionContributor"/>
+        <lang.psiStructureViewFactory language="JimmerBuddy.DTO"
+                                      implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.structure.DtoStructureViewFactory"/>
+        <lang.commenter language="JimmerBuddy.DTO"
+                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.commenter.DtoCommenter"/>
+        <lang.foldingBuilder language="JimmerBuddy.DTO"
+                             implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoFoldingBuilder"/>
+        <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex"/>
+        <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex"/>
+        <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
+                                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoLineMarkerProvider"/>
+        <lang.formatter language="JimmerBuddy.DTO"
+                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.formatter.DtoFormattingModelBuilder"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
     </extensions>
-    <projectListeners>
-        <listener class="cn.enaium.jimmer.buddy.listeners.BuddyFileEditorManagerListener"
-                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-    </projectListeners>
     <actions>
         <action id="cn.enaium.jimmer.buddy.action.Initialize" class="cn.enaium.jimmer.buddy.action.Initialize"
                 text="Initialize" description="Clean all cache" icon="AllIcons.Actions.Refresh"/>

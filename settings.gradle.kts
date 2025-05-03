@@ -3,3 +3,5 @@ when (gradle.startParameter.projectProperties["sinceBuild"]) {
     "242" -> include("242")
     else -> include("231")
 }
+
+include("common")

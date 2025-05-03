@@ -41,13 +41,39 @@ fun KtClass.toImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType 
 fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType(): CommonImmutableType {
     return CommonImmutableType(
         { this.name },
+        { this.qualifiedName },
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
             this.declaredProperties.map { (name, prop) ->
                 CommonImmutableType.CommonImmutableProp(
                     { name },
                     { thread { runReadOnly { prop.declaringType.toCommonImmutableType() } } },
-                    { thread { runReadOnly { prop.targetType?.toCommonImmutableType() } } }
+                    { thread { runReadOnly { prop.targetType?.toCommonImmutableType() } } },
+                    {
+                        if (prop.isId) {
+                            PropType.ID
+                        } else if (prop.isKey) {
+                            PropType.KEY
+                        } else if (prop.isEmbedded) {
+                            PropType.EMBEDDED
+                        } else if (prop.isFormula) {
+                            PropType.FORMULA
+                        } else if (prop.isTransient) {
+                            if (prop.hasTransientResolver()) PropType.CALCULATION else PropType.TRANSIENT
+                        } else if (prop.isRecursive) {
+                            PropType.RECURSIVE
+                        } else if (prop.isAssociation(true)) {
+                            PropType.ASSOCIATION
+                        } else if (prop.isList) {
+                            PropType.LIST
+                        } else if (prop.isLogicalDeleted) {
+                            PropType.LOGICAL_DELETED
+                        } else if (prop.isNullable) {
+                            PropType.NULLABLE
+                        } else {
+                            PropType.PROPERTY
+                        }
+                    }
                 )
             }
         }
@@ -57,13 +83,39 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
 fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType(): CommonImmutableType {
     return CommonImmutableType(
         { this.name },
+        { this.qualifiedName },
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
             this.declaredProps.map { (name, prop) ->
                 CommonImmutableType.CommonImmutableProp(
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
-                    { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() }
+                    { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() },
+                    {
+                        if (prop.isId) {
+                            PropType.ID
+                        } else if (prop.isKey) {
+                            PropType.KEY
+                        } else if (prop.isEmbedded) {
+                            PropType.EMBEDDED
+                        } else if (prop.isFormula) {
+                            PropType.FORMULA
+                        } else if (prop.isTransient) {
+                            if (prop.hasTransientResolver()) PropType.CALCULATION else PropType.TRANSIENT
+                        } else if (prop.isRecursive) {
+                            PropType.RECURSIVE
+                        } else if (prop.isAssociation(true)) {
+                            PropType.ASSOCIATION
+                        } else if (prop.isList) {
+                            PropType.LIST
+                        } else if (prop.isLogicalDeleted) {
+                            PropType.LOGICAL_DELETED
+                        } else if (prop.isNullable) {
+                            PropType.NULLABLE
+                        } else {
+                            PropType.PROPERTY
+                        }
+                    }
                 )
             }
         }
@@ -72,6 +124,7 @@ fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType()
 
 data class CommonImmutableType(
     val name: () -> String,
+    val qualifiedName: () -> String,
     val superTypes: () -> List<CommonImmutableType>,
     val properties: () -> List<CommonImmutableProp>,
 ) {
@@ -79,5 +132,21 @@ data class CommonImmutableType(
         val name: () -> String,
         val declaringType: () -> CommonImmutableType,
         val targetType: () -> CommonImmutableType?,
+        val type: () -> PropType
     )
+}
+
+enum class PropType(val description: String) {
+    ID("Id"),
+    KEY("Key"),
+    EMBEDDED("Embedded"),
+    FORMULA("Formula"),
+    CALCULATION("Calculation"),
+    TRANSIENT("Transient"),
+    RECURSIVE("Recursive"),
+    ASSOCIATION("Association"),
+    LIST("List"),
+    LOGICAL_DELETED("LogicalDeleted"),
+    NULLABLE("Nullable"),
+    PROPERTY("Property")
 }

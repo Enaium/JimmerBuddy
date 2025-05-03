@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.byte.buddy)
     implementation(libs.kotlinpoet)
     implementation(libs.javapoet)
+    implementation(libs.antlr4.intellij.adaptor)
+    implementation(project(":common"))
 }
 
 tasks {

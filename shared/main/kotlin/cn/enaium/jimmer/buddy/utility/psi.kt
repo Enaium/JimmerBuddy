@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.toUElementOfType
@@ -76,8 +77,8 @@ fun PsiClass.hasJimmerAnnotation(): Boolean {
 }
 
 fun KtClass.hasImmutableAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
+        val fqName = annotation.qualifiedName
         fqName == Immutable::class.qualifiedName!!
                 || fqName == Entity::class.qualifiedName!!
                 || fqName == MappedSuperclass::class.qualifiedName!!
