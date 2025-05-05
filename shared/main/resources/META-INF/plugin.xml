@@ -2,22 +2,6 @@
     <id>cn.enaium.jimmer.buddy</id>
     <name>Jimmer Buddy</name>
     <vendor email="enaium@outlook.com" url="https://www.enaium.cn">Enaium</vendor>
-    <description>
-        <![CDATA[<h1>IntelliJ JimmerBuddy plugin</h1>
-        <p>A plugin that adds first-class support for Project Jimmer</p>
-        <h2>Features</h2>
-        <ul>
-            <li>Automatically generate class for immutable, error, dto etc.</li>
-            <li>List all Immutables and DTOs in the project.</li>
-            <li>Generate entity from database or ddl.</li>
-            <li>Jimmer Project Wizard.</li>
-            <li>Generate DTO file for immutable.</li>
-            <li>Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.</li>
-            <li>Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.</li>
-            <li>Completion for `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.</li>
-            <li>Generate all set of Draft</li>
-        </ul>]]>
-    </description>
     <change-notes>
         <![CDATA[Please see the project's GitHub releases page for release notes.]]>
     </change-notes>

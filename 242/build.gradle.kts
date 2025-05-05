@@ -1,7 +1,9 @@
 import org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask
+import org.jetbrains.changelog.markdownToHTML
 
 plugins {
     java
+    alias(libs.plugins.changelog)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.intellij)
 }
@@ -80,5 +82,11 @@ kotlin {
 tasks.named<RunIdeTask>("runIde") {
     jvmArgumentProviders += CommandLineArgumentProvider {
         listOf("-Didea.kotlin.plugin.use.k2=true")
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        description = markdownToHTML(file("../README.md").readText())
     }
 }

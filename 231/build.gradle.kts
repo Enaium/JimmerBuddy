@@ -1,5 +1,8 @@
+import org.jetbrains.changelog.markdownToHTML
+
 plugins {
     java
+    alias(libs.plugins.changelog)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.intellij)
 }
@@ -73,4 +76,10 @@ tasks.processResources {
 
 kotlin {
     jvmToolchain(17)
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        description = markdownToHTML(file("../README.md").readText())
+    }
 }

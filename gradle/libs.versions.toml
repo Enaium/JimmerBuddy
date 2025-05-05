@@ -8,6 +8,7 @@ kotlinpoet = "2.0.0"
 javapoet = "1.13.0"
 antlr4IntellijAdaptor = "0.1"
 antlr = "4.13.2"
+changelog = "2.2.1"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
@@ -25,3 +26,4 @@ antlr = { module = "org.antlr:antlr4", version.ref = "antlr" }
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 intellij = { id = "org.jetbrains.intellij.platform", version.ref = "intellij" }
+changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
