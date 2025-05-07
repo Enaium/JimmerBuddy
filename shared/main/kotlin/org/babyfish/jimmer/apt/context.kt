@@ -16,10 +16,19 @@
 
 package org.babyfish.jimmer.apt
 
+import org.babyfish.jimmer.dto.compiler.DtoModifier
+import java.util.Locale
 import javax.annotation.processing.Filer
+import javax.annotation.processing.Messager
+import javax.annotation.processing.ProcessingEnvironment
+import javax.lang.model.SourceVersion
+import javax.lang.model.element.AnnotationMirror
+import javax.lang.model.element.AnnotationValue
+import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
+import javax.tools.Diagnostic
 
 /**
  * @author Enaium
@@ -53,3 +62,99 @@ fun createContext(
         Modifier.PRIVATE
     )
 }
+
+@Suppress("UNCHECKED_CAST")
+fun createOption(
+    options: Map<String, String>,
+    elements: Elements,
+    types: Types,
+    filer: Filer
+): Option {
+    val jimmerProcessor = JimmerProcessor()
+    jimmerProcessor.init(object : ProcessingEnvironment {
+        override fun getOptions(): Map<String, String> {
+            return options + mapOf("jimmer.buddy.ignoreResourceGeneration" to "true")
+        }
+
+        override fun getMessager(): Messager {
+            return object : Messager {
+                override fun printMessage(kind: Diagnostic.Kind?, msg: CharSequence?) {
+
+                }
+
+                override fun printMessage(
+                    kind: Diagnostic.Kind?,
+                    msg: CharSequence?,
+                    e: Element?
+                ) {
+
+                }
+
+                override fun printMessage(
+                    kind: Diagnostic.Kind?,
+                    msg: CharSequence?,
+                    e: Element?,
+                    a: AnnotationMirror?
+                ) {
+
+                }
+
+                override fun printMessage(
+                    kind: Diagnostic.Kind?,
+                    msg: CharSequence?,
+                    e: Element?,
+                    a: AnnotationMirror?,
+                    v: AnnotationValue?
+                ) {
+
+                }
+            }
+        }
+
+        override fun getFiler(): Filer {
+            return filer
+        }
+
+        override fun getElementUtils(): Elements {
+            return elements
+        }
+
+        override fun getTypeUtils(): Types {
+            return types
+        }
+
+        override fun getSourceVersion(): SourceVersion? {
+            TODO("Not yet implemented")
+        }
+
+        override fun getLocale(): Locale? {
+            TODO("Not yet implemented")
+        }
+    })
+    val javaProcessClass = JimmerProcessor::class.java
+    return Option(
+        javaProcessClass.getDeclaredField("context").also { it.isAccessible = true }.get(jimmerProcessor) as Context,
+        javaProcessClass.getDeclaredField("dtoDirs").also { it.isAccessible = true }
+            .get(jimmerProcessor) as Collection<String>,
+        javaProcessClass.getDeclaredField("dtoTestDirs").also { it.isAccessible = true }
+            .get(jimmerProcessor) as Collection<String>,
+        javaProcessClass.getDeclaredField("defaultNullableInputModifier").also { it.isAccessible = true }
+            .get(jimmerProcessor) as DtoModifier,
+        javaProcessClass.getDeclaredField("checkedException").also { it.isAccessible = true }
+            .get(jimmerProcessor) as Boolean,
+        javaProcessClass.getDeclaredField("ignoreJdkWarning").also { it.isAccessible = true }
+            .get(jimmerProcessor) as Boolean,
+        javaProcessClass.getDeclaredField("dtoFieldModifier").also { it.isAccessible = true }
+            .get(jimmerProcessor) as Modifier
+    )
+}
+
+data class Option(
+    val context: Context,
+    val dtoDirs: Collection<String>,
+    val dtoTestDirs: Collection<String>,
+    val defaultNullableInputModifier: DtoModifier,
+    val checkedException: Boolean,
+    val ignoreJdkWarning: Boolean,
+    val dtoFieldModifier: Modifier
+)

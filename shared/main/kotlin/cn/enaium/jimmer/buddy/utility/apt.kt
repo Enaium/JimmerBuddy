@@ -687,16 +687,10 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
         .method(ElementMatchers.namedOneOf(*it.javaClass.methods.filter { f ->
             Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
         }.map { it.name }.toTypedArray())).intercept(
-            InvocationHandlerAdapter.of(object : InvocationHandler {
-                override fun invoke(
-                    proxy: Any,
-                    method: Method,
-                    args: Array<Any>?
-                ): Any {
-                    return this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
-                        ?: method.invoke(it)
-                }
-            })
+            InvocationHandlerAdapter.of { proxy, method, args ->
+                this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
+                    ?: method.invoke(it)
+            }
         ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
             it.isAccessible = true
         }.newInstance() as Annotation

@@ -21,9 +21,11 @@ import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.project.modules
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -35,7 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.babyfish.jimmer.apt.client.DocMetadata
-import org.babyfish.jimmer.apt.createContext
+import org.babyfish.jimmer.apt.createOption
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
 import org.babyfish.jimmer.apt.dto.DtoGenerator
 import org.babyfish.jimmer.apt.entry.EntryProcessor
@@ -317,23 +319,22 @@ object JimmerBuddy {
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
                     val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
-                    val context = createContext(
+                    val currentModule = project.modules.find { it.name.endsWith(".$src") }
+                    val option = createOption(
+                        currentModule?.let { module ->
+                            CompilerConfiguration.getInstance(project)
+                                .getAnnotationProcessingConfiguration(module).processorOptions.also {
+                                    log.info("ProcessorOptions: $it")
+                                }
+                        } ?: emptyMap(),
                         pe.elementUtils,
                         pe.typeUtils,
-                        pe.filer,
-                        false,
-                        emptyArray(),
-                        emptyArray(),
-                        null,
-                        null,
-                        null,
-                        null,
-                        false
+                        pe.filer
                     )
                     val roundEnv = createRoundEnvironment(rootElements)
 
                     try {
-                        val immutableProcessor = ImmutableProcessor(context, pe.messager)
+                        val immutableProcessor = ImmutableProcessor(option.context, pe.messager)
                         val immutableTypeElements = try {
                             ImmutableProcessor::class.java.getDeclaredMethod(
                                 "parseImmutableTypes",
@@ -356,8 +357,8 @@ object JimmerBuddy {
                                 })
                         }
 
-                        EntryProcessor(context, immutableTypeElements.keys).process()
-                        ErrorProcessor(context, false).process(roundEnv)
+                        EntryProcessor(option.context, immutableTypeElements.keys).process()
+                        ErrorProcessor(option.context, option.checkedException).process(roundEnv)
                         sources.forEach {
                             needRefresh.add(it to generatedDir)
                         }
@@ -375,39 +376,39 @@ object JimmerBuddy {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             project.runReadActionSmart {
                 val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
-                val context = createContext(
-                    pe.elementUtils,
-                    pe.typeUtils,
-                    pe.filer,
-                    false,
-                    emptyArray(),
-                    emptyArray(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    false
-                )
                 projects.forEach { (projectDir, sourceFiles, src) ->
-                    sourceFiles.forEach {
+                    sourceFiles.forEach { sourceFile ->
+                        val currentModule = project.modules.find { it.name.endsWith(".$src") }
+                        val option = createOption(
+                            currentModule?.let { module ->
+                                CompilerConfiguration.getInstance(project)
+                                    .getAnnotationProcessingConfiguration(module).processorOptions.also {
+                                        log.info("ProcessorOptions: $it")
+                                    }
+                            } ?: emptyMap(),
+                            pe.elementUtils,
+                            pe.typeUtils,
+                            pe.filer
+                        )
+
                         sourceFiles.isEmpty() && return@forEach
                         val elements = pe.elementUtils
                         val dtoFile = DtoFile(object : OsFile {
                             override fun getAbsolutePath(): String {
-                                return it.absolutePathString()
+                                return sourceFile.absolutePathString()
                             }
 
                             override fun openReader(): Reader {
-                                return it.readText().reader()
+                                return sourceFile.readText().reader()
                             }
-                        }, projectDir.absolutePathString(), "", emptyList(), it.name)
-                        val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
+                        }, projectDir.absolutePathString(), "", emptyList(), sourceFile.name)
+                        val compiler = AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
                         val typeElement: TypeElement =
                             elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
                         try {
-                            val compile = compiler.compile(context.getImmutableType(typeElement))
+                            val compile = compiler.compile(option.context.getImmutableType(typeElement))
                             compile.forEach {
-                                DtoGenerator(context, DocMetadata(context), it).generate()
+                                DtoGenerator(option.context, DocMetadata(option.context), it).generate()
                             }
                             val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
                             sources.forEach {
