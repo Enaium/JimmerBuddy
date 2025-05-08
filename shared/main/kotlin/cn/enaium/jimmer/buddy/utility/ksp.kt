@@ -19,6 +19,9 @@ package cn.enaium.jimmer.buddy.utility
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import org.babyfish.jimmer.dto.compiler.DtoModifier
+import org.babyfish.jimmer.ksp.Context
+import org.babyfish.jimmer.ksp.JimmerProcessor
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -28,6 +31,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
 import java.util.concurrent.CopyOnWriteArraySet
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * @author Enaium
@@ -377,7 +382,6 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
             },
             object : KSPLogger {
                 override fun error(message: String, symbol: KSNode?) {
-                    println(message)
                 }
 
                 override fun exception(e: Throwable) {
@@ -1128,3 +1132,55 @@ private fun createKSTypeArgument(
         }
     }
 }
+
+@Suppress("UNCHECKED_CAST")
+fun createKspOption(
+    options: Map<String, String>,
+    context: Context,
+    codeGenerator: CodeGenerator
+): KspOption {
+    val jimmerProcessor =
+        JimmerProcessor(SymbolProcessorEnvironment(options, KotlinVersion.CURRENT, codeGenerator, object : KSPLogger {
+            override fun error(message: String, symbol: KSNode?) {
+            }
+
+            override fun exception(e: Throwable) {
+            }
+
+            override fun info(message: String, symbol: KSNode?) {
+            }
+
+            override fun logging(message: String, symbol: KSNode?) {
+            }
+
+            override fun warn(message: String, symbol: KSNode?) {
+            }
+        }))
+
+    val jimmerProcessorClass = JimmerProcessor::class
+    return KspOption(
+        context,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "isModuleRequired" }!!
+            .also { it.isAccessible = true }.get(jimmerProcessor) as Boolean,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "dtoDirs" }!!.also { it.isAccessible = true }
+            .get(jimmerProcessor) as Collection<String>,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "dtoTestDirs" }!!
+            .also { it.isAccessible = true }.get(jimmerProcessor) as Collection<String>,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "defaultNullableInputModifier" }!!
+            .also { it.isAccessible = true }.get(jimmerProcessor) as DtoModifier,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "checkedException" }!!
+            .also { it.isAccessible = true }.get(jimmerProcessor) as Boolean,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "mutable" }!!.also { it.isAccessible = true }
+            .get(jimmerProcessor) as Boolean,
+    )
+}
+
+data class KspOption(
+    val context: Context,
+    val isModuleRequired: Boolean,
+    val dtoDirs: Collection<String>,
+    val dtoTestDirs: Collection<String>,
+    val defaultNullableInputModifier: DtoModifier,
+    val checkedException: Boolean,
+    val mutable: Boolean
+)

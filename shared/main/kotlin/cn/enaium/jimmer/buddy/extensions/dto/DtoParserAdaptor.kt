@@ -30,7 +30,11 @@ object DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
     ): ParseTree? {
         parser?.removeParseListeners()
         return if (root is IFileElementType) {
-            (parser as? DtoParser)?.dto()
+            try {
+                (parser as? DtoParser)?.dto()
+            } catch (_: Throwable) {
+                null
+            }
         } else {
             null
         }

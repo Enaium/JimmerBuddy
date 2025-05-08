@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.utility.annotArgName
 import cn.enaium.jimmer.buddy.utility.annotName
 import cn.enaium.jimmer.buddy.utility.annotValue
 import cn.enaium.jimmer.buddy.utility.classLiteral
+import cn.enaium.jimmer.buddy.utility.subMiddle
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.refactoring.extractMethod.newImpl.ExtractMethodHelper.hasExplicitModifier
@@ -49,7 +50,7 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
-        val text = e.text.substringAfter("\"").substringBefore("\"")
+        val text = e.text.subMiddle("\"","\"")
 
         val props = getProps(e)
 

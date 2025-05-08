@@ -27,6 +27,14 @@ import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
+import org.jetbrains.kotlin.psi.KtCallExpression
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunctionLiteral
+import org.jetbrains.kotlin.psi.KtScript
+import org.jetbrains.kotlin.psi.KtScriptInitializer
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
+import org.jetbrains.kotlin.psi.psiUtil.referenceExpression
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.Callable
@@ -183,3 +191,23 @@ val toManyAnnotations = listOfNotNull(OneToMany::class.qualifiedName, ManyToMany
 val toOneAnnotations = listOfNotNull(OneToOne::class.qualifiedName, ManyToOne::class.qualifiedName)
 
 val mappedByAnnotations = toManyAnnotations + listOfNotNull(OneToOne::class.qualifiedName)
+
+fun getKspOptions(ktFile: KtFile): Map<String, String> {
+    val options = mutableMapOf<String, String>()
+    val ktScript = ktFile.getChildOfType<KtScript>() ?: return emptyMap()
+    val ksp = ktScript.blockExpression.getChildrenOfType<KtScriptInitializer>()
+        .find { it.getChildOfType<KtCallExpression>()?.referenceExpression()?.text == "ksp" } ?: return emptyMap()
+    val bodyBlockExpression =
+        (ksp.firstChild?.lastChild?.firstChild?.firstChild as? KtFunctionLiteral)?.bodyBlockExpression
+            ?: return emptyMap()
+    bodyBlockExpression.getChildrenOfType<KtCallExpression>().filter { it.referenceExpression()?.text == "arg" }
+        .forEach { argFun ->
+            val arguments = argFun.valueArgumentList?.arguments ?: return@forEach
+            val arg = arguments[0].stringTemplateExpression?.text?.subMiddle("\"", "\"")
+                ?: return@forEach
+            val value = arguments[1].stringTemplateExpression?.text?.subMiddle("\"", "\"")
+                ?: return@forEach
+            options[arg] = value
+        }
+    return options
+}

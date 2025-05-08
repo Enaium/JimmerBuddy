@@ -39,7 +39,7 @@ object FormulaPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
-        val text = e.text.substringAfter("\"").substringBefore("\"")
+        val text = e.text.subMiddle("\"","\"")
 
         val props = getProps(e)
 

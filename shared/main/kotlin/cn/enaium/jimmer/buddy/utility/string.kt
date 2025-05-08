@@ -21,7 +21,7 @@ import java.util.*
 /**
  * @author Enaium
  */
-internal fun String.snakeToCamelCase(
+fun String.snakeToCamelCase(
     firstCharUppercase: Boolean = true,
 ): String {
     return this.split("_")
@@ -36,15 +36,15 @@ internal fun String.snakeToCamelCase(
         }
 }
 
-internal fun String.firstCharLowercase(): String {
+fun String.firstCharLowercase(): String {
     return this.replaceFirstChar { firstChar -> firstChar.lowercase(Locale.getDefault()) }
 }
 
-internal fun String.firstCharUppercase(): String {
+fun String.firstCharUppercase(): String {
     return this.replaceFirstChar { firstChar -> firstChar.uppercase(Locale.getDefault()) }
 }
 
-internal fun String.toPlural(): String {
+fun String.toPlural(): String {
     return if (this.matches(Regex(".*(s|x|z|sh|ch)$"))) {
         "${this}es"
     } else if (this.matches(Regex(".*[^aeiou]y$"))) {
@@ -58,4 +58,8 @@ internal fun String.toPlural(): String {
     } else {
         "${this}s"
     }
+}
+
+fun String.subMiddle(left: String, right: String): String {
+    return this.substringAfter(left).substringBeforeLast(right)
 }

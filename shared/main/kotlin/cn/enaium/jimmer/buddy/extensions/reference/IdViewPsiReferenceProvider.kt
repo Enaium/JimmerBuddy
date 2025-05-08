@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.reference
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.annotArgName
 import cn.enaium.jimmer.buddy.utility.annotName
+import cn.enaium.jimmer.buddy.utility.subMiddle
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
@@ -38,7 +39,7 @@ object IdViewPsiReferenceProvider : PsiReferenceProvider() {
     }
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
-        val text = e.text.substringAfter("\"").substringBefore("\"")
+        val text = e.text.subMiddle("\"","\"")
 
         val props = getProps(e)
 

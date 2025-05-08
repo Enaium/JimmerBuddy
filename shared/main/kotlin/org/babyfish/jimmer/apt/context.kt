@@ -64,12 +64,12 @@ fun createContext(
 }
 
 @Suppress("UNCHECKED_CAST")
-fun createOption(
+fun createAptOption(
     options: Map<String, String>,
     elements: Elements,
     types: Types,
     filer: Filer
-): Option {
+): AptOption {
     val jimmerProcessor = JimmerProcessor()
     jimmerProcessor.init(object : ProcessingEnvironment {
         override fun getOptions(): Map<String, String> {
@@ -132,7 +132,7 @@ fun createOption(
         }
     })
     val javaProcessClass = JimmerProcessor::class.java
-    return Option(
+    return AptOption(
         javaProcessClass.getDeclaredField("context").also { it.isAccessible = true }.get(jimmerProcessor) as Context,
         javaProcessClass.getDeclaredField("dtoDirs").also { it.isAccessible = true }
             .get(jimmerProcessor) as Collection<String>,
@@ -149,7 +149,7 @@ fun createOption(
     )
 }
 
-data class Option(
+data class AptOption(
     val context: Context,
     val dtoDirs: Collection<String>,
     val dtoTestDirs: Collection<String>,

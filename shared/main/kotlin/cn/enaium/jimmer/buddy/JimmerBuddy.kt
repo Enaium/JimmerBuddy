@@ -37,7 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.babyfish.jimmer.apt.client.DocMetadata
-import org.babyfish.jimmer.apt.createOption
+import org.babyfish.jimmer.apt.createAptOption
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
 import org.babyfish.jimmer.apt.dto.DtoGenerator
 import org.babyfish.jimmer.apt.entry.EntryProcessor
@@ -52,6 +52,7 @@ import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.io.Reader
 import java.nio.file.Path
@@ -301,32 +302,32 @@ object JimmerBuddy {
         }
 
         suspend fun sourcesProcessJava(projects: Set<GenerateProject>) {
-            log.info("SourcesProcessJava Project:${projects.joinToString { "${it.projectDir.name}:${it.src}" }}")
+
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             projects.forEach { (projectDir, sourceFiles, src) ->
                 sourceFiles.isEmpty() && return@forEach
                 val psiCaches = CopyOnWriteArraySet<PsiClass>()
                 project.runReadActionSmart {
-                    sourceFiles.forEach {
-                        val psiFile = it.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
+                    sourceFiles.forEach { sourceFile ->
+                        val psiFile = sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
                         psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
                             psiCaches.add(it)
                         }
                     }
 
-                    log.info("SourcesProcessJava Project:${projectDir.name}:${src} PsiCaches:${javaImmutablePsiClassCache.size}")
-
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
                     val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
                     val currentModule = project.modules.find { it.name.endsWith(".$src") }
-                    val option = createOption(
-                        currentModule?.let { module ->
-                            CompilerConfiguration.getInstance(project)
-                                .getAnnotationProcessingConfiguration(module).processorOptions.also {
-                                    log.info("ProcessorOptions: $it")
-                                }
-                        } ?: emptyMap(),
+                    val aptOptions = currentModule?.let { module ->
+                        CompilerConfiguration.getInstance(project)
+                            .getAnnotationProcessingConfiguration(module).processorOptions
+                    } ?: emptyMap()
+
+                    log.info("SourcesProcessJava Project:${projectDir.name}:${src} PsiCaches:${javaImmutablePsiClassCache.size} APTOptions:${aptOptions}")
+
+                    val option = createAptOption(
+                        aptOptions,
                         pe.elementUtils,
                         pe.typeUtils,
                         pe.filer
@@ -372,20 +373,19 @@ object JimmerBuddy {
         }
 
         suspend fun dtoProcessJava(projects: Set<GenerateProject>) {
-            log.info("DtoProcessJava Project:${projects.joinToString { "${it.projectDir.name}:${it.src}" }}")
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             project.runReadActionSmart {
                 val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
                 projects.forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.forEach { sourceFile ->
                         val currentModule = project.modules.find { it.name.endsWith(".$src") }
-                        val option = createOption(
-                            currentModule?.let { module ->
-                                CompilerConfiguration.getInstance(project)
-                                    .getAnnotationProcessingConfiguration(module).processorOptions.also {
-                                        log.info("ProcessorOptions: $it")
-                                    }
-                            } ?: emptyMap(),
+                        val aptOptions = currentModule?.let { module ->
+                            CompilerConfiguration.getInstance(project)
+                                .getAnnotationProcessingConfiguration(module).processorOptions
+                        } ?: emptyMap()
+                        log.info("DtoProcessJava Project:${projectDir.name}:${src} APTOptions:${aptOptions}")
+                        val option = createAptOption(
+                            aptOptions,
                             pe.elementUtils,
                             pe.typeUtils,
                             pe.filer
@@ -425,27 +425,35 @@ object JimmerBuddy {
 
         suspend fun sourceProcessKotlin(projects: Set<GenerateProject>) {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
-            log.info("SourceProcessKotlin Project:${projects.joinToString { "${it.projectDir.name}:${it.src}" }}")
             projects.forEach { (projectDir, sourceFiles, src) ->
                 sourceFiles.isEmpty() && return@forEach
                 val ktClassCaches = CopyOnWriteArraySet<KtClass>()
                 project.runReadActionSmart {
-                    sourceFiles.forEach {
-                        val psiFile = it.toFile().toPsiFile(project) ?: return@forEach
+                    sourceFiles.forEach { sourceFile ->
+                        val psiFile = sourceFile.toFile().toPsiFile(project) ?: return@forEach
                         psiFile.getChildOfType<KtClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
                             ktClassCaches.add(it)
                         }
                     }
 
-                    log.info("SourceProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size}")
-
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
                     val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
                     try {
-                        val context = Context(resolver, environment)
-                        org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(context, false).process()
-                        org.babyfish.jimmer.ksp.error.ErrorProcessor(context, true).process()
+
+                        val kspOptions =
+                            getKspOptions(projectDir.resolve("build.gradle.kts").toFile().toPsiFile(project) as KtFile)
+
+                        log.info("SourceProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size} KSPOptions:${kspOptions}")
+
+                        val option = createKspOption(
+                            kspOptions,
+                            Context(resolver, environment),
+                            environment.codeGenerator
+                        )
+                        org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(option.context, option.isModuleRequired)
+                            .process()
+                        org.babyfish.jimmer.ksp.error.ErrorProcessor(option.context, option.checkedException).process()
                         sources.forEach {
                             needRefresh.add(it to generatedDir)
                         }
@@ -460,15 +468,25 @@ object JimmerBuddy {
 
         suspend fun dtoProcessKotlin(projects: Set<GenerateProject>) {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
-            log.info("DtoProcessKotlin Project:${projects.joinToString { "${it.projectDir.name}:${it.src}" }}")
             project.runReadActionSmart {
                 val (resolver, environment, sources) = ktClassToKsp(
                     CopyOnWriteArraySet(),
                     kotlinImmutableKtClassCache
                 )
-                val context = Context(resolver, environment)
                 projects.forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.isEmpty() && return@forEach
+
+                    val kspOptions =
+                        getKspOptions(projectDir.resolve("build.gradle.kts").toFile().toPsiFile(project) as KtFile)
+
+                    log.info("DtoProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
+
+                    val option = createKspOption(
+                        kspOptions,
+                        Context(resolver, environment),
+                        environment.codeGenerator
+                    )
+
                     sourceFiles.forEach {
                         val dtoFile = DtoFile(object : OsFile {
                             override fun getAbsolutePath(): String {
@@ -479,23 +497,24 @@ object JimmerBuddy {
                                 return it.readText().reader()
                             }
                         }, projectDir.absolutePathString(), "", emptyList(), it.name)
-                        val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
+                        val compiler =
+                            KspDtoCompiler(dtoFile, option.context.resolver, option.defaultNullableInputModifier)
                         val classDeclarationByName =
                             resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
                         try {
-                            val compile = compiler.compile(context.typeOf(classDeclarationByName))
-                            compile.forEach {
+                            val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
+                            compile.forEach { dtoType ->
                                 org.babyfish.jimmer.ksp.dto.DtoGenerator(
-                                    context,
-                                    org.babyfish.jimmer.ksp.client.DocMetadata(context),
-                                    false,
-                                    it,
-                                    context.environment.codeGenerator
+                                    option.context,
+                                    org.babyfish.jimmer.ksp.client.DocMetadata(option.context),
+                                    option.mutable,
+                                    dtoType,
+                                    option.context.environment.codeGenerator
                                 ).generate(emptyList())
                             }
                             val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
-                            sources.forEach {
-                                needRefresh.add(it to generatedDir)
+                            sources.forEach { source ->
+                                needRefresh.add(source to generatedDir)
                             }
                         } catch (e: Throwable) {
                             log.error(e)
