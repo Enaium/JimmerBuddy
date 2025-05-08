@@ -77,7 +77,7 @@ class ImmutablePropsChoosePanel(
                                 }
 
                                 is ImmutablePropNode -> {
-                                    node.immutableProp.targetType()?.also {
+                                    thread { runReadOnly { node.immutableProp.targetType() } }?.also {
                                         addProps(it)
                                     }
                                 }
@@ -173,7 +173,7 @@ class ImmutablePropsChoosePanel(
 
     private class ImmutablePropNode(val immutableProp: CommonImmutableType.CommonImmutableProp) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return immutableProp.targetType()?.properties()?.isEmpty() != false
+            return thread { runReadOnly { immutableProp.targetType() } }?.properties()?.isEmpty() != false
         }
 
         override fun toString(): String {

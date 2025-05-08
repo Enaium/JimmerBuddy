@@ -47,8 +47,8 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
             this.declaredProperties.map { (name, prop) ->
                 CommonImmutableType.CommonImmutableProp(
                     { name },
-                    { thread { runReadOnly { prop.declaringType.toCommonImmutableType() } } },
-                    { thread { runReadOnly { prop.targetType?.toCommonImmutableType() } } },
+                    { prop.declaringType.toCommonImmutableType() },
+                    { prop.targetType?.toCommonImmutableType() },
                     {
                         if (prop.isId) {
                             PropType.ID

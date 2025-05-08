@@ -497,11 +497,11 @@ object JimmerBuddy {
                                 return it.readText().reader()
                             }
                         }, projectDir.absolutePathString(), "", emptyList(), it.name)
-                        val compiler =
-                            KspDtoCompiler(dtoFile, option.context.resolver, option.defaultNullableInputModifier)
-                        val classDeclarationByName =
-                            resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
                         try {
+                            val compiler =
+                                KspDtoCompiler(dtoFile, option.context.resolver, option.defaultNullableInputModifier)
+                            val classDeclarationByName =
+                                resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
                             val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
                             compile.forEach { dtoType ->
                                 org.babyfish.jimmer.ksp.dto.DtoGenerator(

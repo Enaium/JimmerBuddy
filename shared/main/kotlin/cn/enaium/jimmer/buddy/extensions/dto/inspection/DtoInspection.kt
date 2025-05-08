@@ -99,11 +99,15 @@ class DtoInspection : LocalInspectionTool() {
                             return file.text.reader()
                         }
                     }, findProjectDir(path)?.absolutePathString() ?: "", "", emptyList(), path.name)
-                    val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
-                    val classDeclarationByName =
-                        resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return
-                    registerProblem(file, document, holder) {
-                        compiler.compile(context.typeOf(classDeclarationByName))
+                    try {
+                        val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
+                        val classDeclarationByName =
+                            resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return
+                        registerProblem(file, document, holder) {
+                            compiler.compile(context.typeOf(classDeclarationByName))
+                        }
+                    } catch (_: Throwable) {
+
                     }
                 }
             }
