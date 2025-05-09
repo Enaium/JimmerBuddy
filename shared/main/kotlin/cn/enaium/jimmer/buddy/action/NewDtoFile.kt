@@ -56,16 +56,24 @@ class NewDtoFile : AnAction() {
                 return
             }
 
-            if (sourceFile.extension == "java") {
-                sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                    ?.takeIf { it.isImmutable() }?.qualifiedName
-            } else if (sourceFile.extension == "kt") {
-                sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                    ?.takeIf { thread { runReadOnly { it.isImmutable() } } }?.fqName?.asString()
-            } else {
-                null
-            }?.also { name ->
-                NewDtoFileDialog(project, sourceFile, name).show()
+            val name = when (sourceFile.extension) {
+                "java" -> {
+                    sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
+                        ?.takeIf { it.isImmutable() }?.qualifiedName
+                }
+
+                "kt" -> {
+                    sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                        ?.takeIf { thread { runReadOnly { it.isImmutable() } } }?.fqName?.asString()
+                }
+
+                else -> {
+                    null
+                }
+            }
+
+            name?.also {
+                NewDtoFileDialog(project, sourceFile, it).show()
             } ?: Notifications.Bus.notify(
                 Notification(
                     JimmerBuddy.INFO_GROUP_ID,
@@ -84,12 +92,12 @@ class NewDtoFile : AnAction() {
                 e.presentation.isVisible = when (sourceFile.extension) {
                     "java" -> {
                         sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                            ?.takeIf { it.hasJimmerAnnotation() } != null
+                            ?.takeIf { it.isImmutable() } != null
                     }
 
                     "kt" -> {
                         sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                            ?.takeIf { thread { runReadOnly { it.hasJimmerAnnotation() } } } != null
+                            ?.takeIf { thread { runReadOnly { it.isImmutable() } } } != null
                     }
 
                     else -> {
