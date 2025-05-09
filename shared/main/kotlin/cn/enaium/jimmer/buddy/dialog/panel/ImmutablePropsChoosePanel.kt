@@ -61,24 +61,21 @@ class ImmutablePropsChoosePanel(
                         node.childCount > 0 && return@runReadOnly null
                         node.removeAllChildren()
 
-                        fun addProps(immutableType: CommonImmutableType) {
-                            immutableType.superTypes().forEach { superType ->
-                                addProps(superType)
-                            }
-                            immutableType.properties().forEach {
-                                node.add(ImmutablePropNode(it))
-                            }
-                        }
+
 
                         if (node.childCount == 0) {
                             when (node) {
                                 is ImmutableTypeNode -> {
-                                    addProps(node.immutableType)
+                                    node.immutableType.props().forEach {
+                                        node.add(ImmutablePropNode(it))
+                                    }
                                 }
 
                                 is ImmutablePropNode -> {
                                     thread { runReadOnly { node.immutableProp.targetType() } }?.also {
-                                        addProps(it)
+                                        it.props().forEach {
+                                            node.add(ImmutablePropNode(it))
+                                        }
                                     }
                                 }
                             }
@@ -163,7 +160,7 @@ class ImmutablePropsChoosePanel(
 
     private class ImmutableTypeNode(val immutableType: CommonImmutableType) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return immutableType.properties().isEmpty()
+            return immutableType.props().isEmpty()
         }
 
         override fun toString(): String {
@@ -173,7 +170,7 @@ class ImmutablePropsChoosePanel(
 
     private class ImmutablePropNode(val immutableProp: CommonImmutableType.CommonImmutableProp) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return thread { runReadOnly { immutableProp.targetType() } }?.properties()?.isEmpty() != false
+            return thread { runReadOnly { immutableProp.targetType() } }?.props()?.isEmpty() != false
         }
 
         override fun toString(): String {

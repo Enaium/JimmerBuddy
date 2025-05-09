@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.findPropertyByName
 import cn.enaium.jimmer.buddy.utility.isJavaProject
 import cn.enaium.jimmer.buddy.utility.isKotlinProject
 import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
@@ -53,23 +54,23 @@ class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
         var currentImmutable = commonImmutable
 
         trace.forEach { trace ->
-            currentImmutable.properties().find { it.name() == trace }?.targetType()?.also {
+            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
                 currentImmutable = it
             }
         }
-        val prop = currentImmutable.properties().find { it.name() == value } ?: return null
+        val prop = currentImmutable.props().find { it.name() == value } ?: return null
 
         JavaPsiFacade.getInstance(project).findClass(currentImmutable.qualifiedName(), project.allScope())
             ?.also { klass ->
-                klass.methods.find { it.name == prop.name() }?.also { method ->
+                klass.allMethods.find { it.name == prop.name() }?.also { method ->
                     return method
                 }
             }
 
         KotlinFullClassNameIndex[currentImmutable.qualifiedName(), project, project.allScope()].firstOrNull()
             ?.also { ktClass ->
-                ktClass.declarations.find { it.name == prop.name() }?.also { declaration ->
-                    return declaration
+                (ktClass as KtClass).findPropertyByName(prop.name(), true)?.also {
+                    return it
                 }
             }
 

@@ -20,10 +20,8 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.utility.isJavaProject
-import cn.enaium.jimmer.buddy.utility.isKotlinProject
-import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
-import cn.enaium.jimmer.buddy.utility.toImmutable
+import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -62,12 +60,25 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
         var currentImmutable = commonImmutable
 
         trace.forEach { trace ->
-            currentImmutable.properties().find { it.name() == trace }?.targetType()?.also {
+            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
                 currentImmutable = it
             }
         }
 
-        currentImmutable.properties().forEach {
+        val props = mutableListOf<CommonImmutableProp>()
+
+        fun addProps(immutableType: CommonImmutableType) {
+            immutableType.superTypes().forEach { superType ->
+                addProps(superType)
+            }
+            immutableType.props().forEach {
+                props.add(it)
+            }
+        }
+
+        addProps(currentImmutable)
+
+        props.forEach {
             result.addElement(
                 LookupElementBuilder.create(it.name()).withIcon(JimmerBuddy.Icons.PROP)
                     .withTailText(" (from ${currentImmutable.name()})").withTypeText(it.type().description)

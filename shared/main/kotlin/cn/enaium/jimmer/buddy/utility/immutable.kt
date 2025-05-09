@@ -44,7 +44,7 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
         { this.qualifiedName },
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
-            this.declaredProperties.map { (name, prop) ->
+            this.properties.map { (name, prop) ->
                 CommonImmutableType.CommonImmutableProp(
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
@@ -86,7 +86,7 @@ fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType()
         { this.qualifiedName },
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
-            this.declaredProps.map { (name, prop) ->
+            this.props.map { (name, prop) ->
                 CommonImmutableType.CommonImmutableProp(
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
@@ -126,7 +126,7 @@ data class CommonImmutableType(
     val name: () -> String,
     val qualifiedName: () -> String,
     val superTypes: () -> List<CommonImmutableType>,
-    val properties: () -> List<CommonImmutableProp>,
+    val props: () -> List<CommonImmutableProp>
 ) {
     data class CommonImmutableProp(
         val name: () -> String,
