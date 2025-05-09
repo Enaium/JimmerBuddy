@@ -16,9 +16,9 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
+import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
@@ -45,7 +45,6 @@ import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.dto.compiler.DtoFile
-import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.dto.compiler.OsFile
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
@@ -393,19 +392,25 @@ object JimmerBuddy {
 
                         sourceFiles.isEmpty() && return@forEach
                         val elements = pe.elementUtils
-                        val dtoFile = DtoFile(object : OsFile {
-                            override fun getAbsolutePath(): String {
-                                return sourceFile.absolutePathString()
-                            }
+                        val dtoFile = DtoFile(
+                            object : OsFile {
+                                override fun getAbsolutePath(): String {
+                                    return sourceFile.absolutePathString()
+                                }
 
-                            override fun openReader(): Reader {
-                                return sourceFile.readText().reader()
-                            }
-                        }, projectDir.absolutePathString(), "", emptyList(), sourceFile.name)
-                        val compiler = AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
-                        val typeElement: TypeElement =
-                            elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
+                                override fun openReader(): Reader {
+                                    return sourceFile.readText().reader()
+                                }
+                            },
+                            projectDir.name,
+                            sourceFile.parent.relativeTo(projectDir).joinToString("/"),
+                            emptyList(),
+                            sourceFile.name
+                        )
                         try {
+                            val compiler = AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
+                            val typeElement: TypeElement =
+                                elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
                             val compile = compiler.compile(option.context.getImmutableType(typeElement))
                             compile.forEach {
                                 DtoGenerator(option.context, DocMetadata(option.context), it).generate()
@@ -487,16 +492,22 @@ object JimmerBuddy {
                         environment.codeGenerator
                     )
 
-                    sourceFiles.forEach {
-                        val dtoFile = DtoFile(object : OsFile {
-                            override fun getAbsolutePath(): String {
-                                return it.absolutePathString()
-                            }
+                    sourceFiles.forEach { sourceFile ->
+                        val dtoFile = DtoFile(
+                            object : OsFile {
+                                override fun getAbsolutePath(): String {
+                                    return sourceFile.absolutePathString()
+                                }
 
-                            override fun openReader(): Reader {
-                                return it.readText().reader()
-                            }
-                        }, projectDir.absolutePathString(), "", emptyList(), it.name)
+                                override fun openReader(): Reader {
+                                    return sourceFile.readText().reader()
+                                }
+                            },
+                            projectDir.name,
+                            sourceFile.parent.relativeTo(projectDir).joinToString("/"),
+                            emptyList(),
+                            sourceFile.name
+                        )
                         try {
                             val compiler =
                                 KspDtoCompiler(dtoFile, option.context.resolver, option.defaultNullableInputModifier)

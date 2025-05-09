@@ -78,10 +78,14 @@ class DtoInspection : LocalInspectionTool() {
                             return file.text.reader()
                         }
                     }, findProjectDir(path)?.absolutePathString() ?: "", "", emptyList(), path.name)
-                    val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
-                    val typeElement: TypeElement = elements.getTypeElement(compiler.sourceTypeName) ?: return
-                    registerProblem(file, document, holder) {
-                        compiler.compile(context.getImmutableType(typeElement))
+                    try {
+                        val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
+                        val typeElement: TypeElement = elements.getTypeElement(compiler.sourceTypeName) ?: return
+                        registerProblem(file, document, holder) {
+                            compiler.compile(context.getImmutableType(typeElement))
+                        }
+                    } catch (_: Throwable) {
+
                     }
                 } else if (project.isKotlinProject()) {
                     val typeClass =
@@ -98,7 +102,7 @@ class DtoInspection : LocalInspectionTool() {
                         override fun openReader(): Reader {
                             return file.text.reader()
                         }
-                    }, findProjectDir(path)?.absolutePathString() ?: "", "", emptyList(), path.name)
+                    }, findProjectDir(path)?.name ?: "", "", emptyList(), path.name)
                     try {
                         val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
                         val classDeclarationByName =
