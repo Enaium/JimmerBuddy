@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.formatter
 
-import cn.enaium.jimmer.buddy.dto.DtoLexer
 import cn.enaium.jimmer.buddy.dto.DtoParser.*
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.RULE
@@ -24,7 +23,6 @@ import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
 import cn.enaium.jimmer.buddy.utility.around
 import cn.enaium.jimmer.buddy.utility.emptyLine
 import com.intellij.formatting.*
-import org.antlr.intellij.adaptor.lexer.PSIElementTypeFactory
 
 /**
  * @author Enaium
@@ -39,6 +37,7 @@ class DtoFormattingModelBuilder : FormattingModelBuilder {
             .around(TOKEN[SEMICOLON], 0, 1)//[; ]
             .around(TOKEN[RIGHT_ARROR]).spaces(1)//[ -> ]
             .around(TOKEN[EQUAL]).spaces(1)//[ = ]
+            .between(TOKEN[AS], TOKEN[LEFT_PARENTHESIS]).spaces(0)//[as(]
             .around(TOKEN[AS]).spaces(1)//[ as ]
             .around(RULE[RULE_modifier]).spaces(1)//[ modifier ]
             .after(TOKEN[AT]).spaces(0)//[@]
