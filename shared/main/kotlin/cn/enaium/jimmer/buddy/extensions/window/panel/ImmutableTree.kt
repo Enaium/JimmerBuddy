@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.findProjects
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
@@ -119,33 +120,38 @@ class ImmutableTree(val project: Project) : JPanel() {
     fun loadImmutables() {
         project.runWhenSmart {
             CoroutineScope(Dispatchers.IO).launch {
-                val files = mutableSetOf<File>()
                 root.removeAllChildren()
-                findProjects(project.guessProjectDir()!!.toNioPath()).forEach {
-                    listOf("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin").forEach { src ->
-                        it.resolve(src).walk().forEach { file ->
-                            if (file.extension == "java" || file.extension == "kt") {
-                                files.add(file.toFile())
-                            }
+                val projects = findProjects(project.guessProjectDir()!!.toNioPath())
+
+                GenerateProject.generate(
+                    projects,
+                    setOf("main", "test"),
+                    GenerateProject.Language.JAVA
+                ).forEach { (_, sourceFiles, _) ->
+                    sourceFiles.forEach { sourceFile ->
+                        project.runReadActionSmart {
+                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
+                                ?.also { psiClass ->
+                                    if (psiClass.hasImmutableAnnotation()) {
+                                        val newChild = ImmutableType(psiClass)
+                                        psiClass.methods.forEach {
+                                            newChild.add(ImmutableProp(it))
+                                        }
+                                        root.add(newChild)
+                                    }
+                                }
                         }
                     }
                 }
-                files.forEach { file ->
-                    if (file.extension == "java") {
+
+                GenerateProject.generate(
+                    projects,
+                    setOf("main", "test"),
+                    GenerateProject.Language.KOTLIN
+                ).forEach { (_, sourceFiles, _) ->
+                    sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {
-                            file.toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()?.also { psiClass ->
-                                if (psiClass.hasImmutableAnnotation()) {
-                                    val newChild = ImmutableType(psiClass)
-                                    psiClass.methods.forEach {
-                                        newChild.add(ImmutableProp(it))
-                                    }
-                                    root.add(newChild)
-                                }
-                            }
-                        }
-                    } else if (file.extension == "kt") {
-                        project.runReadActionSmart {
-                            file.toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
+                            sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
                                 if (ktClass.hasImmutableAnnotation()) {
                                     val newChild = ImmutableType(ktClass)
                                     ktClass.getProperties().forEach {
