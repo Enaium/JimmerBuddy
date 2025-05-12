@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.reference
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
 import org.babyfish.jimmer.Formula
@@ -34,13 +35,21 @@ object FormulaPsiReferenceProvider : PsiReferenceProvider() {
         element: PsiElement,
         context: ProcessingContext
     ): Array<out PsiReference> {
-        return arrayOf(Reference(element))
+        val text = element.text.subMiddle("\"", "\"")
+        val split = text.split(".")
+        return split.mapIndexed { index, item ->
+            val startOffset = element.text.indexOf(item)
+            Reference(
+                element,
+                TextRange(startOffset, startOffset + item.length),
+                split.subList(0, index + 1)
+            )
+        }.toTypedArray()
     }
 
-    private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
-
-        val text = e.text.subMiddle("\"","\"")
-
+    private class Reference(e: PsiElement, textRange: TextRange, val trace: List<String>) :
+        PsiReferenceBase<PsiElement>(e, textRange) {
+        val text = trace.last()
         val props = getProps(e)
 
         override fun resolve(): PsiElement? {
@@ -61,17 +70,16 @@ object FormulaPsiReferenceProvider : PsiReferenceProvider() {
             }
 
             val result = mutableMapOf<String, PsiElement>()
-            val trace = text.split(".")
 
-            element.getParentOfType<PsiClass>(true)?.also {
+            element.getParentOfType<PsiClass>(true)?.also { klass ->
                 if (trace.size == 1) {
-                    it.allMethods.forEach { method ->
+                    klass.allMethods.forEach { method ->
                         if (method.containingClass?.isImmutable() == true) {
                             result[method.name] = method
                         }
                     }
                 } else {
-                    var currentClass = it
+                    var currentClass = klass
                     trace.forEachIndexed { index, name ->
                         if (index == trace.size - 1) {
                             return@forEachIndexed
@@ -83,32 +91,32 @@ object FormulaPsiReferenceProvider : PsiReferenceProvider() {
                     }
                     currentClass.allMethods.forEach { method ->
                         if (method.containingClass?.isImmutable() == true) {
-                            result["${trace.subList(0, trace.size - 1).joinToString(".")}.${method.name}"] = method
+                            result[method.name] = method
                         }
                     }
                 }
             }
 
-            element.getParentOfType<KtClass>(true)?.also {
+            element.getParentOfType<KtClass>(true)?.also { ktClass ->
                 if (trace.size == 1) {
-                    it.getAllProperties().forEach { property ->
+                    ktClass.getAllProperties().forEach { property ->
                         result[property.name ?: "Unknown name"] = property
                     }
                 } else {
-                    var currentClass = it
+                    var currentClass = ktClass
                     trace.forEachIndexed { index, name ->
                         if (index == trace.size - 1) {
                             return@forEachIndexed
                         }
 
-                        currentClass.findPropertyByName(name, true)?.also {
-                            (it as? KtProperty)?.getTarget()?.also {
+                        currentClass.findPropertyByName(name, true)?.also { property ->
+                            (property as? KtProperty)?.getTarget()?.also {
                                 currentClass = it
                             }
                         }
                     }
                     currentClass.getAllProperties().forEach { property ->
-                        result["${trace.subList(0, trace.size - 1).joinToString(".")}.${property.name}"] = property
+                        result["${property.name}"] = property
                     }
                 }
             }

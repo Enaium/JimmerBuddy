@@ -41,8 +41,11 @@ class DtoFoldingBuilder : FoldingBuilderEx(), DumbAware {
             override fun visitElement(element: PsiElement) {
                 val elementType = element.elementType
                 if (element.text.isNotBlank() && elementType is RuleIElementType) {
-                    if (listOf(DtoParser.RULE_dtoBody, DtoParser.RULE_aliasGroupBody, DtoParser.RULE_enumBody)
-                            .contains(elementType.ruleIndex)
+                    if (elementType.ruleIndex in listOf(
+                            DtoParser.RULE_dtoBody,
+                            DtoParser.RULE_aliasGroupBody,
+                            DtoParser.RULE_enumBody
+                        )
                     ) {
                         descriptors.add(FoldingDescriptor(element, element.textRange))
                     }
