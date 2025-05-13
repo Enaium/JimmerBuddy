@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
@@ -29,13 +28,14 @@ import com.intellij.psi.PsiPackage
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 import com.intellij.util.indexing.FileBasedIndex
+import com.intellij.util.indexing.ID
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 
 /**
  * @author Enaium
  */
-object AnnotationQualifiedNameCompletionProvider : CompletionProvider<CompletionParameters>() {
+open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
@@ -46,7 +46,7 @@ object AnnotationQualifiedNameCompletionProvider : CompletionProvider<Completion
 
         if (parts.isEmpty()) {
             val classes = FileBasedIndex.getInstance()
-                .getAllKeys(JimmerBuddy.ANNOTATION_CLASS_INDEX, project)
+                .getAllKeys(id, project)
                 .mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.allScope()) }
             result.addAllElements(classes.map {
                 LookupElementBuilder.create(it.name ?: "Unknown Name").withInsertHandler { context, item ->
@@ -70,11 +70,14 @@ object AnnotationQualifiedNameCompletionProvider : CompletionProvider<Completion
         result.addAllElements(subPackages.map {
             LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(AllIcons.Nodes.Package)
         })
-        val classes =
-            JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.filter { it.isAnnotationType }
-                ?: emptyList<PsiClass>()
-        result.addAllElements(classes.map {
-            LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
-        })
+
+        if (parts.size > 1) {
+            val classes =
+                JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.filter { it.isAnnotationType }
+                    ?: emptyList<PsiClass>()
+            result.addAllElements(classes.map {
+                LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
+            })
+        }
     }
 }

@@ -21,19 +21,16 @@ import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.util.ProcessingContext
-import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 /**
  * @author Enaium
  */
-object ExportKeywordCompletionProvider : CompletionProvider<CompletionParameters>() {
+object ImplementsKeywordCompletion : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
-        if (parameters.position.startOffset == 0) {
-            result.addElement(LookupElementBuilder.create("export"))
-        }
+        result.addElement(LookupElementBuilder.create("implements"))
     }
 }

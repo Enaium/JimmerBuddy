@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
  */
 class AnnotationClassIndex : ScalarIndexExtension<String>() {
     override fun getName(): ID<String, Void> {
-        return JimmerBuddy.ANNOTATION_CLASS_INDEX
+        return JimmerBuddy.Indexes.ANNOTATION_CLASS
     }
 
     override fun getInputFilter(): FileBasedIndex.InputFilter {

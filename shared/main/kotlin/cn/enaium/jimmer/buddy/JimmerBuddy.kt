@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
+import cn.enaium.jimmer.buddy.extensions.index.FullClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
 import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import cn.enaium.jimmer.buddy.utility.*
@@ -74,8 +75,12 @@ object JimmerBuddy {
     const val DTO_NAME = "Jimmer DTO"
     const val DTO_LANGUAGE_ID = "JimmerBuddy.DTO"
     val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("jimmer_project_model")
-    val ANNOTATION_CLASS_INDEX = ID.create<String, Void>(AnnotationClassIndex::class.qualifiedName!!)
-    val INTERFACE_CLASS_INDEX = ID.create<String, Void>(InterfaceClassIndex::class.qualifiedName!!)
+
+    object Indexes {
+        val ANNOTATION_CLASS = ID.create<String, Void>(AnnotationClassIndex::class.qualifiedName!!)
+        val INTERFACE_CLASS = ID.create<String, Void>(InterfaceClassIndex::class.qualifiedName!!)
+        val FULL_CLASS = ID.create<String, Void>(FullClassIndex::class.qualifiedName!!)
+    }
 
     object Icons {
         val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)

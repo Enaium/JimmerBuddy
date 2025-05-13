@@ -35,23 +35,28 @@ class DtoFormattingModelBuilder : FormattingModelBuilder {
             .around(TOKEN[COMMA], 0, 1)//[, ]
             .around(TOKEN[COLON], 0, 1)//[: ]
             .around(TOKEN[SEMICOLON], 0, 1)//[; ]
-            .around(TOKEN[RIGHT_ARROR]).spaces(1)//[ -> ]
+            .around(TOKEN[RIGHT_ARROW]).spaces(1)//[ -> ]
             .around(TOKEN[EQUAL]).spaces(1)//[ = ]
             .between(TOKEN[AS], TOKEN[LEFT_PARENTHESIS]).spaces(0)//[as(]
             .around(TOKEN[AS]).spaces(1)//[ as ]
             .around(RULE[RULE_modifier]).spaces(1)//[ modifier ]
+            .around(RULE[RULE_implements]).spaces(1)//[ implements ]
             .after(TOKEN[AT]).spaces(0)//[@]
             .after(TOKEN[HASH]).spaces(0)//[#]
             .after(RULE[RULE_exportStatement]).emptyLine(1)//[export \n]
             .before(TOKEN[EXPORT]).spaceIf(false)//[export]
             .between(TOKEN[EXPORT], RULE[RULE_typeParts]).spaces(1)//[export a.b.c]
-            .between(TOKEN[RIGHT_ARROR], TOKEN[PACKAGE]).spaces(1)//[-> package]
+            .between(TOKEN[RIGHT_ARROW], TOKEN[PACKAGE]).spaces(1)//[-> package]
             .between(TOKEN[PACKAGE], RULE[RULE_qualifiedNameParts]).spaces(1)//[package a.b.c]
             .before(RULE[RULE_importStatement]).spaceIf(false)//[import]
             .between(TOKEN[IMPORT], RULE[RULE_qualifiedNameParts])
             .spaces(1)//[import a.b.c]
+            .between(TOKEN[LEFT_BRACE], RULE[RULE_importedType]).spaces(1)//[{ Type]
+            .between(RULE[RULE_importedType], TOKEN[RIGHT_BRACE]).spaces(1)//[Type }]
             .before(RULE[RULE_dtoType]).spaceIf(false)//[dtoType]
-
+            .between(RULE[RULE_prop], RULE[RULE_dtoBody]).spaces(1)//[Abc {]
+            .between(RULE[RULE_name], RULE[RULE_dtoBody]).spaces(1)//[abc {]
+            .between(TOKEN[IMPLEMENTS], RULE[RULE_typeRef]).spaces(1)//[implements a.b.c]
         return FormattingModelProvider.createFormattingModelForPsiFile(
             formattingContext.containingFile,
             DtoBlock(

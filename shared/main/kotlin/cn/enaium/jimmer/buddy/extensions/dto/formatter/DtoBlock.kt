@@ -59,12 +59,13 @@ class DtoBlock(
     override fun getIndent(): Indent? {
         if (node.elementType !in TokenSet.create(
                 TOKEN[LEFT_BRACE],
-                TOKEN[RIGHT_BRACE]
+                TOKEN[RIGHT_BRACE],
+                RULE[RULE_implements]
             ) && node.treeParent?.elementType in body
         ) {
             return Indent.getNormalIndent()
         }
-        if (node.elementType == TOKEN[RIGHT_ARROR] && node.treeParent?.elementType == RULE[RULE_exportStatement]) {
+        if (node.elementType == TOKEN[RIGHT_ARROW] && node.treeParent?.elementType == RULE[RULE_exportStatement]) {
             return Indent.getNormalIndent()
         }
 

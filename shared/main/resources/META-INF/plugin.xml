@@ -139,6 +139,7 @@
                              implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoFoldingBuilder"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex"/>
+        <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.FullClassIndex"/>
         <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoLineMarkerProvider"/>
         <lang.formatter language="JimmerBuddy.DTO"

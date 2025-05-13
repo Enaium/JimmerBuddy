@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.index
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.isImmutable
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.*
@@ -30,9 +29,9 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 /**
  * @author Enaium
  */
-class InterfaceClassIndex : ScalarIndexExtension<String>() {
+class FullClassIndex : ScalarIndexExtension<String>() {
     override fun getName(): ID<String, Void> {
-        return JimmerBuddy.Indexes.INTERFACE_CLASS
+        return JimmerBuddy.Indexes.FULL_CLASS
     }
 
     override fun getInputFilter(): FileBasedIndex.InputFilter {
@@ -47,11 +46,9 @@ class InterfaceClassIndex : ScalarIndexExtension<String>() {
         return DataIndexer<String, Void, FileContent> { file ->
             if (file.fileType == JavaFileType.INSTANCE) {
                 file.psiFile.getChildrenOfType<PsiClass>()
-                    .filter { it.isInterface }
                     .associate { Pair(it.qualifiedName, null) }
             } else {
                 file.psiFile.getChildrenOfType<KtClass>()
-                    .filter { it.isInterface() }
                     .associate { Pair(it.fqName!!.asString(), null) }
             }
         }

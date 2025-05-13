@@ -32,7 +32,7 @@ dto
 exportStatement
     :
     EXPORT typeParts
-    (RIGHT_ARROR PACKAGE packageParts)?
+    (RIGHT_ARROW PACKAGE packageParts)?
     ;
 
 typeParts
@@ -73,8 +73,12 @@ dtoType
     (annotations += annotation)*
     (modifier)*
     name
-    (IMPLEMENTS superInterfaces += typeRef (COMMA superInterfaces += typeRef)*)?
+    implements?
     body=dtoBody
+    ;
+
+implements
+    : IMPLEMENTS typeRef (COMMA typeRef)*
     ;
 
 modifier
@@ -120,7 +124,7 @@ aliasPattern
     (prefix = POWER)?
     (original = Identifier)?
     (suffix = DOLLAR)?
-    (translator = RIGHT_ARROR)
+    (translator = RIGHT_ARROW)
     (replacement = Identifier)?
     RIGHT_PARENTHESIS
     ;
@@ -143,10 +147,10 @@ positiveProp
     (
         (childDoc = DocComment)?
         (bodyAnnotations += annotation)*
-        (IMPLEMENTS bodySuperInterfaces += typeRef (COMMA bodySuperInterfaces += typeRef)*)?
+        implements?
         dtoBody
         |
-        RIGHT_ARROR enumBody
+        RIGHT_ARROW enumBody
     )?
     ;
 
@@ -390,7 +394,7 @@ BooleanLiteral
     TRUE | FALSE
     ;
 
-RIGHT_ARROR  : '->';
+RIGHT_ARROW  : '->';
 DOT : '.';
 COMMA : ',';
 SEMICOLON : ';';

@@ -44,7 +44,7 @@ object ExportTypeCompletionProvider : CompletionProvider<CompletionParameters>()
 
         if (parts.isEmpty()) {
             val classes = FileBasedIndex.getInstance()
-                .getAllKeys(JimmerBuddy.INTERFACE_CLASS_INDEX, project)
+                .getAllKeys(JimmerBuddy.Indexes.INTERFACE_CLASS, project)
                 .mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.allScope()) }
                 .filter { it.isImmutable() }
             result.addAllElements(classes.map {
@@ -65,11 +65,13 @@ object ExportTypeCompletionProvider : CompletionProvider<CompletionParameters>()
         result.addAllElements(subPackages.map {
             LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(AllIcons.Nodes.Package)
         })
-        val classes =
-            JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.filter { it.isImmutable() }
-                ?: emptyList<PsiClass>()
-        result.addAllElements(classes.map {
-            LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
-        })
+        if (parts.size > 1) {
+            val classes =
+                JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.filter { it.isImmutable() }
+                    ?: emptyList<PsiClass>()
+            result.addAllElements(classes.map {
+                LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
+            })
+        }
     }
 }
