@@ -17,5 +17,5 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 interface DtoPsiAlias : DtoPsiElement {
-    val alias: String
+    val value: String
 }

@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.lang.structure
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
 import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import javax.swing.Icon
@@ -31,8 +32,40 @@ class DtoItemPresentation(val element: PsiElement) : ItemPresentation {
         return when (element) {
             is DtoPsiFile -> element.name
             is DtoPsiDtoType -> element.name?.value ?: "Unknown Name"
-            is DtoPsiExplicitProp -> (element.positiveProp?.prop ?: element.negativeProp?.prop
-            ?: element.userProp?.prop)?.value ?: "Unknown Name"
+            is DtoPsiExplicitProp -> element.positiveProp?.let { positiveProp ->
+                positiveProp.prop?.value?.let { name ->
+                    positiveProp.alias?.value?.let { alias ->
+                        "$name as $alias"
+                    } ?: name
+                }
+            } ?: element.negativeProp?.let { negativeProp ->
+                negativeProp.prop?.value?.let {
+                    "$it (Negative)"
+                }
+            } ?: element.userProp?.let { userProp ->
+                userProp.prop?.value?.let { name ->
+                    userProp.typeRef?.let { typeRef ->
+                        fun typeRefName(typeRef: DtoPsiTypeRef): String {
+                            return "${typeRef.qualifiedName?.qualifiedNameParts?.qualifiedName?.substringAfterLast(".")}".let {
+                                if (typeRef.genericArguments.isEmpty()) {
+                                    it
+                                } else {
+                                    it + typeRef.genericArguments.joinToString(
+                                        ", ",
+                                        "<",
+                                        ">"
+                                    ) { genericArgument ->
+                                        genericArgument.typeRef?.let { typeRef -> typeRefName(typeRef) } ?: ""
+                                    }
+                                }
+                            }
+                        }
+
+                        "$name: ${typeRefName(typeRef)}"
+                    } ?: name
+                }
+            } ?: "Unknow Name"
+
             else -> "Unknow Name"
         }
     }

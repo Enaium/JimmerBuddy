@@ -27,7 +27,7 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 class DtoPsiPositivePropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiPositiveProp {
     override val prop: DtoPsiProp?
         get() = findChild<DtoPsiProp>("/positiveProp/prop")
-    override val dtoPsiAlias: DtoPsiAlias?
+    override val alias: DtoPsiAlias?
         get() = findChild<DtoPsiAlias>("/positiveProp/alias")
 
     override val dtoBody: DtoPsiDtoBody?

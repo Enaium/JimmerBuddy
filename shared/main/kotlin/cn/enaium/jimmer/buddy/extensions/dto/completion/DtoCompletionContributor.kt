@@ -173,9 +173,8 @@ class DtoCompletionContributor : CompletionContributor() {
                 DtoPsiPart::class.java,
                 DtoPsiQualifiedNameParts::class.java,
                 DtoPsiQualifiedName::class.java,
-                DtoPsiTypeRef::class.java,
-                DtoPsiUserProp::class.java
-            ).inside(DtoPsiDtoBody::class.java),
+                DtoPsiTypeRef::class.java
+            ).inside(DtoPsiUserProp::class.java),
             TypeRefQNameCompletionProvider
         )
     }

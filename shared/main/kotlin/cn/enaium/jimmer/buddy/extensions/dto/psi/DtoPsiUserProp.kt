@@ -18,4 +18,5 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 interface DtoPsiUserProp : DtoPsiElement {
     val prop: DtoPsiProp?
+    val typeRef: DtoPsiTypeRef?
 }

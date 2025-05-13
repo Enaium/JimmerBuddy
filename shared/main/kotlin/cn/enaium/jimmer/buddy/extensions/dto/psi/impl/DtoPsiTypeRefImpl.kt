@@ -16,6 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiGenericArgument
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
@@ -24,4 +28,8 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
  * @author Enaium
  */
 class DtoPsiTypeRefImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiTypeRef {
+    override val qualifiedName: DtoPsiQualifiedName?
+        get() = findChild<DtoPsiQualifiedName>("/typeRef/qualifiedName")
+    override val genericArguments: List<DtoPsiGenericArgument>
+        get() = findChildren<DtoPsiGenericArgument>("/typeRef/genericArgument")
 }

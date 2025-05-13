@@ -16,11 +16,16 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiGenericArgument
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
-class DtoPsiAliasImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAlias {
-    override val value: String
-        get() = node.text
+/**
+ * @author Enaium
+ */
+class DtoPsiGenericArgumentImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiGenericArgument {
+    override val typeRef: DtoPsiTypeRef?
+        get() = findChild<DtoPsiTypeRef>("/genericArgument/typeRef")
 }

@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiUserProp
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
@@ -25,4 +26,6 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 class DtoPsiUserPropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiUserProp {
     override val prop: DtoPsiProp?
         get() = findChild<DtoPsiProp>("/userProp/prop")
+    override val typeRef: DtoPsiTypeRef?
+        get() = findChild<DtoPsiTypeRef>("/userProp/typeRef")
 }

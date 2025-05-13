@@ -16,6 +16,7 @@ A plugin that adds first-class support for Project Jimmer
 - Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Completion for `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Generate all set of Draft
+- DTO class member go to DTO file.
 
 ### First-class DTO development
 
@@ -25,6 +26,7 @@ A plugin that adds first-class support for Project Jimmer
 - Native compiler check.
 - Navigation to `type`, `prop`, `import`, `annotation`, etc.
 - Completion `export`, `package`, `import`, `prop`, `macro`, `config` etc.
+- Automatically import for `export`, `implements`, `userProp` etc.
 - Format source.
 - Structure view.
 

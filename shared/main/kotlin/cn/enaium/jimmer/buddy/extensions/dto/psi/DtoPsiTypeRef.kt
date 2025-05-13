@@ -16,5 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
-interface DtoPsiTypeRef : DtoPsiElement{
+interface DtoPsiTypeRef : DtoPsiElement {
+    val qualifiedName: DtoPsiQualifiedName?
+    val genericArguments: List<DtoPsiGenericArgument>
 }

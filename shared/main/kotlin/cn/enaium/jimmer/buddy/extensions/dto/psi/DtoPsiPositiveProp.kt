@@ -18,6 +18,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 interface DtoPsiPositiveProp : DtoPsiElement {
     val prop: DtoPsiProp?
-    val dtoPsiAlias: DtoPsiAlias?
+    val alias: DtoPsiAlias?
     val dtoBody: DtoPsiDtoBody?
 }
