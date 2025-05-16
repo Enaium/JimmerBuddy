@@ -12,7 +12,8 @@ A plugin that adds first-class support for Project Jimmer
 - List all Immutables and DTOs in the project.
 - Generate entity from database or ddl and choose which table or columns to generate.
 - Jimmer Project Wizard.
-- Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
+- Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula`
+  etc.
 - Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Completion for `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Generate all set of Draft
@@ -29,6 +30,7 @@ A plugin that adds first-class support for Project Jimmer
 - Automatically import for `export`, `implements`, `userProp` etc.
 - Format source.
 - Structure view.
+- Visualization to create DTO file.
 
 ## Screenshots
 
