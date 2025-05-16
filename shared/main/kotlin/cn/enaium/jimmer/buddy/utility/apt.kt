@@ -51,7 +51,7 @@ import kotlin.io.path.Path
  * @author Enaium
  */
 fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapOf()): TypeElement {
-    return caches[this.qualifiedName!!] ?: return createTypeElement(
+    return caches[this.qualifiedName!!] ?: createTypeElement(
         getEnclosedElements = {
             if (this.isInterface) {
                 this.methods.map { method ->
@@ -200,16 +200,6 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                     null
                 }
             }
-        },
-        getSuperclass = {
-            this.superClass?.let {
-                createDeclaredType(
-                    getQualifiedName = { it.qualifiedName!! },
-                    asElement = {
-                        it.asTypeElement(caches)
-                    }
-                )
-            }
         }
     ).also {
         caches[this.qualifiedName!!] = it
@@ -227,7 +217,6 @@ fun psiClassesToApt(
     cacheClasses: CopyOnWriteArraySet<PsiClass>
 ): Apt {
     val typeElementCaches = mutableMapOf<String, TypeElement>()
-    val typeElementCaches1 = mutableMapOf<String, TypeElement>()
 
     val psiClasses = listOf(
         true to compilableClasses,
@@ -237,7 +226,10 @@ fun psiClassesToApt(
     }.reversed().distinctBy { it.second.qualifiedName }
 
     psiClasses.forEach { (compilable, psiClass) ->
-        typeElementCaches[psiClass.qualifiedName!!] = psiClass.asTypeElement(typeElementCaches1)
+        typeElementCaches[psiClass.qualifiedName!!] = psiClass.asTypeElement(typeElementCaches)
+        psiClass.interfaces.forEach {
+            typeElementCaches[it.qualifiedName!!] = it.asTypeElement(typeElementCaches)
+        }
     }
 
     val sources = mutableListOf<Source>()
@@ -430,14 +422,14 @@ fun psiClassesToApt(
             override fun getTypeUtils(): Types? {
                 return object : Types {
                     override fun asElement(t: TypeMirror): Element? {
-                        return typeElementCaches[t.toString()] ?: typeElementCaches1[t.toString()]
-                        ?: if (t.toString() == "java.util.List") {
-                            createTypeElement(
-                                getQualifiedName = { createName("java.util.List") },
-                            )
-                        } else {
-                            null
-                        }
+                        return typeElementCaches[t.toString()]
+                            ?: if (t.toString() == "java.util.List") {
+                                createTypeElement(
+                                    getQualifiedName = { createName("java.util.List") },
+                                )
+                            } else {
+                                null
+                            }
                     }
 
                     override fun isSameType(
