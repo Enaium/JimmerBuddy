@@ -298,7 +298,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     }
 
     ktClasses.forEach { (compilable, ktClass) ->
-        ksClassDeclarationCaches[ktClass.fqName!!.asString()] = ktClass.asKSClassDeclaration()
+        ksClassDeclarationCaches[ktClass.fqName!!.asString()] = ktClass.asKSClassDeclaration(ksClassDeclarationCaches)
 
         if (compilable) {
             ksFiles.add(
@@ -766,7 +766,7 @@ fun createKSType(
 
 fun createKSClassDeclaration(
     qualifiedName: () -> KSName? = { TODO("Not yet implemented") },
-    classKind: () -> ClassKind = { TODO("${qualifiedName()} Not yet implemented") },
+    classKind: () -> ClassKind = { ClassKind.CLASS },
     isCompanionObject: () -> Boolean = { TODO("${qualifiedName()} Not yet implemented") },
     primaryConstructor: () -> KSFunctionDeclaration? = { TODO("${qualifiedName()} Not yet implemented") },
     superTypes: () -> Sequence<KSTypeReference> = { TODO("${qualifiedName()} Not yet implemented") },
@@ -1170,8 +1170,10 @@ fun createKspOption(
             .also { it.isAccessible = true }.get(jimmerProcessor) as DtoModifier,
         jimmerProcessorClass.declaredMemberProperties.find { it.name == "checkedException" }!!
             .also { it.isAccessible = true }.get(jimmerProcessor) as Boolean,
-        jimmerProcessorClass.declaredMemberProperties.find { it.name == "mutable" }!!.also { it.isAccessible = true }
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "dtoMutable" }!!.also { it.isAccessible = true }
             .get(jimmerProcessor) as Boolean,
+        jimmerProcessorClass.declaredMemberProperties.find { it.name == "excludedUserAnnotationPrefixes" }!!
+            .also { it.isAccessible = true }.get(jimmerProcessor) as List<String>
     )
 }
 
@@ -1182,5 +1184,6 @@ data class KspOption(
     val dtoTestDirs: Collection<String>,
     val defaultNullableInputModifier: DtoModifier,
     val checkedException: Boolean,
-    val mutable: Boolean
+    val mutable: Boolean,
+    val excludedUserAnnotationPrefixes: List<String>
 )

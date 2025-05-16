@@ -461,7 +461,11 @@ object JimmerBuddy {
                             Context(resolver, environment),
                             environment.codeGenerator
                         )
-                        org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(option.context, option.isModuleRequired)
+                        org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(
+                            option.context,
+                            option.isModuleRequired,
+                            option.excludedUserAnnotationPrefixes
+                        )
                             .process()
                         org.babyfish.jimmer.ksp.error.ErrorProcessor(option.context, option.checkedException).process()
                         sources.forEach {
