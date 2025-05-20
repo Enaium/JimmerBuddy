@@ -16,8 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import cn.enaium.jimmer.buddy.utility.isJavaProject
@@ -28,25 +26,31 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.icons.AllIcons
 import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiEnumConstant
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassBody
+import org.jetbrains.kotlin.psi.KtEnumEntry
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 /**
  * @author Enaium
  */
-object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
+object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
         val project = parameters.position.project
-        val trace = getTrace(parameters.position)
+        val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
+        val trace = getTrace(prop)
         val typeName =
             parameters.position.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return
         val commonImmutable = if (project.isJavaProject()) {
@@ -67,21 +71,21 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
             }
         }
 
-        currentImmutable.props().forEach {
-            result.addElement(
-                LookupElementBuilder.create(it.name()).withIcon(JimmerBuddy.Icons.PROP)
-                    .withTailText(" (from ${currentImmutable.name()})").withTypeText(it.type().description)
-            )
-        }
-    }
-}
+        val enumName = currentImmutable.props().find { it.name() == prop.prop?.value }?.typeName() ?: return
 
-fun getTrace(position: PsiElement?): List<String> {
-    val trace = mutableSetOf<String>()
-    var parent: PsiElement? = position?.parent
-    while (parent != null) {
-        (parent.findParentOfType<DtoPsiDtoBody>()?.parent as? DtoPsiPositiveProp)?.prop?.value?.also { trace.add(it) }
-        parent = parent.parent
+        val entries = if (project.isJavaProject()) {
+            JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())
+                ?.getChildrenOfType<PsiEnumConstant>()
+                ?.map { it.name } ?: emptyList()
+        } else if (project.isKotlinProject()) {
+            (KotlinFullClassNameIndex[enumName, project, project.allScope()].firstOrNull() as? KtClass)?.getChildOfType<KtClassBody>()
+                ?.getChildrenOfType<KtEnumEntry>()?.map { it.name ?: "Unknown Name" } ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        result.addAllElements(entries.map {
+            LookupElementBuilder.create(it).withTypeText(enumName.substringAfterLast(".")).withIcon(AllIcons.Nodes.Enum)
+        })
     }
-    return trace.reversed()
 }

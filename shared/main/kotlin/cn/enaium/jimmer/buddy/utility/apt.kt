@@ -28,6 +28,7 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
@@ -138,7 +139,7 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                     )
                 }
             } else if (this.isEnum) {
-                this.children.filterIsInstance<PsiEnumConstant>()
+                this.getChildrenOfType<PsiEnumConstant>()
                     .map {
                         val enumConstant = createTypeElement(
                             getQualifiedName = { createName(it.name) },
@@ -444,19 +445,15 @@ fun psiClassesToApt(
                         t2: TypeMirror
                     ): Boolean {
                         return if (t1 is DeclaredType && t2 is DeclaredType) {
-                            val t1Element = t1.asElement()
-                            val t2Element = t2.asElement()
-
-                            if (t1Element !is TypeElement || t2Element !is TypeElement) {
-                                return false
-                            }
+                            val t1Element = t1.asElement()?.toString() ?: t1.toString()
+                            val t2Element = t2.asElement()?.toString() ?: t2.toString()
 
                             var eq =
-                                t1Element.qualifiedName.contentEquals(t2Element.qualifiedName)
+                                t1Element.contentEquals(t2Element)
 
                             if (!eq) {
-                                if (t2Element.qualifiedName.toString() == "java.lang.Number") {
-                                    eq = when (t1Element.qualifiedName.toString()) {
+                                if (t2Element == "java.lang.Number") {
+                                    eq = when (t1Element) {
                                         java.lang.Byte::class.qualifiedName,
                                         java.lang.Short::class.qualifiedName,
                                         java.lang.Integer::class.qualifiedName,
@@ -468,6 +465,8 @@ fun psiClassesToApt(
 
                                         else -> false
                                     }
+                                } else if (t2Element == "java.lang.Enum") {
+                                    eq = typeElementCaches[t1Element]?.kind == ElementKind.ENUM
                                 }
                             }
                             eq
@@ -610,6 +609,10 @@ fun psiClassesToApt(
                                 p: P?
                             ): R? {
                                 TODO("Not yet implemented")
+                            }
+
+                            override fun toString(): String {
+                                return typeElem?.qualifiedName.toString()
                             }
                         }
                     }

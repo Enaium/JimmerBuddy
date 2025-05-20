@@ -49,6 +49,7 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.targetType?.toCommonImmutableType() },
+                    { prop.typeName().toString() },
                     {
                         if (prop.isId) {
                             PropType.ID
@@ -91,6 +92,7 @@ fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType()
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() },
+                    { prop.typeName.toString() },
                     {
                         if (prop.isId) {
                             PropType.ID
@@ -132,6 +134,7 @@ data class CommonImmutableType(
         val name: () -> String,
         val declaringType: () -> CommonImmutableType,
         val targetType: () -> CommonImmutableType?,
+        val typeName: () -> String,
         val type: () -> PropType
     )
 }
