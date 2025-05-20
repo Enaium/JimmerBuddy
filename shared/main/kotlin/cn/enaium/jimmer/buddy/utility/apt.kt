@@ -138,7 +138,7 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                     )
                 }
             } else if (this.isEnum) {
-                this.children.filter { it is PsiEnumConstant }.map { it as PsiEnumConstant }
+                this.children.filterIsInstance<PsiEnumConstant>()
                     .map {
                         val enumConstant = createTypeElement(
                             getQualifiedName = { createName(it.name) },

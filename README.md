@@ -9,7 +9,7 @@ A plugin that adds first-class support for Project Jimmer
 ### First-class Java or Kotlin development
 
 - Automatically generate `draft`, `fetcher`, `props` etc. class for Immutable.
-- List all Immutables and DTOs in the project.
+- List all Immutables, DTOs and ErrorFamilies in the project.
 - Generate entity from database or ddl and choose which table or columns to generate.
 - Jimmer Project Wizard.
 - Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula`
@@ -18,6 +18,7 @@ A plugin that adds first-class support for Project Jimmer
 - Completion for `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
 - Generate all set of Draft
 - DTO class member go to DTO file.
+- Execute SQL to clipboard.
 
 ### First-class DTO development
 
