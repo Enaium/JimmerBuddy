@@ -148,6 +148,8 @@
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoPairedBraceMatcher"/>
         <lang.quoteHandler language="JimmerBuddy.DTO"
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>
+        <consoleFilterProvider implementation="cn.enaium.jimmer.buddy.extensions.console.ExecuteSqlFilter"
+                               order="first"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>
