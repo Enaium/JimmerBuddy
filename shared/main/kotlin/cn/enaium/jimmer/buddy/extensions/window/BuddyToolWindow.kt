@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.window
 
 import cn.enaium.jimmer.buddy.extensions.window.panel.DTOList
 import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
+import cn.enaium.jimmer.buddy.extensions.window.panel.ErrorFamilyList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
 import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.project.Project
@@ -43,6 +44,13 @@ class BuddyToolWindow : ToolWindowFactory {
             toolWindow.contentManager.factory.createContent(
                 DTOList(project),
                 "DTOs",
+                false
+            )
+        )
+        toolWindow.contentManager.addContent(
+            toolWindow.contentManager.factory.createContent(
+                ErrorFamilyList(project),
+                "ErrorFamilies",
                 false
             )
         )

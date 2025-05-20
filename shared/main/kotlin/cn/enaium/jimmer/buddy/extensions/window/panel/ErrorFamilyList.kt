@@ -18,8 +18,14 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
-import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree.ImmutableProp
+import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree.ImmutableType
+import cn.enaium.jimmer.buddy.utility.findProjects
+import cn.enaium.jimmer.buddy.utility.hasErrorFamilyAnnotation
+import cn.enaium.jimmer.buddy.utility.isErrorFamily
+import cn.enaium.jimmer.buddy.utility.runReadActionSmart
+import cn.enaium.jimmer.buddy.utility.runReadOnly
+import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -31,7 +37,8 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiEnumConstant
+import com.intellij.psi.PsiField
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import kotlinx.coroutines.CoroutineScope
@@ -40,14 +47,21 @@ import kotlinx.coroutines.launch
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassBody
+import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.*
+import javax.swing.JLabel
+import javax.swing.JMenuItem
+import javax.swing.JPanel
+import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -55,7 +69,7 @@ import javax.swing.tree.DefaultTreeModel
 /**
  * @author Enaium
  */
-class ImmutableTree(val project: Project) : JPanel() {
+class ErrorFamilyList(val project: Project) : JPanel() {
 
     private val root = DefaultMutableTreeNode()
     private val tree = Tree(root)
@@ -63,13 +77,13 @@ class ImmutableTree(val project: Project) : JPanel() {
     init {
         layout = BorderLayout()
         tree.isRootVisible = false
-        tree.cellRenderer = ImmutableNodeCell()
+        tree.cellRenderer = ErrorFamilyNodeCell()
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 tree.lastSelectedPathComponent?.also { select ->
 
                     fun navigate() {
-                        if (select is ImmutableNode) {
+                        if (select is ErrorFamilyNode) {
                             (select.target as Navigatable).navigate(true)
                         }
                     }
@@ -81,16 +95,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                                     navigate()
                                 }
                             })
-                            if (select is ImmutableType) {
-                                add(JMenuItem("New DTO").apply {
-                                    addActionListener {
-                                        NewDtoFileDialog(project, select.sourceFile, select.qualifiedName).show()
-                                    }
-                                })
-                            }
                         }.show(tree, e.x, e.y)
                     } else if (e.clickCount == 2) {
-                        if (select is ImmutableProp) {
+                        if (select is ErrorFamilyNode) {
                             navigate()
                         }
                     }
@@ -101,16 +108,16 @@ class ImmutableTree(val project: Project) : JPanel() {
             JPanel(BorderLayout()).apply {
                 add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
                     override fun actionPerformed(e: AnActionEvent) {
-                        loadImmutables()
+                        loadErrorFamilies()
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
-        loadImmutables()
+        loadErrorFamilies()
     }
 
-    fun loadImmutables() {
+    fun loadErrorFamilies() {
         project.runWhenSmart {
             CoroutineScope(Dispatchers.IO).launch {
                 root.removeAllChildren()
@@ -125,10 +132,10 @@ class ImmutableTree(val project: Project) : JPanel() {
                         project.runReadActionSmart {
                             sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
                                 ?.also { psiClass ->
-                                    if (psiClass.isImmutable()) {
-                                        val newChild = ImmutableType(psiClass)
-                                        psiClass.methods.forEach {
-                                            newChild.add(ImmutableProp(it))
+                                    if (psiClass.isErrorFamily()) {
+                                        val newChild = ErrorFamilyType(psiClass)
+                                        psiClass.getChildrenOfType<PsiEnumConstant>().forEach {
+                                            newChild.add(ErrorFamilyField(it))
                                         }
                                         root.add(newChild)
                                     }
@@ -145,10 +152,10 @@ class ImmutableTree(val project: Project) : JPanel() {
                     sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {
                             sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
-                                if (ktClass.isImmutable()) {
-                                    val newChild = ImmutableType(ktClass)
-                                    ktClass.getProperties().forEach {
-                                        newChild.add(ImmutableProp(it))
+                                if (ktClass.isErrorFamily()) {
+                                    val newChild = ErrorFamilyType(ktClass)
+                                    ktClass.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.forEach {
+                                        newChild.add(ErrorFamilyField(it))
                                     }
                                     root.add(newChild)
                                 }
@@ -161,8 +168,7 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-
-    private class ImmutableNodeCell() : DefaultTreeCellRenderer() {
+    private class ErrorFamilyNodeCell() : DefaultTreeCellRenderer() {
         override fun getTreeCellRendererComponent(
             tree: JTree,
             value: Any,
@@ -173,29 +179,29 @@ class ImmutableTree(val project: Project) : JPanel() {
             hasFocus: Boolean
         ): Component {
 
-            if (value is ImmutableType) {
-                icon = JimmerBuddy.Icons.IMMUTABLE
-            } else if (value is ImmutableProp) {
-                icon = JimmerBuddy.Icons.PROP
+            if (value is ErrorFamilyType) {
+                icon = AllIcons.Nodes.Enum
+            } else if (value is ErrorFamilyField) {
+                icon = AllIcons.Nodes.ExceptionClass
             }
 
             return JPanel(BorderLayout()).apply {
                 if (sel) {
-                    setBackground(this@ImmutableNodeCell.getBackgroundSelectionColor())
+                    setBackground(this@ErrorFamilyNodeCell.getBackgroundSelectionColor())
                 } else {
-                    setBackground(this@ImmutableNodeCell.getBackground())
+                    setBackground(this@ErrorFamilyNodeCell.getBackground())
                 }
                 add(JLabel(runReadOnly { value.toString() }).apply {
-                    icon = this@ImmutableNodeCell.icon
+                    icon = this@ErrorFamilyNodeCell.icon
                 }, BorderLayout.CENTER)
             }
         }
     }
 
-    private open class ImmutableNode(val target: PsiElement) :
+    private open class ErrorFamilyNode(val target: PsiElement) :
         DefaultMutableTreeNode()
 
-    private open class ImmutableType(target: PsiElement) : ImmutableNode(target) {
+    private open class ErrorFamilyType(target: PsiElement) : ErrorFamilyNode(target) {
         val sourceFile = target.containingFile.virtualFile.toNioPath()
         val qualifiedName: String = when (target) {
             is PsiClass -> {
@@ -232,15 +238,14 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableProp(target: PsiElement) : ImmutableNode(target) {
-
+    private open class ErrorFamilyField(target: PsiElement) : ErrorFamilyNode(target) {
         override fun isLeaf(): Boolean {
             return true
         }
 
         override fun toString(): String {
             return when (target) {
-                is PsiMethod -> {
+                is PsiField -> {
                     target.name
                 }
 

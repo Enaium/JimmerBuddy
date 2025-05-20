@@ -66,6 +66,10 @@ fun PsiClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface
 }
 
+fun PsiClass.isErrorFamily(): Boolean {
+    return hasErrorFamilyAnnotation() && isEnum
+}
+
 fun PsiClass.hasErrorFamilyAnnotation(): Boolean {
     return this.modifierList?.annotations?.any { annotation ->
         annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
@@ -90,9 +94,14 @@ fun KtClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface()
 }
 
+fun KtClass.isErrorFamily(): Boolean {
+    return hasErrorFamilyAnnotation() && isEnum()
+}
+
 fun KtClass.hasErrorFamilyAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        annotation.fqName == ErrorFamily::class.qualifiedName!!
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
+        val fqName = annotation.qualifiedName
+        fqName == ErrorFamily::class.qualifiedName!!
     } == true
 }
 
