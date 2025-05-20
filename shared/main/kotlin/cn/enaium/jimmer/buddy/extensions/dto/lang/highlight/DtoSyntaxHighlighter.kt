@@ -44,6 +44,11 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
         DefaultLanguageHighlighterColors.STRING
     )
 
+    val number = createTextAttributesKey(
+        "${JimmerBuddy.DTO_LANGUAGE_ID}.NUMBER",
+        DefaultLanguageHighlighterColors.NUMBER
+    )
+
     val lineComment = createTextAttributesKey(
         "${JimmerBuddy.DTO_LANGUAGE_ID}.COMMENT",
         DefaultLanguageHighlighterColors.LINE_COMMENT
@@ -88,7 +93,11 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
             DtoLexer.FALSE -> keyword
 
             DtoLexer.StringLiteral,
-            DtoLexer.SqlStringLiteral -> string
+            DtoLexer.SqlStringLiteral,
+            DtoLexer.CharacterLiteral -> string
+
+            DtoLexer.IntegerLiteral,
+            DtoLexer.FloatingPointLiteral -> number
 
             DtoLexer.LineComment -> lineComment
             DtoLexer.BlockComment, DtoLexer.DocComment -> blockComment

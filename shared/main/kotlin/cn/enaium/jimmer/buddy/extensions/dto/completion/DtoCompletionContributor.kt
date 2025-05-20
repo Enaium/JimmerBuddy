@@ -22,6 +22,8 @@ import cn.enaium.jimmer.buddy.extensions.dto.pattern.DtoPsiPatterns
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotation
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumMapping
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImplements
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
@@ -176,6 +178,13 @@ class DtoCompletionContributor : CompletionContributor() {
                 DtoPsiTypeRef::class.java
             ).inside(DtoPsiUserProp::class.java),
             TypeRefQNameCompletionProvider
+        )
+        extend(
+            basic,
+            DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiEnumMapping::class.java)
+                .inside(DtoPsiEnumBody::class.java),
+            EnumEntryCompletionProvider
         )
     }
 }
