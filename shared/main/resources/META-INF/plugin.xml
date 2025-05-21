@@ -152,6 +152,8 @@
                                order="first"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="cn.enaium.jimmer.buddy.extensions.insight.ImmutableInheritorCodeVisionProvider"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

@@ -16,16 +16,15 @@
 
 package cn.enaium.jimmer.buddy.extensions.insight
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.isImmutable
 import cn.enaium.jimmer.buddy.utitlity.getPsiElementPopup
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.search.FilenameIndex
-import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import com.intellij.psi.search.searches.ClassInheritorsSearch
+import org.babyfish.jimmer.sql.MappedSuperclass
+import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.toUElementOfType
 import java.awt.event.MouseEvent
@@ -33,19 +32,21 @@ import java.awt.event.MouseEvent
 /**
  * @author Enaium
  */
-class DtoTypeTargetCodeVisionProvider : ImmutableCodeVisionProvider() {
+class ImmutableInheritorCodeVisionProvider : ImmutableCodeVisionProvider() {
 
     override val id: String
-        get() = "JimmerBuddy.dto.target"
+        get() = "JimmerBuddy.immutable.inheritor"
     override val name: String
-        get() = "DTO Target"
+        get() = "Immutable Inheritor"
 
     override fun getHint(element: PsiElement, file: PsiFile): String? {
-        val project = element.project
-        val qualifiedName = element.toUElementOfType<UClass>()?.qualifiedName ?: return null
-        val count = findDtoTypes(project, qualifiedName).size
+        val uClass = element.toUElementOfType<UClass>() ?: return null
+        uClass.uAnnotations.find { it.qualifiedName == MappedSuperclass::class.qualifiedName } ?: return null
+
+        val count = findInheritors(uClass.javaPsi).size
+
         return if (count > 0) {
-            "$count DTO Types"
+            "$count Inheritors"
         } else {
             null
         }
@@ -56,18 +57,15 @@ class DtoTypeTargetCodeVisionProvider : ImmutableCodeVisionProvider() {
         element: PsiElement,
         event: MouseEvent?
     ) {
-        val project = editor.project ?: return
-        val qualifiedName = element.toUElementOfType<UClass>()?.qualifiedName ?: return
+        val uClass = element.toUElementOfType<UClass>() ?: return
         getPsiElementPopup(
-            findDtoTypes(project, qualifiedName),
-            "Choose DTO Type"
+            findInheritors(uClass.javaPsi),
+            "Choose Inheritors"
         ).showInBestPositionFor(editor)
     }
 
-    private fun findDtoTypes(
-        project: Project,
-        qualifiedName: String
-    ): List<DtoPsiDtoType> = FilenameIndex.getAllFilesByExt(project, "dto")
-        .mapNotNull { it.toPsiFile(project)?.getChildOfType<DtoPsiRoot>() }
-        .find { it.exportStatement?.typeParts?.qualifiedName == qualifiedName }?.dtoTypes ?: emptyList()
+    private fun findInheritors(psiClass: PsiClass): List<PsiClass> {
+        return ClassInheritorsSearch.search(psiClass, psiClass.project.allScope(), false)
+            .filter { it.isImmutable() }
+    }
 }
