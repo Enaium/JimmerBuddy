@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.idea.base.util.allScope
 
 class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
     override val part: String = node.text
+    override fun getName(): String = part
     override fun reference(): PsiElement? {
         val parentElement = parent
         val facade = JavaPsiFacade.getInstance(project)

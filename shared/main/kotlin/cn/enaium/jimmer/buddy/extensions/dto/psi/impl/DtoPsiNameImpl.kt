@@ -34,6 +34,8 @@ class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
     override val value: String
         get() = node.text
 
+    override fun getName(): String = value
+
     override fun reference(): PsiElement? {
         val parentElement = parent
         return when (parentElement) {

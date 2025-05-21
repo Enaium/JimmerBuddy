@@ -18,16 +18,16 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.icons.AllIcons
 import com.intellij.lang.ASTNode
-import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiElement
+import com.intellij.psi.util.findParentOfType
+import org.jetbrains.kotlin.idea.base.util.allScope
 import javax.swing.Icon
 
-class DtoPsiDtoTypeImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiDtoType {
+class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType {
     override val modifiers: List<DtoPsiModifier>
         get() = findChildren<DtoPsiModifier>("/dtoType/modifier")
     override val name: DtoPsiName?
@@ -35,7 +35,21 @@ class DtoPsiDtoTypeImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiDtoType {
     override val body: DtoPsiDtoBody?
         get() = findChild<DtoPsiDtoBody>("/dtoType/dtoBody")
 
+    override fun getName(): String = name?.value ?: "Uknown Name"
+
     override fun getIcon(flags: Int): Icon {
         return AllIcons.Nodes.Type
+    }
+
+    override fun reference(): PsiElement? {
+        val name = name?.value ?: return null
+        val dtoPsiRoot = findParentOfType<DtoPsiRoot>() ?: return null
+        val exportType = dtoPsiRoot.exportStatement?.typeParts?.qualifiedName ?: return null
+        val exportPackage =
+            dtoPsiRoot.exportStatement?.packageParts?.qualifiedName ?: "${exportType.substringBeforeLast(".")}.dto"
+        val target =
+            JavaPsiFacade.getInstance(project).findClass("$exportPackage.$name", project.allScope())
+                ?: return null
+        return target
     }
 }

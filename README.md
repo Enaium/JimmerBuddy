@@ -19,6 +19,7 @@ A plugin that adds first-class support for Project Jimmer
 - Generate all set of Draft
 - DTO class member go to DTO file.
 - Execute SQL to clipboard.
+- DTO type count and navigation.
 
 ### First-class DTO development
 
