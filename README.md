@@ -20,6 +20,7 @@ A plugin that adds first-class support for Project Jimmer
 - DTO class member go to DTO file.
 - Execute SQL to clipboard.
 - DTO type count and navigation.
+- Immutable inheritor count and navigation.
 
 ### First-class DTO development
 
