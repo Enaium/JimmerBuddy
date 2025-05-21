@@ -37,6 +37,8 @@ class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
     override val value: String
         get() = node.text
 
+    override fun getName(): String = value
+
     override fun reference(): PsiElement? {
         val trace = getTrace(this)
         val typeName = this.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return null

@@ -28,10 +28,6 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
  * @author Enaium
  */
 abstract class DtoPsiNamedElement(node: ASTNode) : ANTLRPsiNode(node), DtoPsiElement, PsiNameIdentifierOwner {
-    override fun getName(): String {
-        return nameIdentifier.text
-    }
-
     override fun setName(name: String): DtoPsiElement {
         return this
     }
