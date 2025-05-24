@@ -7,6 +7,7 @@ export default defineAdditionalConfig({
     nav: [
       { text: "首页", link: "/zh" },
       { text: "指南", link: "/zh/guide/what-is-jimmerbuddy" },
+      { text: "参考", link: "/zh/reference/feature-inspection" },
     ],
     sidebar: {
       "/zh/guide/": {
