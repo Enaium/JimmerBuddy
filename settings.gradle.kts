@@ -1,7 +1,7 @@
 rootProject.name = "JimmerBuddy"
-when (gradle.startParameter.projectProperties["sinceBuild"]) {
-    "242" -> include("242")
-    else -> include("231")
-}
 
 include("common")
+include("core")
+include("since")
+include("since:231")
+include("since:242")
