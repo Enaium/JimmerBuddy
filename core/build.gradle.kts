@@ -6,12 +6,6 @@ plugins {
 group = "cn.enaium"
 version = "${property("version")}"
 
-sourceSets {
-    main {
-        resources.srcDir("../shared/src/main/resources")
-    }
-}
-
 repositories {
     mavenCentral()
     intellijPlatform {
@@ -38,6 +32,7 @@ dependencies {
     implementation(libs.kotlinpoet)
     implementation(libs.javapoet)
     implementation(libs.antlr4.intellij.adaptor)
+    implementation(libs.h2)
     implementation(project(":common"))
 }
 

@@ -23,7 +23,7 @@ import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptorFactory
 /**
  * @author Enaium
  */
-class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
+class BuddyTemplateFile : FileTemplateGroupDescriptorFactory {
 
     companion object {
         const val MAVEN_WRAPPER = "jimmer-maven-wrapper.properties"
@@ -34,6 +34,7 @@ class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
         const val GRADLE_TOML = "jimmer-gradle-toml.toml"
         const val JIMMER_DTO_HEAD = "jimmer-dto-head.dto"
         const val JIMMER_DTO_CONTENT = "jimmer-dto-content.dto"
+        const val GENERATE_ENTITY_DOC = "generate-entity-doc.txt"
     }
 
     override fun getFileTemplatesDescriptor(): FileTemplateGroupDescriptor {
@@ -46,6 +47,7 @@ class JimmerProjectTemplateFile : FileTemplateGroupDescriptorFactory {
         group.addTemplate(GRADLE_TOML)
         group.addTemplate(JIMMER_DTO_HEAD)
         group.addTemplate(JIMMER_DTO_CONTENT)
+        group.addTemplate(GENERATE_ENTITY_DOC)
         return group
     }
 }

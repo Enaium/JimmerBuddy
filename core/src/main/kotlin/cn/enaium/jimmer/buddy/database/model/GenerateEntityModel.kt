@@ -24,16 +24,20 @@ import com.intellij.openapi.observable.properties.PropertyGraph
  */
 class GenerateEntityModel : BaseState() {
     private val graph: PropertyGraph = PropertyGraph()
-    val relativePathProperty = graph.property<String>("")
-    val packageNameProperty = graph.property<String>("")
+    val relativePathProperty = graph.property("")
+    val packageNameProperty = graph.property("")
     val languageProperty = graph.property<Language>(Language.KOTLIN)
-    val commentProperty = graph.property<Boolean>(false)
-    val tableAnnotationProperty = graph.property<Boolean>(false)
-    val columnAnnotationProperty = graph.property<Boolean>(false)
-    val idViewAnnotationProperty = graph.property<Boolean>(false)
-    val joinTableAnnotationProperty = graph.property<Boolean>(false)
-    val primaryKeyNameProperty = graph.property<String>("id")
+    val commentProperty = graph.property(false)
+    val tableAnnotationProperty = graph.property(false)
+    val columnAnnotationProperty = graph.property(false)
+    val idViewAnnotationProperty = graph.property(false)
+    val joinTableAnnotationProperty = graph.property(false)
+    val primaryKeyNameProperty = graph.property("id")
     val associationProperty = graph.property<Association>(Association.REAL)
+    val tableNameRegexProperty = graph.property("")
+    val tableNameReplaceProperty = graph.property("")
+    val columnNameRegexProperty = graph.property("")
+    val columnNameReplaceProperty = graph.property("")
 
     val relativePath: String by relativePathProperty
     val packageName: String by packageNameProperty
@@ -45,6 +49,10 @@ class GenerateEntityModel : BaseState() {
     val joinTableAnnotation: Boolean by joinTableAnnotationProperty
     val primaryKeyName: String by primaryKeyNameProperty
     val association: Association by associationProperty
+    val tableNameRegex: String by tableNameRegexProperty
+    val tableNameReplace: String by tableNameReplaceProperty
+    val columnNameRegex: String by columnNameRegexProperty
+    val columnNameReplace: String by columnNameReplaceProperty
 
     enum class Language(val text: String) {
         KOTLIN("Kotlin"),

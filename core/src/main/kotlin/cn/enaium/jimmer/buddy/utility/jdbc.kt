@@ -110,7 +110,7 @@ internal fun DatabaseMetaData.getUniqueKeys(tableName: String): Set<UniqueKey> {
         }
     }
     return uniqueKey2Columns.map { (name, columns) ->
-        UniqueKey(name, tableName, columns.map { getColumns(tableName).first { column -> column.name == it } })
+        UniqueKey(name, tableName, columns.map { getColumns(tableName).first { column -> column.name == it } }.toSet())
     }.toSet()
 }
 
