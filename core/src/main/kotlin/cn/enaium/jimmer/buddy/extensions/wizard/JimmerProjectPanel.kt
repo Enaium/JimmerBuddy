@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.wizard
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.projectLocationField
 import com.intellij.ide.IdeBundle
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -141,19 +142,5 @@ class JimmerProjectPanel(propertyGraph: PropertyGraph, private val wizardContext
         wizardContext.projectName = entityNameProperty.get()
         wizardContext.defaultModuleName = entityNameProperty.get()
         wizardContext.getUserData(JimmerBuddy.PROJECT_MODEL_PROP_KEY)?.set(projectModel)
-    }
-
-    private fun Row.projectLocationField(
-        locationProperty: GraphProperty<String>,
-        wizardContext: WizardContext,
-    ): Cell<TextFieldWithBrowseButton> {
-        val fileChooserDescriptor =
-            FileChooserDescriptorFactory.createSingleLocalFileDescriptor()
-                .withFileFilter { it.isDirectory }
-                .withPathToTextConvertor(::getPresentablePath)
-                .withTextToPathConvertor(::getCanonicalPath)
-        val title = IdeBundle.message("title.select.project.file.directory", wizardContext.presentationName)
-        val property = locationProperty.transform(::getPresentablePath, ::getCanonicalPath)
-        return textFieldWithBrowseButton(title, wizardContext.project, fileChooserDescriptor).bindText(property)
     }
 }

@@ -19,10 +19,14 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.ForeignKey
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.extensions.template.BuddyTemplateFile
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.firstCharLowercase
 import cn.enaium.jimmer.buddy.utility.snakeToCamelCase
 import cn.enaium.jimmer.buddy.utility.toPlural
+import com.intellij.ide.fileTemplates.FileTemplateManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import org.babyfish.jimmer.sql.*
@@ -37,10 +41,13 @@ class KotlinEntityGenerate : EntityGenerate {
     val kotlinTypeMappings = JimmerBuddySetting.INSTANCE.state.typeMapping.mapValues { it.value.kotlinType }
 
     override fun generate(
-        projectDir: Path,
+        project: Project,
         generateEntity: GenerateEntityModel,
         tables: Set<cn.enaium.jimmer.buddy.database.model.Table>
     ): List<Path> {
+
+        val tables = replaceName(tables, generateEntity)
+
         val idSuffix = "_${generateEntity.primaryKeyName}"
 
         val commonColumns = getCommonColumns(tables)
@@ -108,6 +115,15 @@ class KotlinEntityGenerate : EntityGenerate {
                     table.remark?.also {
                         type.addKdoc(it)
                     }
+                }
+
+                try {
+                    val templateManager = FileTemplateManager.getInstance(project)
+                    templateManager.getInternalTemplate(BuddyTemplateFile.GENERATE_ENTITY_DOC).also {
+                        type.addKdoc(it.getText(templateManager.defaultProperties))
+                    }
+                } catch (_: Throwable) {
+
                 }
 
                 if (commonColumns.isNotEmpty()) type.addSuperinterface(ClassName(packageName, BASE_ENTITY))
@@ -265,8 +281,8 @@ class KotlinEntityGenerate : EntityGenerate {
         }
 
         // Write to file
-        return type2Builder.map { (tableName, typeBuilder) ->
-            projectDir.resolve(generateEntity.relativePath).also {
+        return type2Builder.mapNotNull { (tableName, typeBuilder) ->
+            project.guessProjectDir()?.toNioPath()?.resolve(generateEntity.relativePath)?.let {
                 FileSpec.builder(packageName, tableName)
                     .indent("    ")
                     .addType(typeBuilder.build()).build()

@@ -22,7 +22,7 @@ package cn.enaium.jimmer.buddy.database.model
 data class UniqueKey(
     val name: String,
     val tableName: String,
-    val columns: List<Column>,
+    val columns: Set<Column>,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

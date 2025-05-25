@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.panel.ImmutablePropsChoosePanel
-import cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile
+import cn.enaium.jimmer.buddy.extensions.template.BuddyTemplateFile
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
@@ -75,7 +75,7 @@ class NewDtoFileDialog(
                     textField().align(Align.FILL).bindText(model.immutableNameProperty)
                 }
                 row("Package Name:") {
-                    textField().align(Align.FILL).bindText(model.packageNameProperty)
+                    packageChooserField(project, model.packageNameProperty).align(Align.FILL)
                 }
                 row("DTO File Name:") {
                     textField().align(Align.FILL).bindText(model.dtoFileNameProperty)
@@ -118,7 +118,7 @@ class NewDtoFileDialog(
         findProjectDir(sourceFile)?.also { projectDir ->
             val dtoFile = projectDir.resolve("src/main/dto/${model.dtoFileName}.dto")
             val fileTemplateManager = FileTemplateManager.getInstance(project)
-            val dtoHeadTemplate = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.JIMMER_DTO_HEAD)
+            val dtoHeadTemplate = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_HEAD)
             val dtoHeadContent = dtoHeadTemplate.getText(
                 mapOf(
                     "IMMUTABLE_NAME" to model.immutableName,
@@ -126,7 +126,7 @@ class NewDtoFileDialog(
                 )
             )
             val dtoContentTemplate =
-                fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.JIMMER_DTO_CONTENT)
+                fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_CONTENT)
             val dtoContent = dtoContentTemplate.getText(
                 mapOf(
                     "DTO_TYPES" to listOf(

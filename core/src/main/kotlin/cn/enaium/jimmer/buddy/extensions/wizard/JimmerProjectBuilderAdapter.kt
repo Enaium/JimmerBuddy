@@ -16,7 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.wizard
 
-import cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile
+import cn.enaium.jimmer.buddy.extensions.template.BuddyTemplateFile
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.ide.wizard.GeneratorNewProjectWizardBuilderAdapter
@@ -245,7 +245,7 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
         val fileTemplateManager = FileTemplateManager.getInstance(project)
         when (projectModel.builder) {
             JimmerProjectModel.Builder.GRADLE -> {
-                val gradleWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_WRAPPER)
+                val gradleWrapper = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.GRADLE_WRAPPER)
                 val gradleWrapperContent =
                     gradleWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
                 val gradleWrapperPath = projectDir.resolve("gradle/wrapper/gradle-wrapper.properties")
@@ -253,7 +253,7 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
                     gradleWrapperPath.createParentDirectories()
                 }
                 gradleWrapperPath.writeText(gradleWrapperContent)
-                val gradleToml = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_TOML)
+                val gradleToml = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.GRADLE_TOML)
                 val gradleTomlContent = gradleToml.getText(
                     mapOf(
                         "versions" to versions,
@@ -263,7 +263,7 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
                 )
                 val gradleTomlPath = projectDir.resolve("gradle/libs.versions.toml")
                 gradleTomlPath.writeText(gradleTomlContent)
-                val gradleBuild = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_BUILD)
+                val gradleBuild = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.GRADLE_BUILD)
                 val gradleBuildContent = gradleBuild.getText(
                     mapOf(
                         "GROUP" to projectModel.group,
@@ -273,21 +273,21 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
                 )
                 val gradleBuildPath = projectDir.resolve("build.gradle.kts")
                 gradleBuildPath.writeText(gradleBuildContent)
-                val gradleSettings = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.GRADLE_SETTINGS)
+                val gradleSettings = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.GRADLE_SETTINGS)
                 val gradleSettingsContent = gradleSettings.getText(mapOf("ARTIFACT" to projectModel.artifact))
                 val gradleSettingsPath = projectDir.resolve("settings.gradle.kts")
                 gradleSettingsPath.writeText(gradleSettingsContent)
             }
 
             JimmerProjectModel.Builder.MAVEN -> {
-                val mavenWrapper = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.MAVEN_WRAPPER)
+                val mavenWrapper = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.MAVEN_WRAPPER)
                 val mavenWrapperContent = mavenWrapper.getText(mapOf("WRAPPER_VERSION" to projectModel.wrapperVersion))
                 val mavenWrapperPath = projectDir.resolve(".mvn/wrapper/maven-wrapper.properties")
                 if (mavenWrapperPath.exists().not()) {
                     mavenWrapperPath.createParentDirectories()
                 }
                 mavenWrapperPath.writeText(mavenWrapperContent)
-                val mavenPom = fileTemplateManager.getInternalTemplate(JimmerProjectTemplateFile.MAVEN_POM)
+                val mavenPom = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.MAVEN_POM)
                 val mavenPomContent = mavenPom.getText(
                     mapOf(
                         "GROUP" to projectModel.group,

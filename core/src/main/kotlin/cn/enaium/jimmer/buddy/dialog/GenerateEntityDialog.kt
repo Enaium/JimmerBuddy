@@ -24,6 +24,8 @@ import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.dialog.panel.TableTreeTable
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.getTables
+import cn.enaium.jimmer.buddy.utility.packageChooserField
+import cn.enaium.jimmer.buddy.utility.relativeLocationField
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.DialogWrapper
@@ -45,6 +47,7 @@ import java.util.*
 import java.util.logging.Logger
 import javax.swing.JComponent
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 import kotlin.io.path.walk
@@ -78,10 +81,10 @@ class GenerateEntityDialog(
         return borderPanel {
             addToTop(panel {
                 row("Relative Path:") {
-                    textField().align(Align.FILL).bindText(generateEntityModel.relativePathProperty)
+                    relativeLocationField(project, generateEntityModel.relativePathProperty).align(Align.FILL)
                 }
                 row("Package Name:") {
-                    textField().align(Align.FILL).bindText(generateEntityModel.packageNameProperty)
+                    packageChooserField(project, generateEntityModel.packageNameProperty).align(Align.FILL)
                 }
                 row("Language:") {
                     JimmerBuddy.Services.UI.segmentedButtonText(this, GenerateEntityModel.Language.entries) {
@@ -105,6 +108,14 @@ class GenerateEntityDialog(
                             it.text
                         }.bind(generateEntityModel.associationProperty)
                     }
+                    row("Table Name Regex:") {
+                        textField().align(Align.FILL).bindText(generateEntityModel.tableNameRegexProperty)
+                        textField().align(Align.FILL).bindText(generateEntityModel.tableNameReplaceProperty)
+                    }
+                    row("Column Name Regex:") {
+                        textField().align(Align.FILL).bindText(generateEntityModel.columnNameRegexProperty)
+                        textField().align(Align.FILL).bindText(generateEntityModel.columnNameReplaceProperty)
+                    }
                 }
             })
             addToCenter(tableTreeTable)
@@ -113,9 +124,9 @@ class GenerateEntityDialog(
 
     private fun getTables(): Set<Table> {
         val uri = databaseItem.uri
-
+        val isDDL = uri.startsWith("file:")
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {
-            if (uri.startsWith("file:")) {
+            if (isDDL) {
                 return@let JdbcDriver.H2
             } else {
                 Messages.showErrorDialog(
@@ -146,23 +157,38 @@ class GenerateEntityDialog(
             }
         }
 
-        listOfNotNull(
-            Path(System.getProperty("user.home")).resolve(".gradle"),
-            System.getenv("GRADLE_USER_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
-        ).forEach { path ->
-            path.resolve("caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.artifact}")
-                .walk().findLast {
-                    it.isDirectory().not()
-                            && it.name.endsWith("-sources.jar").not()
-                            && it.name.endsWith("-javadoc.jar").not()
-                            && it.name.endsWith(".jar")
-                }?.also {
-                    driverJarFile = it
-                }
+        if (driverJarFile == null) {
+            listOfNotNull(
+                Path(System.getProperty("user.home")).resolve(".gradle"),
+                System.getenv("GRADLE_USER_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
+            ).forEach { path ->
+                path.resolve("caches/modules-2/files-2.1/${jdbcDriver.group}/${jdbcDriver.artifact}")
+                    .walk().findLast {
+                        it.isDirectory().not()
+                                && it.name.endsWith("-sources.jar").not()
+                                && it.name.endsWith("-javadoc.jar").not()
+                                && it.name.endsWith(".jar")
+                    }?.also {
+                        driverJarFile = it
+                    }
+            }
         }
 
         if (driverJarFile == null) {
-            Messages.showErrorDialog("Failed to find driver jar, please check your maven or gradle cache", "Error")
+            driverJarFile = Path(databaseItem.driverFile).takeIf { it.exists() }
+        }
+
+        if (driverJarFile == null) {
+            if (isDDL) {
+                Messages.showErrorDialog(
+                    "Failed to find H2 driver jar, please check your maven or gradle cache",
+                    "Error"
+                )
+            } else if (databaseItem.driverFile.isNotBlank()) {
+                Messages.showErrorDialog("Driver file is not found", "Error");
+            } else {
+                Messages.showErrorDialog("Failed to find driver jar, please check your maven or gradle cache", "Error")
+            }
             return emptySet()
         }
 
@@ -184,11 +210,10 @@ class GenerateEntityDialog(
         }
     }
 
-
     private fun getConnection(): Connection {
-        return URI.create(databaseItem.uri).takeIf { it.scheme == "file" }?.let { ddl ->
+        return URI.create(databaseItem.uri.replace("\\", "/")).takeIf { it.scheme == "file" }?.let { ddl ->
             DriverManager.getConnection(
-                "jdbc:h2:mem:test;DATABASE_TO_LOWER=true;INIT=RUNSCRIPT FROM '${
+                "jdbc:h2:mem:jimmer-buddy-ddl;DATABASE_TO_LOWER=true;INIT=RUNSCRIPT FROM '${
                     ddl.toURL().toPath().absolutePath.replace(
                         "\\",
                         "/"
@@ -226,10 +251,9 @@ class GenerateEntityDialog(
             }
         }
 
-        val projectDir = project.guessProjectDir() ?: return
         JimmerBuddy.getWorkspace(project).asyncRefresh(
             generate.generate(
-                projectDir.toNioPath(),
+                project,
                 generateEntityModel,
                 result
             )

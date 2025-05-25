@@ -21,7 +21,7 @@
                     anchor="bottom" icon="/icons/log.svg"/>
         <moduleBuilder builderClass="cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectBuilderAdapter"
                        order="first"/>
-        <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.JimmerProjectTemplateFile"/>
+        <fileTemplateGroup implementation="cn.enaium.jimmer.buddy.extensions.template.BuddyTemplateFile"/>
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
         <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.ImmutableLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.insight.ImmutableLineMarkerProvider"/>

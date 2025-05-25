@@ -3,8 +3,12 @@ name: Deploy Document
 on:
   push:
     branches: [master]
+    paths:
+      - 'document/**'
   pull_request:
     branches: [master]
+    paths:
+      - 'document/**'
   workflow_dispatch:
 
 permissions:

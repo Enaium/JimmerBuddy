@@ -110,7 +110,8 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
         var password: String = "",
         var catalog: String = "",
         var schemaPattern: String = "",
-        var tableNamePattern: String = ""
+        var tableNamePattern: String = "",
+        var driverFile: String = "",
     )
 
     data class JavaToKotlin(

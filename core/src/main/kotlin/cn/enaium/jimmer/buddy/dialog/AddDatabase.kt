@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
+import cn.enaium.jimmer.buddy.utility.jarFileChooserField
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.DialogWrapper
@@ -58,6 +59,9 @@ class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
             row("Table Name Pattern:") {
                 textField().align(Align.FILL).bindText(databaseModel.tableNamePatternProperty)
             }
+            row("Driver File:") {
+                jarFileChooserField(databaseModel.driverFileProperty).align(Align.FILL)
+            }
         }
     }
 
@@ -73,19 +77,21 @@ class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
             databaseModel.password,
             databaseModel.catalog,
             databaseModel.schemaPattern,
-            databaseModel.tableNamePattern
+            databaseModel.tableNamePattern,
+            databaseModel.driverFile
         )
         super.doOKAction()
     }
 
     private inner class DatabaseModel : BaseState() {
         private val graph: PropertyGraph = PropertyGraph()
-        val uriProperty = graph.property<String>(select?.uri ?: "")
+        val uriProperty = graph.property(select?.uri ?: "")
         val usernameProperty = graph.property<String>(select?.username ?: "")
         val passwordProperty = graph.property<String>(select?.password ?: "")
         val catalogProperty = graph.property<String>(select?.catalog ?: "")
         val schemaPatternProperty = graph.property<String>(select?.schemaPattern ?: "")
         val tableNamePatternProperty = graph.property<String>(select?.tableNamePattern ?: "")
+        val driverFileProperty = graph.property<String>(select?.driverFile ?: "")
 
         val uri: String by uriProperty
         val username: String by usernameProperty
@@ -93,5 +99,6 @@ class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
         val catalog: String by catalogProperty
         val schemaPattern: String by schemaPatternProperty
         val tableNamePattern: String by tableNamePatternProperty
+        val driverFile: String by driverFileProperty
     }
 }
