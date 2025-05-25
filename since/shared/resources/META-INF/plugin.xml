@@ -95,6 +95,26 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.OrderedPropAnnotationInspection"
         />
+        <localInspection
+                displayName="IdAnnotation"
+                shortName="IdAnnotation"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.IdAnnotationInspection"
+        />
+        <localInspection
+                displayName="SuperType"
+                shortName="SuperType"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.SuperTypeInspection"
+        />
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>

@@ -31,17 +31,17 @@ class ImmutableAnnotationInspection : AbstractLocalInspectionTool() {
         holder: ProblemsHolder,
         isOnTheFly: Boolean
     ) {
-        val problem = if (element is PsiClass && element.hasImmutableAnnotation() && !element.isInterface) {
-            true
-        } else if (element is KtClass && element.hasImmutableAnnotation() && !element.isInterface()) {
-            true
-        } else {
-            false
-        }
-        if (problem) {
+        val descriptionTemplate =
+            "You can not use @Immutable annotation on here because Immutable must be an interface."
+        if (element is PsiClass && element.hasImmutableAnnotation() && !element.isInterface) {
             holder.registerProblem(
-                element,
-                "You can not use @Immutable annotation on here because Immutable must be an interface."
+                element.nameIdentifier ?: return,
+                descriptionTemplate
+            )
+        } else if (element is KtClass && element.hasImmutableAnnotation() && !element.isInterface()) {
+            holder.registerProblem(
+                element.nameIdentifier ?: return,
+                descriptionTemplate
             )
         }
     }

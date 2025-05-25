@@ -17,18 +17,14 @@
 package cn.enaium.jimmer.buddy.extensions.completion
 
 import cn.enaium.jimmer.buddy.utility.annotName
-import cn.enaium.jimmer.buddy.utility.isImmutable
 import com.intellij.codeInsight.completion.CompletionConfidence
 import com.intellij.codeInsight.completion.SkipAutopopupInStrings
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ThreeState
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.Entity
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 
 /**
  * @author Enaium
