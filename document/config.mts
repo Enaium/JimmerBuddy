@@ -29,6 +29,11 @@ export default defineAdditionalConfig({
               { text: "DTO Lanauge", link: "dto-language" },
             ],
           },
+          {
+            text: "Reference",
+            base: "/reference/",
+            link: "feature-inspection",
+          },
         ],
       },
       "/reference/": {

@@ -61,6 +61,11 @@ export default defineAdditionalConfig({
               { text: "可视化创建", link: "visualization-create" },
             ],
           },
+          {
+            text: "参考",
+            base: "/zh/reference/",
+            link: "feature-inspection",
+          },
         ],
       },
     },
