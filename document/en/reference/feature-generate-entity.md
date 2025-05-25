@@ -12,7 +12,7 @@ JimmerBuddy can generate entity classes from the databases or ddl files.
 
 4. Input some information about the database or ddl file.
 
-![20250525162253](https://s2.loli.net/2025/05/25/C1REKkceOMHq2AP.png)
+![20250525220125](https://s2.loli.net/2025/05/25/JfedxGM3hpzwI1V.png)
 
 5. Click `OK` button to save the configuration.
 

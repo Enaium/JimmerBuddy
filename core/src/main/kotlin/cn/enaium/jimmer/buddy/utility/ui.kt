@@ -110,14 +110,22 @@ fun Row.fileChooserField(
             .withFileFilter { it.extension == extension }
             .withPathToTextConvertor {
                 if (uri) {
-                    Path(it).toUri().toString()
+                    try {
+                        Path(it).toUri().toString()
+                    } catch (_: Throwable) {
+                        getPresentablePath(it)
+                    }
                 } else {
                     getPresentablePath(it)
                 }
             }
             .withTextToPathConvertor {
                 if (uri) {
-                    URI(it).toPath().toAbsolutePath().pathString
+                    try {
+                        URI(it).toPath().toAbsolutePath().pathString
+                    } catch (_: Throwable) {
+                        getCanonicalPath(it)
+                    }
                 } else {
                     getCanonicalPath(it)
                 }

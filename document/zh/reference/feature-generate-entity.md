@@ -12,7 +12,7 @@ JimmerBuddy 可以从数据库或 ddl 文件生成实体类。
 3. 点击 `+` 按钮添加数据库或 ddl 文件。
 4. 输入一些关于数据库或 ddl 文件的信息。
 
-![20250525162253](https://s2.loli.net/2025/05/25/C1REKkceOMHq2AP.png)
+![20250525220125](https://s2.loli.net/2025/05/25/JfedxGM3hpzwI1V.png)
 
 5. 点击 `OK` 按钮保存配置。
 
