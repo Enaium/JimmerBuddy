@@ -125,39 +125,45 @@ class GenerateEntityDialog(
     private fun getTables(): Set<Table> {
         val uri = databaseItem.uri
         val isDDL = uri.startsWith("file:")
+
+        var driverJarFile = Path(databaseItem.driverFile).takeIf { it.exists() }
+        val driverName = databaseItem.driverName.takeIf { it.isNotBlank() }
+
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {
             if (isDDL) {
                 return@let JdbcDriver.H2
-            } else {
+            } else if (driverJarFile == null) {
                 Messages.showErrorDialog(
                     "Unsupported JDBC Driver(${JdbcDriver.entries.joinToString(", ") { it.scheme }})",
                     "Error"
                 )
                 return emptySet()
+            } else {
+                null
             }
         }
 
-        var driverJarFile: Path? = null
-
-        listOfNotNull(
-            Path(System.getProperty("user.home")).resolve(".m2"),
-            System.getenv("M2_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
-        ).forEach { path ->
-            path.resolve(
-                "repository/${
-                    jdbcDriver.group.split(".").joinToString("/")
-                }/${jdbcDriver.artifact}"
-            ).walk().findLast {
-                it.isDirectory().not()
-                        && it.name.endsWith("-sources.jar").not()
-                        && it.name.endsWith("-javadoc.jar").not()
-                        && it.name.endsWith(".jar")
-            }?.also {
-                driverJarFile = it
+        if (driverJarFile == null && jdbcDriver != null) {
+            listOfNotNull(
+                Path(System.getProperty("user.home")).resolve(".m2"),
+                System.getenv("M2_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
+            ).forEach { path ->
+                path.resolve(
+                    "repository/${
+                        jdbcDriver.group.split(".").joinToString("/")
+                    }/${jdbcDriver.artifact}"
+                ).walk().findLast {
+                    it.isDirectory().not()
+                            && it.name.endsWith("-sources.jar").not()
+                            && it.name.endsWith("-javadoc.jar").not()
+                            && it.name.endsWith(".jar")
+                }?.also {
+                    driverJarFile = it
+                }
             }
         }
 
-        if (driverJarFile == null) {
+        if (driverJarFile == null && jdbcDriver != null) {
             listOfNotNull(
                 Path(System.getProperty("user.home")).resolve(".gradle"),
                 System.getenv("GRADLE_USER_HOME")?.takeIf { it.isNotBlank() }?.let { Path.of(it) },
@@ -172,10 +178,6 @@ class GenerateEntityDialog(
                         driverJarFile = it
                     }
             }
-        }
-
-        if (driverJarFile == null) {
-            driverJarFile = Path(databaseItem.driverFile).takeIf { it.exists() }
         }
 
         if (driverJarFile == null) {
@@ -195,7 +197,7 @@ class GenerateEntityDialog(
         DriverManager.registerDriver(
             DiverWrapper(
                 Class.forName(
-                    jdbcDriver.className, true,
+                    jdbcDriver?.className ?: driverName, true,
                     URLClassLoader(arrayOf(driverJarFile.toUri().toURL()), this.javaClass.classLoader)
                 ).getConstructor()
                     .newInstance() as Driver

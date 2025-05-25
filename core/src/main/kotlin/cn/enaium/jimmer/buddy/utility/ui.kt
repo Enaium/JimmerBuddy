@@ -32,15 +32,16 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.ui.addExtension
 import com.intellij.openapi.ui.getCanonicalPath
 import com.intellij.openapi.ui.getPresentablePath
-import com.intellij.ui.components.fields.ExpandableTextField
 import com.intellij.ui.components.fields.ExtendableTextField
 import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.bindText
+import java.net.URI
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.pathString
 import kotlin.io.path.relativeTo
+import kotlin.io.path.toPath
 
 /**
  * @author Enaium
@@ -99,14 +100,27 @@ fun Row.relativeLocationField(
     return textFieldWithBrowseButton("Select Source", project, fileChooserDescriptor).bindText(property)
 }
 
-fun Row.jarFileChooserField(
-    locationProperty: GraphProperty<String>,
+fun Row.fileChooserField(
+    property: GraphProperty<String>,
+    extension: String,
+    uri: Boolean = false
 ): Cell<TextFieldWithBrowseButton> {
     val fileChooserDescriptor =
-        FileChooserDescriptorFactory.createSingleFileDescriptor("jar")
-            .withFileFilter { it.isDirectory }
-            .withPathToTextConvertor(::getPresentablePath)
-            .withTextToPathConvertor(::getCanonicalPath)
-    val property = locationProperty.transform(::getPresentablePath, ::getCanonicalPath)
-    return textFieldWithBrowseButton("Jar Chooser", null, fileChooserDescriptor).bindText(property)
+        FileChooserDescriptorFactory.createSingleLocalFileDescriptor()
+            .withFileFilter { it.extension == extension }
+            .withPathToTextConvertor {
+                if (uri) {
+                    Path(it).toUri().toString()
+                } else {
+                    getPresentablePath(it)
+                }
+            }
+            .withTextToPathConvertor {
+                if (uri) {
+                    URI(it).toPath().toAbsolutePath().pathString
+                } else {
+                    getCanonicalPath(it)
+                }
+            }
+    return textFieldWithBrowseButton("File Chooser", null, fileChooserDescriptor).bindText(property)
 }
