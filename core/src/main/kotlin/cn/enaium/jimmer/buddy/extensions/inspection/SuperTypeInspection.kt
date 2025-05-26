@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.annotations
+import cn.enaium.jimmer.buddy.utility.isImmutable
 import cn.enaium.jimmer.buddy.utility.type
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClass
@@ -25,7 +26,6 @@ import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiReferenceList
 import org.babyfish.jimmer.sql.MappedSuperclass
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 /**
@@ -38,7 +38,7 @@ class SuperTypeInspection : AbstractLocalInspectionTool() {
         isOnTheFly: Boolean
     ) {
         val descriptionTemplate = "Super type must be annotated with @MappedSuperclass"
-        if (element is PsiClass) {
+        if (element is PsiClass && element.isImmutable()) {
             element.getChildrenOfType<PsiReferenceList>().forEach { psiReferenceList ->
                 psiReferenceList.getChildrenOfType<PsiJavaCodeReferenceElement>()
                     .forEach { psiJavaCodeReferenceElement ->
@@ -47,7 +47,7 @@ class SuperTypeInspection : AbstractLocalInspectionTool() {
                         }
                     }
             }
-        } else if (element is KtClass) {
+        } else if (element is KtClass && element.isImmutable()) {
             element.superTypeListEntries.forEach { superTypeListEntry ->
                 superTypeListEntry.typeReference?.type()?.ktClass?.annotations()
                     ?.find { annotation -> annotation.fqName == MappedSuperclass::class.qualifiedName }
