@@ -484,39 +484,39 @@ SqlStringLiteral
     ;
 
 CharacterLiteral
-	:
-	'\'' SingleCharacter '\''
-	|
-	'\'' EscapeSequence '\''
-	;
+    :
+    '\'' SingleCharacter '\''
+    |
+    '\'' EscapeSequence '\''
+    ;
 
 fragment
 SingleCharacter
-	:
-	~['\\\r\n]
-	;
+    :
+    ~['\\\r\n]
+    ;
 
 StringLiteral
-	:
-	'"' StringCharacters? '"'
-	;
+    :
+    '"' StringCharacters? '"'
+    ;
 
 fragment
 StringCharacters
-	:
-	StringCharacter+
-	;
+    :
+    StringCharacter+
+    ;
 
 fragment
 StringCharacter
-	:
-	~["\\\r\n] | EscapeSequence
-	;
+    :
+    ~["\\\r\n] | EscapeSequence
+    ;
 
 fragment
 EscapeSequence
-	:
-	'\\' [btnfr"'\\]
+    :
+    '\\' [btnfr"'\\]
     |
     UnicodeEscape // This is not in the spec but prevents having to preprocess the input
     ;
@@ -534,11 +534,15 @@ HexDigit
     ;
 
 IntegerLiteral
-	:
-	'0' | [1-9][0-9]*
-	;
+    :
+    '0' | [1-9][0-9]*
+    ;
 
 FloatingPointLiteral
     :
     [0-9]+ DOT [0-9]+
+    ;
+
+ERRCHAR
+    :   .   -> channel(HIDDEN)
     ;

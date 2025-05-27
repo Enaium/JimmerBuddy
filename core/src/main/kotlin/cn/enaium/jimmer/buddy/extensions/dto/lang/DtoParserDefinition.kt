@@ -48,8 +48,10 @@ class DtoParserDefinition : ParserDefinition {
         return DtoParserAdaptor
     }
 
+    val file = IFileElementType(DtoLanguage)
+
     override fun getFileNodeType(): IFileElementType {
-        return IFileElementType(DtoLanguage)
+        return file
     }
 
     override fun getWhitespaceTokens(): TokenSet {
