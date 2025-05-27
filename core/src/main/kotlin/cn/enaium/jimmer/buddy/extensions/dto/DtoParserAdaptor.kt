@@ -30,13 +30,9 @@ object DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
     ): ParseTree? {
         parser?.removeParseListeners()
         return if (root is IFileElementType) {
-            try {
-                (parser as? DtoParser)?.dto()
-            } catch (_: Throwable) {
-                null
-            }
+            (parser as DtoParser).dto()
         } else {
-            null
+            throw UnsupportedOperationException("Cannot parse ${root?.javaClass?.name}")
         }
     }
 }
