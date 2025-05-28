@@ -16,11 +16,16 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumMapping
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 /**
  * @author Enaium
  */
-class DtoPsiEnumMappingImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiEnumMapping
+class DtoPsiEnumMappingImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiEnumMapping {
+    override val name: DtoPsiName?
+        get() = findChild<DtoPsiName>("/enumMapping/name")
+}
