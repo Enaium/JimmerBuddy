@@ -52,12 +52,14 @@ interface EntityGenerate {
                 }.toSet(),
                 primaryKeys = table.primaryKeys.map { primaryKey ->
                     primaryKey.copy(
-                        column = primaryKey.column.copy(
-                            name = primaryKey.column.name.replace(
-                                Regex(generateEntity.columnNameRegex),
-                                generateEntity.columnNameReplace
+                        columns = primaryKey.columns.map { column ->
+                            column.copy(
+                                name = column.name.replace(
+                                    Regex(generateEntity.columnNameRegex),
+                                    generateEntity.columnNameReplace
+                                )
                             )
-                        )
+                        }.toSet()
                     )
                 }.toSet(),
                 foreignKeys = table.foreignKeys.map { foreignKey ->

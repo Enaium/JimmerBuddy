@@ -108,6 +108,11 @@ class KotlinEntityGenerate : EntityGenerate {
                 return@forEach
             }
 
+            // Skip middle table
+            if (table.columns.size == 2 && table.primaryKeys.size == 1 && table.primaryKeys.first().columns.size == 2) {
+                return@forEach
+            }
+
             val typeName = table.name.snakeToCamelCase()
             TypeSpec.interfaceBuilder(ClassName(packageName, typeName)).let { type ->
 
@@ -161,9 +166,14 @@ class KotlinEntityGenerate : EntityGenerate {
                                 }
                             }
 
+                            if (tables.find { it.name == column.tableName }?.primaryKeys?.any { primaryKey -> primaryKey.columns.any { it.name == column.name } } == true) {
+                                propertyBuilder.addAnnotation(Id::class)
+                            }
+
                             if (column.name.endsWith(idSuffix, true)) {
                                 propertyBuilder.addAnnotation(IdView::class)
                             }
+
                             propertyBuilder.build()
                         }
                 )

@@ -203,10 +203,10 @@ class GenerateEntityDialog(
                     .newInstance() as Driver
             )
         )
-        return getConnection().use {
-            it.metaData.getTables(
+        return getConnection().use { connection ->
+            connection.metaData.getTables(
                 catalog = databaseItem.catalog.takeIf { it.isNotBlank() },
-                schemaPattern = databaseItem.schemaPattern.takeIf { it.isNotBlank() },
+                schemaPattern = if (isDDL) "public" else databaseItem.schemaPattern.takeIf { it.isNotBlank() },
                 tableNamePattern = databaseItem.tableNamePattern.takeIf { it.isNotBlank() },
             )
         }

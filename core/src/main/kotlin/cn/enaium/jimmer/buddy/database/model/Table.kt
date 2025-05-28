@@ -20,6 +20,8 @@ package cn.enaium.jimmer.buddy.database.model
  * @author Enaium
  */
 data class Table(
+    val catalog: String,
+    val schema: String,
     val name: String,
     var remark: String?,
     val columns: Set<Column>,

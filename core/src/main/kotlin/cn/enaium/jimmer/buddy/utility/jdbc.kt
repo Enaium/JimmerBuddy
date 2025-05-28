@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.database.model.*
+import org.jetbrains.kotlin.idea.gradleTooling.get
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.util.concurrent.CopyOnWriteArraySet
@@ -25,7 +26,20 @@ import java.util.concurrent.CopyOnWriteArraySet
  * @author Enaium
  */
 internal enum class ColumnLabel {
-    COLUMN_NAME, TABLE_NAME, TYPE_NAME, REMARKS, COLUMN_DEF, NULLABLE, PK_NAME, FKCOLUMN_NAME, PKTABLE_NAME, PKCOLUMN_NAME, FK_NAME, INDEX_NAME
+    COLUMN_NAME,
+    TABLE_NAME,
+    TYPE_NAME,
+    REMARKS,
+    COLUMN_DEF,
+    NULLABLE,
+    PK_NAME,
+    FKCOLUMN_NAME,
+    PKTABLE_NAME,
+    PKCOLUMN_NAME,
+    FK_NAME,
+    INDEX_NAME,
+    TABLE_CAT,
+    TABLE_SCHEM
 }
 
 private fun ResultSet.toColumn(tableName: String): Column {
@@ -48,12 +62,14 @@ internal fun DatabaseMetaData.getTables(
         val tables = mutableSetOf<Table>()
         while (tableResult.next()) {
             val tableName = tableResult.getString(ColumnLabel.TABLE_NAME.name)
+            val catalog = tableResult.getString(ColumnLabel.TABLE_CAT.name)
+            val schema = tableResult.getString(ColumnLabel.TABLE_SCHEM.name)
             val remark = tableResult.getString(ColumnLabel.REMARKS.name)
             val columns = getColumns(tableName)
             val primaryKeys = getPrimaryKeys(tableName)
             val foreignKeys = getForeignKeys(tableName)
             val uniqueKeys = getUniqueKeys(tableName)
-            tables.add(Table(tableName, remark, columns, primaryKeys, foreignKeys, uniqueKeys))
+            tables.add(Table(catalog, schema, tableName, remark, columns, primaryKeys, foreignKeys, uniqueKeys))
         }
         tables
     }
@@ -71,13 +87,19 @@ internal fun DatabaseMetaData.getColumns(tableName: String): Set<Column> {
 
 internal fun DatabaseMetaData.getPrimaryKeys(tableName: String): Set<PrimaryKey> {
     return getPrimaryKeys(null, null, tableName).use { primaryKey ->
-        val primaryKeys = mutableSetOf<PrimaryKey>()
+        val primaryKeys = mutableMapOf<String, PrimaryKey>()
         while (primaryKey.next()) {
             val columnName = primaryKey.getString(ColumnLabel.COLUMN_NAME.name)
             val column = getColumns(tableName).first { it.name == columnName }
-            primaryKeys.add(PrimaryKey(primaryKey.getString(ColumnLabel.PK_NAME.name), tableName, column))
+            val name = primaryKey.getString(ColumnLabel.PK_NAME.name)
+            if (primaryKeys.contains(name)) {
+                val pk = primaryKeys[name] ?: break
+                primaryKeys[name] = pk.copy(columns = pk.columns + column)
+            } else {
+                primaryKeys[name] = PrimaryKey(name, tableName, setOf(column))
+            }
         }
-        primaryKeys
+        primaryKeys.values.toSet()
     }
 }
 

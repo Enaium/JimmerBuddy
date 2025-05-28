@@ -42,7 +42,7 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
     }
 
     data class Setting(
-        var databases: List<DatabaseItem> = listOf<DatabaseItem>(),
+        var databases: List<DatabaseItem> = listOf(),
         var typeMapping: Map<String, JavaToKotlin> = mapOf(
             "tinyint" to JavaToKotlin(java.lang.Byte::class.java.name, Byte::class.qualifiedName!!),
             "smallint" to JavaToKotlin(
@@ -61,6 +61,14 @@ class JimmerBuddySetting : PersistentStateComponent<JimmerBuddySetting.Setting> 
             "numeric" to JavaToKotlin(
                 BigDecimal::class.java.name,
                 BigDecimal::class.qualifiedName!!
+            ),
+            "character" to JavaToKotlin(
+                Character::class.java.name,
+                Char::class.qualifiedName!!
+            ),
+            "character varying" to JavaToKotlin(
+                java.lang.String::class.java.name,
+                String::class.qualifiedName!!
             ),
             "varchar" to JavaToKotlin(
                 java.lang.String::class.java.name,
