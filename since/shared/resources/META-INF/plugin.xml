@@ -168,6 +168,8 @@
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoPairedBraceMatcher"/>
         <lang.quoteHandler language="JimmerBuddy.DTO"
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>
+        <spellchecker.support language="JimmerBuddy.DTO"
+                              implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>
         <consoleFilterProvider implementation="cn.enaium.jimmer.buddy.extensions.console.ExecuteSqlFilter"
                                order="first"/>
         <codeInsight.daemonBoundCodeVisionProvider
