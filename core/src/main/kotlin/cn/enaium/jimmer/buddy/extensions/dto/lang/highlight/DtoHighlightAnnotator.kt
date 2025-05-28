@@ -17,26 +17,23 @@
 package cn.enaium.jimmer.buddy.extensions.dto.lang.highlight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dto.DtoParser
 import cn.enaium.jimmer.buddy.dto.DtoParser.AT
 import cn.enaium.jimmer.buddy.dto.DtoParser.HASH
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotation
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumMapping
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.findParentOfType
 
@@ -67,6 +64,11 @@ class DtoHighlightAnnotator : Annotator {
         DefaultLanguageHighlighterColors.METADATA
     )
 
+    val constant = createTextAttributesKey(
+        "${JimmerBuddy.DTO_LANGUAGE_ID}.CONSTANT",
+        DefaultLanguageHighlighterColors.CONSTANT
+    )
+
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val elementType = element.elementType
         when (element) {
@@ -74,6 +76,8 @@ class DtoHighlightAnnotator : Annotator {
             is DtoPsiProp -> property
             is DtoPsiAlias -> variable
             is DtoPsiName -> element.findParentOfType<DtoPsiMacro>()?.let { macro }
+                ?: element.findParentOfType<DtoPsiEnumMapping>()?.let { constant }
+
             is DtoPsiPart -> element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
             else -> when (elementType) {
                 TOKEN[HASH] -> {

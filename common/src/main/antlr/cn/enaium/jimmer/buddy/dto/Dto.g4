@@ -377,7 +377,7 @@ enumBody
 
 enumMapping
     :
-    constant = Identifier COLON
+    constant = name COLON
     (
         value = StringLiteral | (negative = MINUS)? value = IntegerLiteral
     )
