@@ -29,7 +29,6 @@ import com.intellij.ui.components.JBTextField
 import com.intellij.ui.treeStructure.treetable.TreeColumnInfo
 import com.intellij.util.ui.ColumnInfo
 import java.awt.BorderLayout
-import java.awt.Component
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -41,6 +40,7 @@ import javax.swing.table.TableCellRenderer
  */
 class TableTreeTable(val tables: Set<Table>) : JPanel() {
     private val root = DefaultNode()
+    private val schemaNodes = mutableMapOf<String, SchemaNode>()
 
     init {
         layout = BorderLayout()
@@ -74,7 +74,17 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                     }
                 })
             }
-            root.add(tableNode)
+
+            if (schemaNodes.contains(table.schema)) {
+                schemaNodes[table.schema]?.add(tableNode)
+            } else {
+                schemaNodes[table.schema] = SchemaNode(table.schema).also {
+                    it.add(tableNode)
+                }
+            }
+        }
+        schemaNodes.forEach {
+            root.add(it.value)
         }
         val treeTable = CheckboxTreeTable(
             root,
@@ -86,7 +96,7 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
 
     private class ColumnType(name: String) : ColumnInfo<Any, Any>(name) {
         override fun valueOf(p0: Any): Any? {
-            return (p0 as? ColumnNode)?.column?.type
+            return (p0 as? ColumnNode)?.column?.type?.lowercase()
         }
 
         override fun isCellEditable(item: Any): Boolean {
@@ -126,40 +136,46 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
         }
 
         override fun getEditor(item: Any): TableCellEditor? {
-            return if (item is TableNode) {
-                DefaultCellEditor(JBTextField().apply {
-                    document.addDocumentListener(object : DocumentListener {
-                        override fun insertUpdate(e: DocumentEvent) {
-                            item.table.remark = text
-                        }
+            return when (item) {
+                is TableNode -> {
+                    DefaultCellEditor(JBTextField().apply {
+                        document.addDocumentListener(object : DocumentListener {
+                            override fun insertUpdate(e: DocumentEvent) {
+                                item.table.remark = text
+                            }
 
-                        override fun removeUpdate(e: DocumentEvent) {
-                            item.table.remark = text
-                        }
+                            override fun removeUpdate(e: DocumentEvent) {
+                                item.table.remark = text
+                            }
 
-                        override fun changedUpdate(e: DocumentEvent) {
-                            item.table.remark = text
-                        }
+                            override fun changedUpdate(e: DocumentEvent) {
+                                item.table.remark = text
+                            }
+                        })
                     })
-                })
-            } else if (item is ColumnNode) {
-                DefaultCellEditor(JBTextField().apply {
-                    document.addDocumentListener(object : DocumentListener {
-                        override fun insertUpdate(e: DocumentEvent) {
-                            item.column.remark = text
-                        }
+                }
 
-                        override fun removeUpdate(e: DocumentEvent) {
-                            item.column.remark = text
-                        }
+                is ColumnNode -> {
+                    DefaultCellEditor(JBTextField().apply {
+                        document.addDocumentListener(object : DocumentListener {
+                            override fun insertUpdate(e: DocumentEvent) {
+                                item.column.remark = text
+                            }
 
-                        override fun changedUpdate(e: DocumentEvent) {
-                            item.column.remark = text
-                        }
+                            override fun removeUpdate(e: DocumentEvent) {
+                                item.column.remark = text
+                            }
+
+                            override fun changedUpdate(e: DocumentEvent) {
+                                item.column.remark = text
+                            }
+                        })
                     })
-                })
-            } else {
-                null
+                }
+
+                else -> {
+                    null
+                }
             }
         }
     }
@@ -189,19 +205,10 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
 
         override fun getRenderer(item: Any): TableCellRenderer? {
             return (item as? ColumnNode)?.column?.nullable?.let {
-                object : TableCellRenderer {
-                    override fun getTableCellRendererComponent(
-                        table: JTable,
-                        value: Any,
-                        isSelected: Boolean,
-                        hasFocus: Boolean,
-                        row: Int,
-                        column: Int,
-                    ): Component {
-                        return JBCheckBox().apply {
-                            this.isSelected = value as Boolean
-                            horizontalAlignment = SwingUtilities.CENTER
-                        }
+                TableCellRenderer { table, value, isSelected, hasFocus, row, column ->
+                    JBCheckBox().apply {
+                        this.isSelected = value as Boolean
+                        horizontalAlignment = SwingUtilities.CENTER
                     }
                 }
             }
@@ -223,14 +230,15 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
             hasFocus: Boolean,
         ) {
             textRenderer.icon = when (value) {
-                is TableNode -> JimmerBuddy.Icons.Database.TABLE
+                is SchemaNode -> AllIcons.Nodes.DataSchema
+                is TableNode -> AllIcons.Nodes.DataTables
                 is FolderNode -> AllIcons.Modules.SourceRoot
-                is ColumnNode -> if (tables.find { it.name == value.column.tableName }?.primaryKeys?.any { it.column.name == value.column.name } == true) {
+                is ColumnNode -> if (tables.find { it.name == value.column.tableName }?.primaryKeys?.any { primaryKey -> primaryKey.columns.any { it.name == value.column.name } } == true) {
                     JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
                 } else if (tables.find { it.name == value.column.tableName }?.foreignKeys?.any { it.column.name == value.column.name } == true) {
                     JimmerBuddy.Icons.Database.COLUMN_BLUE_KEY
                 } else {
-                    JimmerBuddy.Icons.Database.COLUMN
+                    AllIcons.Nodes.DataColumn
                 }
 
                 is KeyNode -> JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
@@ -243,35 +251,37 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
     }
 
     fun getResult(): Set<Table> {
-        return tables.mapNotNull { table ->
-            root.children().toList().filterIsInstance<TableNode>()
-                .find { it.table.name == table.name && it.choose() }
-                ?.let { tableNode ->
-                    val children = tableNode.children().toList()
-                    table.copy(
-                        columns = table.columns.filter { column ->
-                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.COLUMN }
-                                ?.children()?.toList()?.filterIsInstance<ColumnNode>()
-                                ?.any { it.column.name == column.name && it.choose() } == true
-                        }.toSet(),
-                        primaryKeys = table.primaryKeys.filter { key ->
-                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.KEY }
-                                ?.children()?.toList()?.filterIsInstance<KeyNode>()
-                                ?.any { it.primaryKey.name == key.name && it.choose() } == true
-                        }.toSet(),
-                        foreignKeys = table.foreignKeys.filter { foreignKey ->
-                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.FOREIGN_KEY }
-                                ?.children()?.toList()?.filterIsInstance<ForeignKeyNode>()
-                                ?.any { it.foreignKey.name == foreignKey.name && it.choose() } == true
-                        }.toMutableSet(),
-                        uniqueKeys = table.uniqueKeys.filter { index ->
-                            children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.INDEX }
-                                ?.children()?.toList()?.filterIsInstance<IndexNode>()
-                                ?.any { it.uniqueKey.name == index.name && it.choose() } == true
-                        }.toSet()
-                    )
-                }
-        }.toSet()
+        return tables.map { table ->
+            root.children().toList().filterIsInstance<SchemaNode>().mapNotNull { schema ->
+                schema.children().toList().filterIsInstance<TableNode>()
+                    .find { it.table.schema == schema.name && it.table.name == table.name && it.choose() }
+                    ?.let { tableNode ->
+                        val children = tableNode.children().toList()
+                        table.copy(
+                            columns = table.columns.filter { column ->
+                                children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.COLUMN }
+                                    ?.children()?.toList()?.filterIsInstance<ColumnNode>()
+                                    ?.any { it.column.name == column.name && it.choose() } == true
+                            }.toSet(),
+                            primaryKeys = table.primaryKeys.filter { key ->
+                                children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.KEY }
+                                    ?.children()?.toList()?.filterIsInstance<KeyNode>()
+                                    ?.any { it.primaryKey.name == key.name && it.choose() } == true
+                            }.toSet(),
+                            foreignKeys = table.foreignKeys.filter { foreignKey ->
+                                children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.FOREIGN_KEY }
+                                    ?.children()?.toList()?.filterIsInstance<ForeignKeyNode>()
+                                    ?.any { it.foreignKey.name == foreignKey.name && it.choose() } == true
+                            }.toMutableSet(),
+                            uniqueKeys = table.uniqueKeys.filter { index ->
+                                children.filterIsInstance<FolderNode>().find { it.type == FolderNode.Type.INDEX }
+                                    ?.children()?.toList()?.filterIsInstance<IndexNode>()
+                                    ?.any { it.uniqueKey.name == index.name && it.choose() } == true
+                            }.toSet()
+                        )
+                    }
+            }
+        }.flatten().toSet()
     }
 
     private open class DefaultNode() : CheckedTreeNode() {
@@ -301,6 +311,12 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
 
         override fun toString(): String {
             return type.title
+        }
+    }
+
+    private class SchemaNode(val name: String) : DefaultNode() {
+        override fun toString(): String {
+            return name
         }
     }
 

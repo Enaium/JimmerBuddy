@@ -109,6 +109,11 @@ class JavaEntityGenerate : EntityGenerate {
                 return@forEach
             }
 
+            // Skip middle table
+            if (table.columns.size == 2 && table.primaryKeys.size == 1 && table.primaryKeys.first().columns.size == 2) {
+                return@forEach
+            }
+
             val typeName = table.name.snakeToCamelCase()
             TypeSpec.interfaceBuilder(ClassName.get(packageName, typeName)).let { type ->
 
@@ -160,6 +165,10 @@ class JavaEntityGenerate : EntityGenerate {
                                 column.remark?.let {
                                     methodBuilder.addJavadoc(it)
                                 }
+                            }
+
+                            if (tables.find { it.name == column.tableName }?.primaryKeys?.any { primaryKey -> primaryKey.columns.any { it.name == column.name } } == true) {
+                                methodBuilder.addAnnotation(Id::class.java)
                             }
 
                             if (column.name.endsWith(idSuffix, true)) {
