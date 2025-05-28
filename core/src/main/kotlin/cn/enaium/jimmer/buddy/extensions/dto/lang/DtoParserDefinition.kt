@@ -74,10 +74,7 @@ class DtoParserDefinition : ParserDefinition {
     override fun createElement(node: ASTNode): PsiElement {
         val elementType = node.elementType
         if (elementType is TokenIElementType) {
-            return when (elementType.antlrTokenType) {
-                DtoLexer.Identifier -> DtoPsiIdentifierImpl(node)
-                else -> ANTLRPsiNode(node)
-            }
+            return ANTLRPsiNode(node)
         }
         if (elementType !is RuleIElementType) {
             return ANTLRPsiNode(node)

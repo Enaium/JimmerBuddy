@@ -16,13 +16,12 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiIdentifier
-import com.intellij.lang.ASTNode
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDocComment
 import com.intellij.psi.tree.IElementType
 import org.antlr.intellij.adaptor.psi.ANTLRPsiLeafNode
-import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
-class DtoPsiIdentifierImpl(type: IElementType, text: CharSequence) : ANTLRPsiLeafNode(type, text), DtoPsiIdentifier {
-    override val id: String
-        get() = text
+/**
+ * @author Enaium
+ */
+class DtoPsiDocCommentImpl(type: IElementType, text: CharSequence) : ANTLRPsiLeafNode(type, text), DtoPsiDocComment {
 }
