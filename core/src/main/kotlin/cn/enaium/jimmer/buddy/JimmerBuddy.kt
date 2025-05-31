@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy
 
+import cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspData
 import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.FullClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
@@ -26,6 +27,7 @@ import cn.enaium.jimmer.buddy.service.UiService
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
+import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
@@ -36,6 +38,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.ID
+import com.jetbrains.rd.util.printlnError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,6 +60,7 @@ import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.Reader
 import java.nio.file.Path
 import java.util.*
@@ -107,7 +111,8 @@ object JimmerBuddy {
     object Services {
         val PSI: PsiService = ServiceLoader.load(PsiService::class.java, JimmerBuddy::class.java.classLoader).first()
         val UI: UiService = ServiceLoader.load(UiService::class.java, JimmerBuddy::class.java.classLoader).first()
-        val NAVIGATION: NavigationService = ServiceLoader.load(NavigationService::class.java, JimmerBuddy::class.java.classLoader).first()
+        val NAVIGATION: NavigationService =
+            ServiceLoader.load(NavigationService::class.java, JimmerBuddy::class.java.classLoader).first()
     }
 
     private val workspaces = ConcurrentHashMap<Project, Workspace>()
@@ -456,8 +461,8 @@ object JimmerBuddy {
                     val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
                     try {
 
-                        val kspOptions =
-                            getKspOptions(projectDir.resolve("build.gradle.kts").toFile().toPsiFile(project) as KtFile)
+
+                        val kspOptions = getKspOptions(project)
 
                         log.info("SourceProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size} KSPOptions:${kspOptions}")
 
@@ -495,8 +500,7 @@ object JimmerBuddy {
                 projects.forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.isEmpty() && return@forEach
 
-                    val kspOptions =
-                        getKspOptions(projectDir.resolve("build.gradle.kts").toFile().toPsiFile(project) as KtFile)
+                    val kspOptions = getKspOptions(project)
 
                     log.info("DtoProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
 

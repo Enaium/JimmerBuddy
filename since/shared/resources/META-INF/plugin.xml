@@ -8,6 +8,7 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.java</depends>
     <depends>org.jetbrains.kotlin</depends>
+    <depends>com.intellij.gradle</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
@@ -176,6 +177,14 @@
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.ImmutableInheritorCodeVisionProvider"/>
+        <dependencySupport coordinate="org.babyfish.jimmer:jimmer-core" kind="java"/>
+        <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql" kind="java"/>
+        <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql-kotlin" kind="kotlin"/>
+        <dependencySupport coordinate="org.babyfish.jimmer:jimmer-spring-boot-starter" kind="java"/>
+        <externalProjectDataService implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspDataService"/>
+    </extensions>
+    <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
+        <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.kotlin">
         <supportsKotlinPluginMode supportsK1="true" supportsK2="${supportsK2}"/>

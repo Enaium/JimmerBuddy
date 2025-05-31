@@ -18,6 +18,7 @@ dependencies {
         intellijIdeaCommunity("2024.2.6")
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.kotlin")
+        bundledPlugin("com.intellij.gradle")
     }
 
     implementation(project(":core"))
