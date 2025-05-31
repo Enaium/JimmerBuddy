@@ -20,6 +20,7 @@ dependencies {
         intellijIdeaCommunity("2023.1")
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.kotlin")
+        bundledPlugin("com.intellij.gradle")
     }
 
     implementation(libs.jimmer.core)
