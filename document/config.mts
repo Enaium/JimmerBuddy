@@ -49,6 +49,7 @@ export default defineAdditionalConfig({
               { text: "Navigate", link: "navigate" },
               { text: "SQL to Clipboard", link: "sql-to-clipboard" },
               { text: "Inlay Hit", link: "inlay-hit" },
+              { text: "Postfix Template", link: "postfix-template" },
             ],
           },
           {
