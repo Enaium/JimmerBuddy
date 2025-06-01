@@ -35,7 +35,7 @@ export default defineAdditionalConfig({
         base: "/zh/reference/",
         items: [
           {
-            text: "Feature",
+            text: "特性",
             base: "/zh/reference/feature-",
             items: [
               { text: "检查", link: "inspection" },
@@ -44,6 +44,7 @@ export default defineAdditionalConfig({
               { text: "导航", link: "navigate" },
               { text: "SQL 到剪贴板", link: "sql-to-clipboard" },
               { text: "内联提示", link: "inlay-hit" },
+              { text: "后缀模板", link: "postfix-template" },
             ],
           },
           {
