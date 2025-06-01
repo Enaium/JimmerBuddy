@@ -182,6 +182,10 @@
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql-kotlin" kind="kotlin"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-spring-boot-starter" kind="java"/>
         <externalProjectDataService implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspDataService"/>
+        <codeInsight.template.postfixTemplateProvider language="JAVA"
+                                                      implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyJavaPostfixTemplateProvider"/>
+        <codeInsight.template.postfixTemplateProvider language="kotlin"
+                                                      implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyKotlinPostfixTemplateProvider"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>
