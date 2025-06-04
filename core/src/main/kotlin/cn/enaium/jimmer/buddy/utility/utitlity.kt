@@ -30,6 +30,9 @@ import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
+import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
+import org.intellij.markdown.html.HtmlGenerator
+import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.File
 import java.nio.file.Path
@@ -257,4 +260,10 @@ private fun String.simplifyTypeName(): String {
     }
 
     return stripFullType(this)
+}
+
+fun String.toHtml(): String {
+    val flavour = CommonMarkFlavourDescriptor()
+    val parsedTree = MarkdownParser(flavour).buildMarkdownTreeFromString(this)
+    return HtmlGenerator(this, parsedTree, flavour).generateHtml()
 }

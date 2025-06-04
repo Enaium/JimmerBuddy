@@ -19,13 +19,16 @@ package cn.enaium.jimmer.buddy.utility
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.psi.PsiClass
 import org.babyfish.jimmer.apt.createContext
+import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.ksp.Context
+import org.babyfish.jimmer.sql.IdView
+import org.babyfish.jimmer.sql.ManyToManyView
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
  * @author Enaium
  */
-fun PsiClass.toImmutable(): org.babyfish.jimmer.apt.immutable.meta.ImmutableType {
+fun PsiClass.toImmutable(): ImmutableType {
     val (pe, typeElements, sources) = psiClassesToApt(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = createContext(pe.elementUtils, pe.typeUtils, pe.filer)
     return context.getImmutableType(pe.elementUtils.getTypeElement(this.qualifiedName!!))
@@ -50,38 +53,27 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.targetType?.toCommonImmutableType() },
                     { prop.typeName().simplify() },
-                    {
-                        if (prop.isId) {
-                            PropType.ID
-                        } else if (prop.isKey) {
-                            PropType.KEY
-                        } else if (prop.isEmbedded) {
-                            PropType.EMBEDDED
-                        } else if (prop.isFormula) {
-                            PropType.FORMULA
-                        } else if (prop.isTransient) {
-                            if (prop.hasTransientResolver()) PropType.CALCULATION else PropType.TRANSIENT
-                        } else if (prop.isRecursive) {
-                            PropType.RECURSIVE
-                        } else if (prop.isAssociation(true)) {
-                            PropType.ASSOCIATION
-                        } else if (prop.isList) {
-                            PropType.LIST
-                        } else if (prop.isLogicalDeleted) {
-                            PropType.LOGICAL_DELETED
-                        } else if (prop.isNullable) {
-                            PropType.NULLABLE
-                        } else {
-                            PropType.PROPERTY
-                        }
-                    }
+                    { prop.isId },
+                    isKey = { prop.isKey },
+                    isEmbedded = { prop.isEmbedded },
+                    { prop.isAssociation(it) },
+                    isList = { prop.isList },
+                    isTransient = { prop.isTransient },
+                    isFormula = { prop.isFormula },
+                    hasTransientResolver = { prop.hasTransientResolver() },
+                    isRecursive = { prop.isRecursive },
+                    isIdView = { prop.annotation(IdView::class) != null },
+                    isManyToManyView = { prop.annotation(ManyToManyView::class) != null },
+                    isLogicalDeleted = { prop.isLogicalDeleted },
+                    isNullable = { prop.isNullable },
+                    isExcludedFromAllScalars = { prop.isExcludedFromAllScalars }
                 )
             }
         }
     )
 }
 
-fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType(): CommonImmutableType {
+fun ImmutableType.toCommonImmutableType(): CommonImmutableType {
     return CommonImmutableType(
         { this.name },
         { this.qualifiedName },
@@ -93,31 +85,20 @@ fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType()
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() },
                     { prop.typeName.simplify() },
-                    {
-                        if (prop.isId) {
-                            PropType.ID
-                        } else if (prop.isKey) {
-                            PropType.KEY
-                        } else if (prop.isEmbedded) {
-                            PropType.EMBEDDED
-                        } else if (prop.isFormula) {
-                            PropType.FORMULA
-                        } else if (prop.isTransient) {
-                            if (prop.hasTransientResolver()) PropType.CALCULATION else PropType.TRANSIENT
-                        } else if (prop.isRecursive) {
-                            PropType.RECURSIVE
-                        } else if (prop.isAssociation(true)) {
-                            PropType.ASSOCIATION
-                        } else if (prop.isList) {
-                            PropType.LIST
-                        } else if (prop.isLogicalDeleted) {
-                            PropType.LOGICAL_DELETED
-                        } else if (prop.isNullable) {
-                            PropType.NULLABLE
-                        } else {
-                            PropType.PROPERTY
-                        }
-                    }
+                    { prop.isId },
+                    isKey = { prop.isKey },
+                    isEmbedded = { prop.isEmbedded },
+                    { prop.isAssociation(false) },
+                    isList = { prop.isList },
+                    isTransient = { prop.isTransient },
+                    hasTransientResolver = { prop.hasTransientResolver() },
+                    isRecursive = { prop.isRecursive },
+                    isFormula = { prop.isFormula },
+                    isIdView = { prop.getAnnotation(IdView::class.java) != null },
+                    isManyToManyView = { prop.getAnnotation(ManyToManyView::class.java) != null },
+                    isLogicalDeleted = { prop.isLogicalDeleted },
+                    isNullable = { prop.isNullable },
+                    isExcludedFromAllScalars = { prop.isExcludedFromAllScalars },
                 )
             }
         }
@@ -135,8 +116,49 @@ data class CommonImmutableType(
         val declaringType: () -> CommonImmutableType,
         val targetType: () -> CommonImmutableType?,
         val typeName: () -> String,
-        val type: () -> PropType
-    )
+        val isId: () -> Boolean,
+        val isKey: () -> Boolean,
+        val isEmbedded: () -> Boolean,
+        val isAssociation: (entityLevel: Boolean) -> Boolean,
+        val isList: () -> Boolean,
+        val isTransient: () -> Boolean,
+        val isFormula: () -> Boolean,
+        val hasTransientResolver: () -> Boolean,
+        val isRecursive: () -> Boolean,
+        val isIdView: () -> Boolean,
+        val isManyToManyView: () -> Boolean,
+        val isLogicalDeleted: () -> Boolean,
+        val isNullable: () -> Boolean,
+        val isExcludedFromAllScalars: () -> Boolean,
+    ) {
+        companion object {
+            fun CommonImmutableProp.type(): PropType {
+                return if (isId()) {
+                    PropType.ID
+                } else if (isKey()) {
+                    PropType.KEY
+                } else if (isEmbedded()) {
+                    PropType.EMBEDDED
+                } else if (isFormula()) {
+                    PropType.FORMULA
+                } else if (isTransient()) {
+                    if (hasTransientResolver()) PropType.CALCULATION else PropType.TRANSIENT
+                } else if (isRecursive()) {
+                    PropType.RECURSIVE
+                } else if (isAssociation(true)) {
+                    PropType.ASSOCIATION
+                } else if (isList()) {
+                    PropType.LIST
+                } else if (isLogicalDeleted()) {
+                    PropType.LOGICAL_DELETED
+                } else if (isNullable()) {
+                    PropType.NULLABLE
+                } else {
+                    PropType.PROPERTY
+                }
+            }
+        }
+    }
 }
 
 enum class PropType(val description: String) {

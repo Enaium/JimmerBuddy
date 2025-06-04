@@ -38,7 +38,7 @@ class DtoLineMarkerProvider : RelatedItemLineMarkerProvider() {
         if (element is DtoPsiDtoType) {
             val name = element.name?.value ?: return
             val dtoPsiRoot = element.findParentOfType<DtoPsiRoot>() ?: return
-            val exportType = dtoPsiRoot.exportStatement?.typeParts?.qualifiedName ?: return
+            val exportType = dtoPsiRoot.qualifiedName() ?: return
             val exportPackage =
                 dtoPsiRoot.exportStatement?.packageParts?.qualifiedName ?: "${exportType.substringBeforeLast(".")}.dto"
 

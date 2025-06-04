@@ -138,6 +138,8 @@
                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoParserDefinition"/>
         <lang.syntaxHighlighter language="JimmerBuddy.DTO"
                                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoSyntaxHighlighter"/>
+        <lang.documentationProvider language="JimmerBuddy.DTO"
+                                    implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoDocumentProvider"/>
         <localInspection
                 displayName="DtoInspection"
                 shortName="DtoInspection"

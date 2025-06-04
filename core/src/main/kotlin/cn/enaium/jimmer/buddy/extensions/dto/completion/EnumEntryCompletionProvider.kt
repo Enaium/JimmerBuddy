@@ -52,7 +52,7 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
         val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
         val trace = getTrace(prop)
         val typeName =
-            parameters.position.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return
+            parameters.position.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return
         val commonImmutable = if (project.isJavaProject()) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
                 ?.toCommonImmutableType() ?: return

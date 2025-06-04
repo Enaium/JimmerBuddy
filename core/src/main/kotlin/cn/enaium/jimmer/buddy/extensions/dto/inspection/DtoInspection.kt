@@ -49,7 +49,7 @@ class DtoInspection : LocalInspectionTool() {
                 val document = PsiDocumentManager.getInstance(project).getDocument(file) ?: return
                 val path = file.virtualFile.toNioPath()
                 val typeName =
-                    file.getChildOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return
+                    file.getChildOfType<DtoPsiRoot>()?.qualifiedName() ?: return
                 if (project.isJavaProject()) {
                     val typeClass =
                         JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope()) ?: return

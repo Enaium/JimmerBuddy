@@ -62,7 +62,7 @@ class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
 
             is DtoPsiDtoType -> {
                 val dtoPsiRoot = parentElement.findParentOfType<DtoPsiRoot>() ?: return null
-                val exportType = dtoPsiRoot.exportStatement?.typeParts?.qualifiedName ?: return null
+                val exportType = dtoPsiRoot.qualifiedName() ?: return null
                 val exportPackage = dtoPsiRoot.exportStatement?.packageParts?.qualifiedName
                     ?: "${exportType.substringBeforeLast(".")}.dto"
                 JavaPsiFacade.getInstance(parentElement.project)
@@ -73,7 +73,7 @@ class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
                 val prop = parentElement.findParentOfType<DtoPsiPositiveProp>() ?: return null
                 val trace = getTrace(prop)
                 val typeName =
-                    parentElement.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName
+                    parentElement.findParentOfType<DtoPsiRoot>()?.qualifiedName()
                         ?: return null
                 val commonImmutable = if (project.isJavaProject()) {
                     JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()

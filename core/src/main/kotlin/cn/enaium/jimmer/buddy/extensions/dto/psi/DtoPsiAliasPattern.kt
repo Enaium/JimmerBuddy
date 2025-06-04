@@ -16,5 +16,19 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+import com.intellij.psi.PsiNameIdentifierOwner
+
 interface DtoPsiAliasPattern : DtoPsiElement {
+    val prefix: Boolean
+    val suffix: Boolean
+    val original: Original?
+    val replacement: Replacement?
+
+    interface Original : DtoPsiElement {
+        val value: String
+    }
+
+    interface Replacement : DtoPsiElement {
+        val value: String
+    }
 }

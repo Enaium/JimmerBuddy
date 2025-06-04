@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.isJavaProject
 import cn.enaium.jimmer.buddy.utility.isKotlinProject
 import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
@@ -48,7 +49,7 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
         val project = parameters.position.project
         val trace = getTrace(parameters.position)
         val typeName =
-            parameters.position.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return
+            parameters.position.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return
         val commonImmutable = if (project.isJavaProject()) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
                 ?.toCommonImmutableType() ?: return
