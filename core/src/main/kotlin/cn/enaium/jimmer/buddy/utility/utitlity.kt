@@ -25,18 +25,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
+import com.squareup.javapoet.TypeName
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
-import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunctionLiteral
-import org.jetbrains.kotlin.psi.KtScript
-import org.jetbrains.kotlin.psi.KtScriptInitializer
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
-import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
-import org.jetbrains.kotlin.psi.psiUtil.referenceExpression
 import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.File
 import java.nio.file.Path
@@ -205,4 +198,63 @@ fun getKspOptions(project: Project): Map<String, String> {
         }
     }
     return emptyMap()
+}
+
+fun TypeName.simplify(): String {
+    return this.toString().simplifyTypeName()
+}
+
+fun com.squareup.kotlinpoet.TypeName.simplify(): String {
+    return this.toString().simplifyTypeName()
+}
+
+private fun String.simplifyTypeName(): String {
+    fun splitGenericParams(params: String): List<String> {
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var depth = 0
+        for (char in params) {
+            when (char) {
+                '<' -> {
+                    depth++
+                    current.append(char)
+                }
+
+                '>' -> {
+                    depth--
+                    current.append(char)
+                }
+
+                ',' -> {
+                    if (depth == 0) {
+                        result.add(current.toString().trim())
+                        current.clear()
+                    } else {
+                        current.append(char)
+                    }
+                }
+
+                else -> current.append(char)
+            }
+        }
+        if (current.isNotEmpty()) {
+            result.add(current.toString().trim())
+        }
+        return result
+    }
+
+    fun stripFullType(typeStr: String): String {
+        val trimmed = typeStr.trim()
+        val genericStart = trimmed.indexOf('<')
+        return if (genericStart == -1) {
+            trimmed.substringAfterLast('.')
+        } else {
+            val base = trimmed.substring(0, genericStart).substringAfterLast('.')
+            val genericContent = trimmed.substring(genericStart + 1, trimmed.lastIndexOf('>'))
+            val params = splitGenericParams(genericContent).map { stripFullType(it) }
+            "$base<${params.joinToString(", ")}>"
+        }
+    }
+
+    return stripFullType(this)
 }
