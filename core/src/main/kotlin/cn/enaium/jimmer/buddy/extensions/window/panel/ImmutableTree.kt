@@ -126,9 +126,13 @@ class ImmutableTree(val project: Project) : JPanel() {
                             sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
                                 ?.also { psiClass ->
                                     if (psiClass.isImmutable()) {
+
                                         val newChild = ImmutableType(psiClass)
-                                        psiClass.methods.forEach {
-                                            newChild.add(ImmutableProp(it))
+                                        psiClass.toImmutable().toCommonImmutableType().props().forEach {
+                                            psiClass.methods.find { method -> method.name == it.name() }
+                                                ?.also { method ->
+                                                    newChild.add(ImmutableProp(method, it))
+                                                }
                                         }
                                         root.add(newChild)
                                     }
@@ -147,8 +151,11 @@ class ImmutableTree(val project: Project) : JPanel() {
                             sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
                                 if (ktClass.isImmutable()) {
                                     val newChild = ImmutableType(ktClass)
-                                    ktClass.getProperties().forEach {
-                                        newChild.add(ImmutableProp(it))
+                                    ktClass.toImmutable().toCommonImmutableType().props().forEach {
+                                        ktClass.getProperties().find { property -> property.name == it.name() }
+                                            ?.also { property ->
+                                                newChild.add(ImmutableProp(property, it))
+                                            }
                                     }
                                     root.add(newChild)
                                 }
@@ -185,7 +192,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 } else {
                     setBackground(this@ImmutableNodeCell.getBackground())
                 }
-                add(JLabel(runReadOnly { value.toString() }).apply {
+                add(JLabel(value.toString()).apply {
                     icon = this@ImmutableNodeCell.icon
                 }, BorderLayout.CENTER)
             }
@@ -232,24 +239,33 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableProp(target: PsiElement) : ImmutableNode(target) {
+    private open class ImmutableProp(target: PsiElement, val prop: CommonImmutableType.CommonImmutableProp) :
+        ImmutableNode(target) {
 
         override fun isLeaf(): Boolean {
             return true
         }
 
         override fun toString(): String {
-            return when (target) {
-                is PsiMethod -> {
-                    target.name
-                }
+            return thread {
+                runReadOnly {
+                    when (target) {
+                        is PsiMethod -> {
+                            target.name
+                        }
 
-                is KtProperty -> {
-                    target.name ?: "Unknown Name"
-                }
+                        is KtProperty -> {
+                            (target.name ?: "Unknown Name")
+                        }
 
-                else -> {
-                    target.text
+                        else -> {
+                            target.text
+                        }
+                    }.let { name ->
+                        "$name: ${prop.typeName()} (${prop.type().description})".let { typeName ->
+                            prop.targetType()?.let { targetType -> "$typeName -> ${targetType.name()}" } ?: typeName
+                        }
+                    }
                 }
             }
         }

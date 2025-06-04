@@ -49,7 +49,7 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.targetType?.toCommonImmutableType() },
-                    { prop.typeName().toString() },
+                    { prop.typeName().simplify() },
                     {
                         if (prop.isId) {
                             PropType.ID
@@ -92,7 +92,7 @@ fun org.babyfish.jimmer.apt.immutable.meta.ImmutableType.toCommonImmutableType()
                     { name },
                     { prop.declaringType.toCommonImmutableType() },
                     { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() },
-                    { prop.typeName.toString() },
+                    { prop.typeName.simplify() },
                     {
                         if (prop.isId) {
                             PropType.ID
