@@ -32,8 +32,6 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.Filer
@@ -134,7 +132,10 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                                 }
                             }
                         },
-                        getAnnotationsByType = { emptyArray() },
+                        getAnnotationsByType = { anno ->
+                            method.modifierList.annotations.find { it.hasQualifiedName(anno.name) }
+                                ?.findAnnotation()?.let { arrayOf(it) }
+                        },
                         isDefault = { method.body != null }
                     )
                 }
@@ -1039,7 +1040,7 @@ private fun createExecutableElement(
     getEnclosedElements: () -> List<Element> = { TODO("${getSimpleName()} Not yet implemented") },
     getAnnotationMirrors: () -> List<AnnotationMirror> = { TODO("${getSimpleName()} Not yet implemented") },
     getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getSimpleName()} Not yet implemented") },
-    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { TODO("${getSimpleName()} Not yet implemented") },
+    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation>? = { TODO("${getSimpleName()} Not yet implemented") },
 ): ExecutableElement {
     return object : ExecutableElement {
         override fun asType(): TypeMirror {

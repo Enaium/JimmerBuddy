@@ -263,7 +263,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                             target.text
                         }
                     }.let { name ->
-                        "$name: ${prop.typeName()} (${prop.type().description})".let { typeName ->
+                        "$name: ${prop.simpleTypeName()} (${prop.type().description})".let { typeName ->
                             prop.targetType()?.let { targetType -> "$typeName -> ${targetType.name()}" } ?: typeName
                         }
                     }

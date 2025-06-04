@@ -20,7 +20,9 @@ import cn.enaium.jimmer.buddy.dto.DtoParser
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.IFileElementType
 import org.antlr.intellij.adaptor.parser.ANTLRParserAdaptor
+import org.antlr.v4.runtime.DefaultErrorStrategy
 import org.antlr.v4.runtime.Parser
+import org.antlr.v4.runtime.misc.IntervalSet
 import org.antlr.v4.runtime.tree.ParseTree
 
 object DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
@@ -29,6 +31,11 @@ object DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
         root: IElementType?
     ): ParseTree? {
         parser?.removeParseListeners()
+        parser?.errorHandler = object : DefaultErrorStrategy() {
+            override fun getErrorRecoverySet(recognizer: Parser): IntervalSet {
+                return IntervalSet()
+            }
+        }
         return if (root is IFileElementType) {
             (parser as DtoParser).dto()
         } else {

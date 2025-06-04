@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspData
 import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.FullClassIndex
 import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
@@ -27,7 +26,6 @@ import cn.enaium.jimmer.buddy.service.UiService
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
@@ -38,7 +36,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.ID
-import com.jetbrains.rd.util.printlnError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,9 +55,7 @@ import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
-import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.Reader
 import java.nio.file.Path
 import java.util.*
@@ -280,11 +275,12 @@ object JimmerBuddy {
 
         fun asyncRefresh(files: List<Path>) {
             files.isEmpty() && return
-            invokeLater {
-                try {
+            project.runWhenSmart {
+                CoroutineScope(Dispatchers.IO).launch {
                     LocalFileSystem.getInstance().refreshNioFiles(files)
+                }
+                invokeLater {
                     log.info("Refreshed ${files.joinToString(", ") { it.name }}")
-                } catch (_: Throwable) {
                 }
             }
         }
