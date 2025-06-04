@@ -122,11 +122,19 @@ aliasPattern
     :
     AS LEFT_PARENTHESIS
     (prefix = POWER)?
-    (original = Identifier)?
+    (original)?
     (suffix = DOLLAR)?
     (translator = RIGHT_ARROW)
-    (replacement = Identifier)?
+    (replacement)?
     RIGHT_PARENTHESIS
+    ;
+
+original
+    : Identifier
+    ;
+
+replacement
+    : Identifier
     ;
 
 positiveProp

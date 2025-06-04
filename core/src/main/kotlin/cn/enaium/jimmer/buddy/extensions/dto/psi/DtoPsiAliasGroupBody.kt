@@ -16,7 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
-interface DtoPsiAliasGroup : DtoPsiElement {
-    val pattern: DtoPsiAliasPattern?
-    val body: DtoPsiAliasGroupBody?
+/**
+ * @author Enaium
+ */
+interface DtoPsiAliasGroupBody : DtoPsiElement {
+    val positiveProps: List<DtoPsiPositiveProp>
 }

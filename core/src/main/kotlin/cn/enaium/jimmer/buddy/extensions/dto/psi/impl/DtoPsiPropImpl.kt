@@ -41,7 +41,7 @@ class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
 
     override fun reference(): PsiElement? {
         val trace = getTrace(this)
-        val typeName = this.findParentOfType<DtoPsiRoot>()?.exportStatement?.typeParts?.qualifiedName ?: return null
+        val typeName = this.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
 
         val commonImmutable = if (project.isJavaProject()) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()

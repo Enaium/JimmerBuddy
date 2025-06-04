@@ -16,9 +16,16 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroupBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 class DtoPsiAliasGroupImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAliasGroup {
+    override val pattern: DtoPsiAliasPattern?
+        get() = findChild<DtoPsiAliasPattern>("/aliasGroup/aliasPattern")
+    override val body: DtoPsiAliasGroupBody?
+        get() = findChild<DtoPsiAliasGroupBody>("/aliasGroup/aliasGroupBody")
 }

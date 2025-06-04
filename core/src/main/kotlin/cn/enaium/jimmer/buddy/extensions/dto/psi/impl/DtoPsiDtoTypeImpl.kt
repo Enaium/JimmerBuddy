@@ -44,7 +44,7 @@ class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType
     override fun reference(): PsiElement? {
         val name = name?.value ?: return null
         val dtoPsiRoot = findParentOfType<DtoPsiRoot>() ?: return null
-        val exportType = dtoPsiRoot.exportStatement?.typeParts?.qualifiedName ?: return null
+        val exportType = dtoPsiRoot.qualifiedName() ?: return null
         val exportPackage =
             dtoPsiRoot.exportStatement?.packageParts?.qualifiedName ?: "${exportType.substringBeforeLast(".")}.dto"
         val target =

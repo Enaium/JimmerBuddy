@@ -69,5 +69,5 @@ class DtoTypeTargetCodeVisionProvider : ImmutableCodeVisionProvider() {
         qualifiedName: String
     ): List<DtoPsiDtoType> = FilenameIndex.getAllFilesByExt(project, "dto")
         .mapNotNull { it.toPsiFile(project)?.getChildOfType<DtoPsiRoot>() }
-        .find { it.exportStatement?.typeParts?.qualifiedName == qualifiedName }?.dtoTypes ?: emptyList()
+        .find { it.qualifiedName() == qualifiedName }?.dtoTypes ?: emptyList()
 }

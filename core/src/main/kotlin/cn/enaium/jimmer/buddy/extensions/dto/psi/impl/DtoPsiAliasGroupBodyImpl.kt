@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
+
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroupBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
+import com.intellij.lang.ASTNode
+import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 /**
  * @author Enaium
  */
-interface DtoPsiRoot : DtoPsiElement {
-    val exportStatement: DtoPsiExportStatement?
-    val importStatements: List<DtoPsiImportStatement>
-    val dtoTypes: List<DtoPsiDtoType>
-
-    fun hasImport(qualifiedName: String): Boolean
-
-    fun qualifiedName(): String?
+class DtoPsiAliasGroupBodyImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAliasGroupBody {
+    override val positiveProps: List<DtoPsiPositiveProp>
+        get() = findChildren<DtoPsiPositiveProp>("/aliasGroupBody/positiveProp")
 }
