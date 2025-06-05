@@ -19,6 +19,8 @@ package cn.enaium.jimmer.buddy.utility
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import com.intellij.psi.PsiClass
+import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.JimmerProcessor
@@ -37,7 +39,91 @@ import kotlin.reflect.jvm.isAccessible
 /**
  * @author Enaium
  */
-fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> = mutableMapOf<String, KSClassDeclaration>()): KSClassDeclaration {
+fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> = mutableMapOf()): KSClassDeclaration {
+    return caches[this.qualifiedName()] ?: createKSClassDeclaration(
+        qualifiedName = { createKSName(this.qualifiedName()!!) },
+        classKind = {
+            if (this.isInterface) {
+                ClassKind.INTERFACE
+            } else if (this.isEnum) {
+                ClassKind.ENUM_CLASS
+            } else {
+                ClassKind.CLASS
+            }
+        },
+        simpleName = { createKSName(this.name!!) },
+        packageName = { createKSName(this.qualifiedName()!!.substringBeforeLast(".")) },
+        superTypes = {
+            this.superTypes.mapNotNull { superType ->
+                val superClass = superType.resolve() ?: return@mapNotNull null
+                createKSTypeReference(resolve = {
+                    createKSType(
+                        declaration = {
+                            superClass.asKSClassDeclaration(caches)
+                        },
+                        arguments = {
+                            superType.parameters.mapNotNull { parameterType ->
+                                val klass =
+                                    PsiUtil.resolveGenericsClassInType(parameterType).element ?: return@mapNotNull null
+                                createKSTypeArgument(
+                                    variance = {
+                                        Variance.INVARIANT
+                                    },
+                                    type = {
+                                        createKSTypeReference(
+                                            resolve = {
+                                                createKSType(
+                                                    declaration = {
+                                                        klass.asKSClassDeclaration(caches)
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    )
+                })
+            }.asSequence()
+        },
+        parentDeclaration = { null },
+        annotations = { emptySequence() },
+        declarations = { emptySequence() },
+        asStarProjectedType = {
+            createKSType(
+                this.qualifiedName(),
+                declaration = {
+                    this@asKSClassDeclaration.asKSClassDeclaration(caches)
+                },
+                isAssignableFrom = {
+                    it.toString() == qualifiedName()
+                }
+            )
+        },
+        asType = {
+            this.asStarProjectedType()
+        }
+    ).also {
+        caches[this.qualifiedName()!!] = it
+    }
+}
+
+private fun PsiClass.qualifiedName(): String? {
+    return when (this.qualifiedName) {
+        java.lang.Long::class.java.name -> Long::class.qualifiedName
+        Integer::class.java.name -> Int::class.qualifiedName
+        java.lang.Short::class.java.name -> Short::class.qualifiedName
+        java.lang.Byte::class.java.name -> Byte::class.qualifiedName
+        java.lang.Double::class.java.name -> Double::class.qualifiedName
+        java.lang.Float::class.java.name -> Float::class.qualifiedName
+        String::class.java.name -> String::class.qualifiedName
+        java.lang.Boolean::class.java.name -> Boolean::class.qualifiedName
+        else -> this.qualifiedName
+    }
+}
+
+fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> = mutableMapOf()): KSClassDeclaration {
     return caches[this.fqName!!.asString()] ?: createKSClassDeclaration(
         qualifiedName = { createKSName(fqName!!.asString()) },
         classKind = {
@@ -53,15 +139,11 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         superTypes = {
             superTypeListEntries.mapNotNull {
                 val superClass = it.typeReference?.type()?.ktClass ?: return@mapNotNull null
-                createKSTypeReference(
-                    resolve = {
-                        createKSType(
-                            declaration = {
-                                superClass.asKSClassDeclaration(caches)
-                            }
-                        )
-                    }
-                )
+                createKSTypeReference(resolve = {
+                    createKSType(declaration = {
+                        superClass.asKSClassDeclaration(caches)
+                    })
+                })
             }.asSequence()
         },
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
@@ -79,24 +161,15 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                         qualifiedName = { createKSName(fqName) },
                                         simpleName = { createKSName(fqName.substringAfterLast(".")) },
                                         packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                                        annotations = { emptySequence() }
-                                    )
-                                }
-                            )
-                        }
-                    ),
-                    shortName = {
+                                        annotations = { emptySequence() })
+                                })
+                        }), shortName = {
                         createKSName(fqName.substringAfterLast("."))
-                    },
-                    arguments = {
+                    }, arguments = {
                         annotation.arguments.map { argument ->
-                            createKSValueArgument(
-                                name = { createKSName(argument.name) },
-                                value = { argument.value }
-                            )
+                            createKSValueArgument(name = { createKSName(argument.name) }, value = { argument.value })
                         }
-                    }
-                )
+                    })
             }.asSequence()
         },
         declarations = {
@@ -133,24 +206,17 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                                 fqName.substringBeforeLast(".")
                                                             )
                                                         },
-                                                        annotations = { emptySequence() }
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    ),
-                                    shortName = {
+                                                        annotations = { emptySequence() })
+                                                })
+                                        }), shortName = {
                                         createKSName(fqName.substringAfterLast("."))
-                                    },
-                                    arguments = {
+                                    }, arguments = {
                                         annotation.arguments.map { argument ->
                                             createKSValueArgument(
                                                 name = { createKSName(argument.name) },
-                                                value = { argument.value }
-                                            )
+                                                value = { argument.value })
                                         }
-                                    }
-                                )
+                                    })
                             }.asSequence()
                         },
                         modifiers = {
@@ -177,7 +243,9 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                                         ktClass?.asKSClassDeclaration(caches)
                                                                             ?: createKSClassDeclaration(
                                                                                 classKind = { ClassKind.CLASS },
-                                                                                qualifiedName = { createKSName(fqName) },
+                                                                                qualifiedName = {
+                                                                                    createKSName(fqName)
+                                                                                },
                                                                                 simpleName = {
                                                                                     createKSName(
                                                                                         fqName.substringAfterLast(
@@ -193,15 +261,10 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                                                     )
                                                                                 },
                                                                                 asStarProjectedType = {
-                                                                                    createKSType(
-                                                                                        qualifiedName = fqName
-                                                                                    )
-                                                                                }
-                                                                            )
-                                                                    }
-                                                                )
-                                                            }
-                                                        )
+                                                                                    this@createKSType
+                                                                                })
+                                                                    })
+                                                            })
                                                     },
                                                     variance = { Variance.INVARIANT },
                                                 )
@@ -214,32 +277,22 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                                                     qualifiedName = { createKSName(fqName) },
                                                     simpleName = {
                                                         createKSName(
-                                                            fqName
-                                                                .substringAfterLast(".")
+                                                            fqName.substringAfterLast(".")
                                                         )
                                                     },
                                                     packageName = {
                                                         createKSName(
-                                                            fqName
-                                                                .substringBeforeLast(".")
+                                                            fqName.substringBeforeLast(".")
                                                         )
                                                     },
                                                     asStarProjectedType = {
-                                                        createKSType(
-                                                            declaration = {
-                                                                createKSClassDeclaration(
-                                                                    qualifiedName = { createKSName(fqName) },
-                                                                )
-                                                            }
-                                                        )
+                                                        this@createKSType
                                                     },
-                                                    annotations = { sequenceOf() }
-                                                )
+                                                    annotations = { sequenceOf() })
                                         },
                                         isMarkedNullable = { typeReference.nullable },
                                     )
-                                }
-                            )
+                                })
                         },
                         getter = {
                             property.getter?.let {
@@ -268,12 +321,15 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
             createKSType(
                 this.fqName!!.asString(),
                 declaration = {
-                    this.asKSClassDeclaration(caches)
+                    this@asKSClassDeclaration.asKSClassDeclaration(caches)
                 },
                 isAssignableFrom = {
                     it.toString() == fqName!!.asString()
                 }
             )
+        },
+        asType = {
+            this.asStarProjectedType()
         }
     ).also {
         caches[this.fqName!!.asString()] = it
@@ -291,8 +347,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
     val ktClasses = mapOf(
-        true to compilableClasses,
-        false to cacheClasses
+        true to compilableClasses, false to cacheClasses
     ).flatMap { (compilable, classes) ->
         classes.map { compilable to it }
     }
@@ -309,15 +364,13 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
                     declarations = { sequenceOf(ksClassDeclarationCaches[ktClass.fqName!!.asString()]!!) },
                     annotations = { sequenceOf() }
 
-                )
-            )
+                ))
         }
     }
     val sources = mutableListOf<Source>()
     return Ksp(
         resolver = createResolver(
-            caches = ksClassDeclarationCaches,
-            newFiles = ksFiles.asSequence()
+            caches = ksClassDeclarationCaches, newFiles = ksFiles.asSequence()
         ),
         environment = SymbolProcessorEnvironment(
             mapOf("jimmer.buddy.ignoreResourceGeneration" to "true"),
@@ -327,36 +380,25 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
                     get() = TODO("Not yet implemented")
 
                 override fun associate(
-                    sources: List<KSFile>,
-                    packageName: String,
-                    fileName: String,
-                    extensionName: String
+                    sources: List<KSFile>, packageName: String, fileName: String, extensionName: String
                 ) {
                     TODO("Not yet implemented")
                 }
 
                 override fun associateByPath(
-                    sources: List<KSFile>,
-                    path: String,
-                    extensionName: String
+                    sources: List<KSFile>, path: String, extensionName: String
                 ) {
                     TODO("Not yet implemented")
                 }
 
                 override fun associateWithClasses(
-                    classes: List<KSClassDeclaration>,
-                    packageName: String,
-                    fileName: String,
-                    extensionName: String
+                    classes: List<KSClassDeclaration>, packageName: String, fileName: String, extensionName: String
                 ) {
                     TODO("Not yet implemented")
                 }
 
                 override fun createNewFile(
-                    dependencies: Dependencies,
-                    packageName: String,
-                    fileName: String,
-                    extensionName: String
+                    dependencies: Dependencies, packageName: String, fileName: String, extensionName: String
                 ): OutputStream {
                     return object : ByteArrayOutputStream() {
                         override fun close() {
@@ -373,9 +415,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
                 }
 
                 override fun createNewFileByPath(
-                    dependencies: Dependencies,
-                    path: String,
-                    extensionName: String
+                    dependencies: Dependencies, path: String, extensionName: String
                 ): OutputStream {
                     TODO("Not yet implemented")
                 }
@@ -503,6 +543,7 @@ private fun createResolver(
                 qualifiedName = { createKSName(name.asString()) },
                 simpleName = { createKSName(name.asString().substringAfterLast(".")) },
                 packageName = { createKSName(name.asString().substringBeforeLast(".")) },
+                asType = { createKSType(declaration = { this@createKSClassDeclaration }) }
             )
         }
 
@@ -517,8 +558,7 @@ private fun createResolver(
         }
 
         override fun getFunctionDeclarationsByName(
-            name: KSName,
-            includeTopLevel: Boolean
+            name: KSName, includeTopLevel: Boolean
         ): Sequence<KSFunctionDeclaration> {
             TODO("Not yet implemented")
         }
@@ -582,22 +622,19 @@ private fun createResolver(
         }
 
         override fun getPropertyDeclarationByName(
-            name: KSName,
-            includeTopLevel: Boolean
+            name: KSName, includeTopLevel: Boolean
         ): KSPropertyDeclaration? {
             TODO("Not yet implemented")
         }
 
         override fun getSymbolsWithAnnotation(
-            annotationName: String,
-            inDepth: Boolean
+            annotationName: String, inDepth: Boolean
         ): Sequence<KSAnnotated> {
             TODO("Not yet implemented")
         }
 
         override fun getTypeArgument(
-            typeRef: KSTypeReference,
-            variance: Variance
+            typeRef: KSTypeReference, variance: Variance
         ): KSTypeArgument {
             TODO("Not yet implemented")
         }
@@ -623,16 +660,13 @@ private fun createResolver(
         }
 
         override fun overrides(
-            overrider: KSDeclaration,
-            overridee: KSDeclaration
+            overrider: KSDeclaration, overridee: KSDeclaration
         ): Boolean {
             TODO("Not yet implemented")
         }
 
         override fun overrides(
-            overrider: KSDeclaration,
-            overridee: KSDeclaration,
-            containingClass: KSClassDeclaration
+            overrider: KSDeclaration, overridee: KSDeclaration, containingClass: KSClassDeclaration
         ): Boolean {
             TODO("Not yet implemented")
         }
@@ -698,7 +732,7 @@ fun createKSType(
     qualifiedName: String? = null,
     annotations: () -> Sequence<KSAnnotation> = { emptySequence() },
     arguments: () -> List<KSTypeArgument> = { emptyList() },
-    declaration: () -> KSDeclaration = { TODO("Not yet implemented") },
+    declaration: KSType.() -> KSDeclaration = { TODO("Not yet implemented") },
     isError: () -> Boolean = { false },
     isFunctionType: () -> Boolean = { false },
     isMarkedNullable: () -> Boolean = { false },
@@ -718,7 +752,7 @@ fun createKSType(
         override val arguments: List<KSTypeArgument>
             get() = arguments()
         override val declaration: KSDeclaration
-            get() = declaration()
+            get() = declaration.invoke(this)
         override val isError: Boolean
             get() = isError()
         override val isFunctionType: Boolean
@@ -771,7 +805,7 @@ fun createKSClassDeclaration(
     primaryConstructor: () -> KSFunctionDeclaration? = { TODO("${qualifiedName()} Not yet implemented") },
     superTypes: () -> Sequence<KSTypeReference> = { TODO("${qualifiedName()} Not yet implemented") },
     asStarProjectedType: () -> KSType = { TODO("${qualifiedName()} Not yet implemented") },
-    asType: (List<KSTypeArgument>) -> KSType = { TODO("${qualifiedName()} Not yet implemented") },
+    asType: KSClassDeclaration.(List<KSTypeArgument>) -> KSType = { TODO("${qualifiedName()} Not yet implemented") },
     getAllFunctions: () -> Sequence<KSFunctionDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
     getAllProperties: () -> Sequence<KSPropertyDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
     getSealedSubclasses: () -> Sequence<KSClassDeclaration> = { TODO("${qualifiedName()} Not yet implemented") },
@@ -807,7 +841,7 @@ fun createKSClassDeclaration(
         }
 
         override fun asType(typeArguments: List<KSTypeArgument>): KSType {
-            return asType(typeArguments)
+            return asType.invoke(this, typeArguments)
         }
 
         override fun getAllFunctions(): Sequence<KSFunctionDeclaration> {
@@ -1106,7 +1140,7 @@ private fun createKSAnnotation(
 }
 
 private fun createKSTypeArgument(
-    type: () -> KSTypeReference = { TODO("Not yet implemented") },
+    type: () -> KSTypeReference? = { TODO("Not yet implemented") },
     variance: () -> Variance = { TODO("Not yet implemented") },
     annotations: () -> Sequence<KSAnnotation> = { TODO("Not yet implemented") },
     location: () -> Location = { TODO("Not yet implemented") },
@@ -1114,7 +1148,7 @@ private fun createKSTypeArgument(
     parent: () -> KSNode? = { TODO("Not yet implemented") },
 ): KSTypeArgument {
     return object : KSTypeArgument {
-        override val type: KSTypeReference
+        override val type: KSTypeReference?
             get() = type()
         override val variance: Variance
             get() = variance()
@@ -1135,9 +1169,7 @@ private fun createKSTypeArgument(
 
 @Suppress("UNCHECKED_CAST")
 fun createKspOption(
-    options: Map<String, String>,
-    context: Context,
-    codeGenerator: CodeGenerator
+    options: Map<String, String>, context: Context, codeGenerator: CodeGenerator
 ): KspOption {
     val jimmerProcessor =
         JimmerProcessor(SymbolProcessorEnvironment(options, KotlinVersion.CURRENT, codeGenerator, object : KSPLogger {
