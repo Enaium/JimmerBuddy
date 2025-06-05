@@ -29,6 +29,11 @@ export default defineAdditionalConfig({
               { text: "DTO语言", link: "dto-language" },
             ],
           },
+          {
+            text: "参考",
+            base: "/zh/reference/",
+            link: "feature-inspection",
+          },
         ],
       },
       "/zh/reference/": {
@@ -61,11 +66,6 @@ export default defineAdditionalConfig({
               { text: "结构视图", link: "structure-view" },
               { text: "可视化创建", link: "visualization-create" },
             ],
-          },
-          {
-            text: "参考",
-            base: "/zh/reference/",
-            link: "feature-inspection",
           },
         ],
       },
