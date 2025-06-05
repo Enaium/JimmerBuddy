@@ -121,6 +121,9 @@ class PsiService231 : PsiService {
                                 },
                                 packageName = {
                                     createKSName(it.substringBeforeLast("."))
+                                },
+                                asType = {
+                                    this@createKSType
                                 }
                             )
                         }
