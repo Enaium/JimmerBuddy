@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.database.model.*
-import org.jetbrains.kotlin.idea.gradleTooling.get
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.util.concurrent.CopyOnWriteArraySet
@@ -62,8 +61,8 @@ internal fun DatabaseMetaData.getTables(
         val tables = mutableSetOf<Table>()
         while (tableResult.next()) {
             val tableName = tableResult.getString(ColumnLabel.TABLE_NAME.name)
-            val catalog = tableResult.getString(ColumnLabel.TABLE_CAT.name)
-            val schema = tableResult.getString(ColumnLabel.TABLE_SCHEM.name)
+            val catalog = tableResult.getString(ColumnLabel.TABLE_CAT.name) ?: "unknown-${(0..9).random()}"
+            val schema = tableResult.getString(ColumnLabel.TABLE_SCHEM.name) ?: catalog
             val remark = tableResult.getString(ColumnLabel.REMARKS.name)
             val columns = getColumns(tableName)
             val primaryKeys = getPrimaryKeys(tableName)

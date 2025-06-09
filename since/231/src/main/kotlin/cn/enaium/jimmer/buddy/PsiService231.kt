@@ -17,14 +17,19 @@
 package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.service.PsiService
+import cn.enaium.jimmer.buddy.utility.asKSClassDeclaration
 import cn.enaium.jimmer.buddy.utility.createKSClassDeclaration
 import cn.enaium.jimmer.buddy.utility.createKSName
 import cn.enaium.jimmer.buddy.utility.createKSType
+import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
+import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.base.utils.fqname.fqName
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.references.mainReference
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
@@ -42,7 +47,7 @@ class PsiService231 : PsiService {
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiService.Annotation.Argument(
                         name.asString(),
-                        value.toAny()
+                        value.toAny(ktClass.project)
                     )
                 } ?: emptyList()
             )
@@ -56,7 +61,7 @@ class PsiService231 : PsiService {
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiService.Annotation.Argument(
                         name.asString(),
-                        value.toAny()
+                        value.toAny(ktProperty.project)
                     )
                 } ?: emptyList())
         }
@@ -102,31 +107,33 @@ class PsiService231 : PsiService {
     fun KtAnnotationEntry.annotation(): AnnotationDescriptor? =
         this.analyze()[BindingContext.ANNOTATION, this]
 
-    fun ConstantValue<*>.toAny(): Any? {
+    fun ConstantValue<*>.toAny(project: Project): Any? {
         return when (this::class) {
             StringValue::class -> this.value.toString()
             BooleanValue::class -> this.value.toString().toBoolean()
-            ArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
-            TypedArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny() }
+            ArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny(project) }
+            TypedArrayValue::class -> (this.value as? List<*>)?.map { (it as ConstantValue<*>).toAny(project) }
             KClassValue::class -> (this.value as? NormalClass)?.classId?.asSingleFqName()?.asString()?.replace("/", ".")
                 ?.let {
                     createKSType(
                         declaration = {
-                            createKSClassDeclaration(
-                                qualifiedName = {
-                                    createKSName(it)
-                                },
-                                simpleName = {
-                                    createKSName(it.substringAfterLast("."))
-                                },
-                                packageName = {
-                                    createKSName(it.substringBeforeLast("."))
-                                },
-                                asType = {
-                                    this@createKSType
-                                }
-                            )
-                        }
+                            JavaPsiFacade.getInstance(project).findClass(it, project.allScope())?.asKSClassDeclaration()
+                                ?: (KotlinFullClassNameIndex[it, project, project.allScope()].firstOrNull() as? KtClass)?.asKSClassDeclaration()
+                                ?: createKSClassDeclaration(
+                                    qualifiedName = {
+                                        createKSName(it)
+                                    },
+                                    simpleName = {
+                                        createKSName(it.substringAfterLast("."))
+                                    },
+                                    packageName = {
+                                        createKSName(it.substringBeforeLast("."))
+                                    },
+                                    asType = {
+                                        this@createKSType
+                                    }
+                                )
+                        },
                     )
                 }
 

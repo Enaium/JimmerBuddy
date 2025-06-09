@@ -27,7 +27,6 @@ import cn.enaium.jimmer.buddy.utility.getTables
 import cn.enaium.jimmer.buddy.utility.packageChooserField
 import cn.enaium.jimmer.buddy.utility.relativeLocationField
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.dsl.builder.Align
@@ -46,11 +45,7 @@ import java.sql.DriverPropertyInfo
 import java.util.*
 import java.util.logging.Logger
 import javax.swing.JComponent
-import kotlin.io.path.Path
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
-import kotlin.io.path.name
-import kotlin.io.path.walk
+import kotlin.io.path.*
 
 /**
  * @author Enaium
@@ -126,7 +121,7 @@ class GenerateEntityDialog(
         val uri = databaseItem.uri
         val isDDL = uri.startsWith("file:")
 
-        var driverJarFile = Path(databaseItem.driverFile).takeIf { it.exists() }
+        var driverJarFile = databaseItem.driverFile.takeIf { it.isNotBlank() }?.let { Path(it).takeIf { path -> path.exists() } }
         val driverName = databaseItem.driverName.takeIf { it.isNotBlank() }
 
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {

@@ -83,7 +83,8 @@ class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
             databaseModel.catalog,
             databaseModel.schemaPattern,
             databaseModel.tableNamePattern,
-            databaseModel.driverFile
+            databaseModel.driverFile,
+            databaseModel.driverName
         )
         super.doOKAction()
     }
