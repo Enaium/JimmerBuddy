@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.gradle.ksp
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
 import org.gradle.api.Project
 import org.jetbrains.plugins.gradle.tooling.AbstractModelBuilderService
 import org.jetbrains.plugins.gradle.tooling.ErrorMessageBuilder
@@ -51,7 +50,7 @@ class KspModelBuilderImpl : AbstractModelBuilderService() {
         project: Project,
         e: Exception
     ): ErrorMessageBuilder {
-        return ErrorMessageBuilder.create(project, e, JimmerBuddy.NAME)
+        return ErrorMessageBuilder.create(project, e, "JimmerBuddy")
             .withDescription("Unable to build ksp configuration")
     }
 }

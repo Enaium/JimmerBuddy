@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.antlr4.intellij.adaptor)
     implementation(libs.h2)
     implementation(project(":common"))
+    implementation(project(":gradle-tooling-extension"))
 }
 
 kotlin {
