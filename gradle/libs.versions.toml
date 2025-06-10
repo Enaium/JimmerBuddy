@@ -10,6 +10,7 @@ antlr4IntellijAdaptor = "0.1"
 antlr = "4.13.2"
 changelog = "2.2.1"
 h2 = "2.3.232"
+gradleToolingExtension = "231.9423.9"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
@@ -24,6 +25,7 @@ javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
 antlr4-intellij-adaptor = { module = "org.antlr:antlr4-intellij-adaptor", version.ref = "antlr4IntellijAdaptor" }
 antlr = { module = "org.antlr:antlr4", version.ref = "antlr" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+gradle-tooling-extension = { module = "com.jetbrains.intellij.gradle:gradle-tooling-extension", version.ref = "gradleToolingExtension" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
