@@ -45,7 +45,10 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
         if (element is PsiAnnotation) {
             element.getParentOfType<PsiMethod>(true).also { methodElement ->
                 val dependencies = (element.findAttributeValue("dependencies")
-                    ?.toAny(Array<String>::class.java) as? Array<*>)?.map { it.toString() }
+                    ?.let {
+                        it.toAny(Array<String>::class.java) as? Array<*> ?: it.toAny(String::class.java)
+                            ?.let { string -> arrayOf(string.toString()) }
+                    })?.map { it.toString() }
                     ?.takeIf { it.isNotEmpty() } ?: run {
                     methodElement?.body?.also {
                         holder.registerProblem(
