@@ -16,6 +16,4 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
-interface DtoPsiPart : DtoPsiElement {
-    val part: String
-}
+interface DtoPsiPart : DtoPsiElement

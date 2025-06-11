@@ -19,26 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.dto.DtoParser
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.pattern.DtoPsiPatterns
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotation
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumMapping
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImplements
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportedType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPackageParts
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeParts
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiUserProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionType
@@ -185,6 +166,15 @@ class DtoCompletionContributor : CompletionContributor() {
                 .withParent(DtoPsiEnumMapping::class.java)
                 .inside(DtoPsiEnumBody::class.java),
             EnumEntryCompletionProvider
+        )
+        extend(
+            basic,
+            DtoPsiPatterns.psiElement().withParents(
+                DtoPsiPart::class.java,
+                DtoPsiQualifiedNameParts::class.java,
+                DtoPsiQualifiedName::class.java,
+            ).inside(DtoPsiMacro::class.java),
+            MacroArgCompletionProvider
         )
     }
 }

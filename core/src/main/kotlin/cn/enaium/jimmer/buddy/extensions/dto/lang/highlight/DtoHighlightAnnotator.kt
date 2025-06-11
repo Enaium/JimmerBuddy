@@ -20,14 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dto.DtoParser.AT
 import cn.enaium.jimmer.buddy.dto.DtoParser.HASH
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotation
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumMapping
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
@@ -69,6 +62,11 @@ class DtoHighlightAnnotator : Annotator {
         DefaultLanguageHighlighterColors.CONSTANT
     )
 
+    val typeRef = createTextAttributesKey(
+        "${JimmerBuddy.DTO_LANGUAGE_ID}.TYPE_REF",
+        DefaultLanguageHighlighterColors.CLASS_REFERENCE
+    )
+
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val elementType = element.elementType
         when (element) {
@@ -79,6 +77,17 @@ class DtoHighlightAnnotator : Annotator {
                 ?: element.findParentOfType<DtoPsiEnumMapping>()?.let { constant }
 
             is DtoPsiPart -> element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
+                ?: element.findParentOfType<DtoPsiMacro>()?.let {
+                    if (element.text == "this") {
+                        keyword
+                    } else {
+                        typeRef
+                    }
+                }
+                ?: element.findParentOfType<DtoPsiTypeRef>()?.let {
+                    typeRef
+                }
+
             else -> when (elementType) {
                 TOKEN[HASH] -> {
                     element.findParentOfType<DtoPsiMacro>()?.let { macro }

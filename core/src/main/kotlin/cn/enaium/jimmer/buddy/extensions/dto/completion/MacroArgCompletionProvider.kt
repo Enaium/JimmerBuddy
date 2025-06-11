@@ -17,43 +17,30 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.psi.PsiElement
-import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 
 /**
  * @author Enaium
  */
-object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
+object MacroArgCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
         val element = parameters.position
-        findCurrentImmutableType(element)?.props()?.forEach {
+        result.addElement(LookupElementBuilder.create("this"))
+        findCurrentImmutableType(element)?.superTypes()?.forEach {
             result.addElement(
-                LookupElementBuilder.create(it.name()).withIcon(JimmerBuddy.Icons.PROP)
-                    .withTailText(" (from ${it.name()})").withTypeText(it.type().description)
+                LookupElementBuilder.create(it.name())
+                    .withTailText(" (from ${it.qualifiedName().substringBeforeLast(".")})")
+                    .withIcon(JimmerBuddy.Icons.IMMUTABLE)
             )
         }
     }
-}
-
-fun getTrace(position: PsiElement?): List<String> {
-    val trace = mutableSetOf<String>()
-    var parent: PsiElement? = position?.parent
-    while (parent != null) {
-        (parent.findParentOfType<DtoPsiDtoBody>()?.parent as? DtoPsiPositiveProp)?.prop?.value?.also { trace.add(it) }
-        parent = parent.parent
-    }
-    return trace.reversed()
 }

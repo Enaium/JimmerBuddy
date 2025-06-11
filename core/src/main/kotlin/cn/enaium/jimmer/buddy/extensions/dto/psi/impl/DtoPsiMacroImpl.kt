@@ -17,12 +17,16 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 class DtoPsiMacroImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiMacro {
     override val name: DtoPsiName?
         get() = findChild<DtoPsiName>("/macro/name")
+    override val args: List<DtoPsiQualifiedName>
+        get() = findChildren<DtoPsiQualifiedName>("/macro/qualifiedName")
 }

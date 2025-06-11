@@ -28,4 +28,8 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 class DtoPsiQualifiedNameImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiQualifiedName {
     override val qualifiedNameParts: DtoPsiQualifiedNameParts?
         get() = findChild<DtoPsiQualifiedNameParts>("/qualifiedName/qualifiedNameParts")
+
+    override fun qualifiedName(): String? {
+        return qualifiedNameParts?.qualifiedName
+    }
 }

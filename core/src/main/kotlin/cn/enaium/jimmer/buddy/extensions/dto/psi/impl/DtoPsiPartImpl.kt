@@ -16,13 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPackageParts
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeParts
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
+import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.lang.ASTNode
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
@@ -30,8 +25,7 @@ import com.intellij.psi.util.findParentOfType
 import org.jetbrains.kotlin.idea.base.util.allScope
 
 class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
-    override val part: String = node.text
-    override fun getName(): String = part
+    override fun getName(): String = text
     override fun reference(): PsiElement? {
         val parentElement = parent
         val facade = JavaPsiFacade.getInstance(project)
@@ -42,46 +36,60 @@ class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
                 facade
                     .findPackage(
                         parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1)
-                            .joinToString(".") { it.part })
+                            .joinToString(".") { it.text })
             }
         }
 
         if (parentElement is DtoPsiQualifiedNameParts) {
-            return if (parentElement.parts.last() == this && parentElement.findParentOfType<DtoPsiImportStatement>() == null) {
-                var reference = facade.findClass(parentElement.qualifiedName, project.allScope())
+            return if (parentElement.parts.last() == this) {
+                if (parentElement.findParentOfType<DtoPsiMacro>() != null) {
+                    parentElement.findParentOfType<DtoPsiMacro>()?.also { macro ->
+                        val currentImmutableType = findCurrentImmutableType(macro) ?: return null
+                        val find = currentImmutableType.superTypes().find { it.name() == text }
+                        return facade.findClass(
+                            if (text == "this") currentImmutableType.qualifiedName() else find?.qualifiedName()
+                                ?: return null,
+                            project.allScope()
+                        )
+                    }
+                } else if (parentElement.findParentOfType<DtoPsiImportStatement>() == null) {
+                    var reference = facade.findClass(parentElement.qualifiedName, project.allScope())
 
-                if (reference == null) {
-                    findParentOfType<DtoPsiRoot>()?.importStatements?.forEach { importStatement ->
-                        val qualifiedName = importStatement.qualifiedNameParts?.qualifiedName
-                        qualifiedName?.takeIf { it.endsWith(parentElement.qualifiedName) }
-                            ?.also {
-                                reference = facade.findClass(it, project.allScope())
-                            }
+                    if (reference == null) {
+                        findParentOfType<DtoPsiRoot>()?.importStatements?.forEach { importStatement ->
+                            val qualifiedName = importStatement.qualifiedNameParts?.qualifiedName
+                            qualifiedName?.takeIf { it.endsWith(parentElement.qualifiedName) }
+                                ?.also {
+                                    reference = facade.findClass(it, project.allScope())
+                                }
 
-                        importStatement.importTypes.forEach { importType ->
-                            if (reference == null) {
-                                reference = facade.findClass(
-                                    "$qualifiedName.${importType.name?.value}",
-                                    project.allScope()
-                                )
+                            importStatement.importTypes.forEach { importType ->
+                                if (reference == null) {
+                                    reference = facade.findClass(
+                                        "$qualifiedName.${importType.name?.value}",
+                                        project.allScope()
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                reference
+                    reference
+                } else {
+                    null
+                }
             } else {
                 facade
                     .findPackage(
                         parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1)
-                            .joinToString(".") { it.part })
+                            .joinToString(".") { it.text })
             }
         }
 
         if (parentElement is DtoPsiPackageParts) {
             return facade
                 .findPackage(
-                    parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1).joinToString(".") { it.part })
+                    parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1).joinToString(".") { it.text })
         }
         return null
     }

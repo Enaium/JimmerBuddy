@@ -37,7 +37,7 @@ object ImportedTypeCompletionProvider : CompletionProvider<CompletionParameters>
     ) {
         val project = parameters.position.project
         val packageName =
-            parameters.position.findParentOfType<DtoPsiImportStatement>(true)?.qualifiedNameParts?.parts?.joinToString(".") { it.part }
+            parameters.position.findParentOfType<DtoPsiImportStatement>(true)?.qualifiedNameParts?.parts?.joinToString(".") { it.text }
                 ?: return
         val classes =
             JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes ?: emptyArray<PsiClass>()

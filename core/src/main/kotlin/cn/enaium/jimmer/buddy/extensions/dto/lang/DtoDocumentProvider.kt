@@ -16,68 +16,62 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.lang
 
-import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
+import cn.enaium.jimmer.buddy.utility.toHtml
 import com.intellij.lang.documentation.AbstractDocumentationProvider
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.findParentOfType
-import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
-import org.jetbrains.kotlin.psi.KtClass
 
 /**
  * @author Enaium
  */
 class DtoDocumentProvider : AbstractDocumentationProvider() {
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
-        element.findParentOfType<DtoPsiMacro>()?.also { element ->
-            val name = element.name?.value ?: return null
-            val project = element.project
-            val trace = getTrace(element)
-            val typeName = element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
-            val commonImmutable = if (project.isJavaProject()) {
-                JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
-                    ?.toCommonImmutableType() ?: return null
-            } else if (project.isKotlinProject()) {
-                (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
-                    ?.toCommonImmutableType() ?: return null
-            } else {
-                return null
-            }
+        if (element is DtoPsiName) {
+            element.findParentOfType<DtoPsiMacro>()?.also { macro ->
+                val name = macro.name?.value ?: return null
+                val currentImmutable = findCurrentImmutableType(macro) ?: return null
 
-            var currentImmutable = commonImmutable
+                val props = when (name) {
+                    "allScalars" -> {
+                        val commonImmutableProps = mutableListOf<CommonImmutableType.CommonImmutableProp>()
+                        if (macro.args.isEmpty()) {
+                            commonImmutableProps.addAll(currentImmutable.props())
+                        } else {
+                            macro.args.forEach { arg ->
+                                when (arg.qualifiedName()) {
+                                    "this" -> commonImmutableProps.addAll(currentImmutable.declaredProps())
+                                    else -> commonImmutableProps.addAll(
+                                        currentImmutable.superTypes().find { it.qualifiedName() == it.qualifiedName() }
+                                            ?.declaredProps() ?: emptyList()
+                                    )
+                                }
+                            }
+                        }
+                        commonImmutableProps.filter { isAutoScalar(it) }
+                    }
 
-            trace.forEach { trace ->
-                currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
-                    currentImmutable = it
+                    "allReferences" -> {
+                        currentImmutable.props().filter { isAutoReference(it) }
+                    }
+
+                    else -> {
+                        emptyList()
+                    }
                 }
-            }
 
-            val props = when (name) {
-                "allScalars" -> {
-                    currentImmutable.props().filter { isAutoScalar(it) }
-                }
-
-                "allReferences" -> {
-                    currentImmutable.props().filter { isAutoReference(it) }
-                }
-
-                else -> {
-                    emptyList()
-                }
-            }
-
-            val content = """
+                val content = """
                 ## $name
                 
                 ${props.joinToString(", ") { "`${it.name()}`" }}
             """.trimIndent()
-            return content.toHtml()
+                return content.toHtml()
+            }
         }
 
         element.findParentOfType<DtoPsiAliasGroup>()?.also { group ->

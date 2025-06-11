@@ -16,19 +16,13 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
-import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.findPropertyByName
-import cn.enaium.jimmer.buddy.utility.isJavaProject
-import cn.enaium.jimmer.buddy.utility.isKotlinProject
-import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
-import cn.enaium.jimmer.buddy.utility.toImmutable
 import com.intellij.lang.ASTNode
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.findParentOfType
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
@@ -40,26 +34,7 @@ class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
     override fun getName(): String = value
 
     override fun reference(): PsiElement? {
-        val trace = getTrace(this)
-        val typeName = this.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
-
-        val commonImmutable = if (project.isJavaProject()) {
-            JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
-                ?.toCommonImmutableType() ?: return null
-        } else if (project.isKotlinProject()) {
-            (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
-                ?.toCommonImmutableType() ?: return null
-        } else {
-            return null
-        }
-
-        var currentImmutable = commonImmutable
-
-        trace.forEach { trace ->
-            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
-                currentImmutable = it
-            }
-        }
+        val currentImmutable = findCurrentImmutableType(this) ?: return null
         val prop = currentImmutable.props().find { it.name() == value } ?: return null
 
         JavaPsiFacade.getInstance(project).findClass(currentImmutable.qualifiedName(), project.allScope())

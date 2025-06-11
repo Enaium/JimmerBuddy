@@ -17,11 +17,9 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.isJavaProject
 import cn.enaium.jimmer.buddy.utility.isKotlinProject
-import cn.enaium.jimmer.buddy.utility.toCommonImmutableType
-import cn.enaium.jimmer.buddy.utility.toImmutable
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -50,28 +48,8 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
     ) {
         val project = parameters.position.project
         val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
-        val trace = getTrace(prop)
-        val typeName =
-            parameters.position.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return
-        val commonImmutable = if (project.isJavaProject()) {
-            JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
-                ?.toCommonImmutableType() ?: return
-        } else if (project.isKotlinProject()) {
-            (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
-                ?.toCommonImmutableType() ?: return
-        } else {
-            return
-        }
-
-        var currentImmutable = commonImmutable
-
-        trace.forEach { trace ->
-            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
-                currentImmutable = it
-            }
-        }
-
-        val enumName = currentImmutable.props().find { it.name() == prop.prop?.value }?.typeName() ?: return
+        val enumName =
+            findCurrentImmutableType(prop)?.props()?.find { it.name() == prop.prop?.value }?.typeName() ?: return
 
         val entries = if (project.isJavaProject()) {
             JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())

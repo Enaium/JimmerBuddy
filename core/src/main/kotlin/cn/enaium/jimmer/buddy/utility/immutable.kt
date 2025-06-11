@@ -16,13 +16,21 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
+import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.apt.createContext
+import org.babyfish.jimmer.apt.immutable.meta.ImmutableProp
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.sql.IdView
 import org.babyfish.jimmer.sql.ManyToManyView
+import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 
 /**
@@ -32,6 +40,30 @@ fun PsiClass.toImmutable(): ImmutableType {
     val (pe, typeElements, sources) = psiClassesToApt(copyOnWriteSetOf(this), copyOnWriteSetOf())
     val context = createContext(pe.elementUtils, pe.typeUtils, pe.filer)
     return context.getImmutableType(pe.elementUtils.getTypeElement(this.qualifiedName!!))
+}
+
+fun ImmutableProp.toCommonImmutableProp(): CommonImmutableType.CommonImmutableProp {
+    return CommonImmutableType.CommonImmutableProp(
+        { name },
+        { declaringType.toCommonImmutableType() },
+        { context().getImmutableType(elementType)?.toCommonImmutableType() },
+        { typeName.toString() },
+        { typeName.simplify() },
+        { isId },
+        isKey = { isKey },
+        isEmbedded = { isEmbedded },
+        { isAssociation(false) },
+        isList = { isList },
+        isTransient = { isTransient },
+        hasTransientResolver = { hasTransientResolver() },
+        isRecursive = { isRecursive },
+        isFormula = { isFormula },
+        isIdView = { getAnnotation(IdView::class.java) != null },
+        isManyToManyView = { getAnnotation(ManyToManyView::class.java) != null },
+        isLogicalDeleted = { isLogicalDeleted },
+        isNullable = { isNullable },
+        isExcludedFromAllScalars = { isExcludedFromAllScalars },
+    )
 }
 
 fun KtClass.toImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
@@ -48,29 +80,38 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
             this.properties.map { (name, prop) ->
-                CommonImmutableType.CommonImmutableProp(
-                    { name },
-                    { prop.declaringType.toCommonImmutableType() },
-                    { prop.targetType?.toCommonImmutableType() },
-                    { prop.typeName().toString() },
-                    { prop.typeName().simplify() },
-                    { prop.isId },
-                    isKey = { prop.isKey },
-                    isEmbedded = { prop.isEmbedded },
-                    { prop.isAssociation(it) },
-                    isList = { prop.isList },
-                    isTransient = { prop.isTransient },
-                    isFormula = { prop.isFormula },
-                    hasTransientResolver = { prop.hasTransientResolver() },
-                    isRecursive = { prop.isRecursive },
-                    isIdView = { prop.annotation(IdView::class) != null },
-                    isManyToManyView = { prop.annotation(ManyToManyView::class) != null },
-                    isLogicalDeleted = { prop.isLogicalDeleted },
-                    isNullable = { prop.isNullable },
-                    isExcludedFromAllScalars = { prop.isExcludedFromAllScalars }
-                )
+                prop.toCommonImmutableProp()
+            }
+        },
+        {
+            this.declaredProperties.map { (name, prop) ->
+                prop.toCommonImmutableProp()
             }
         }
+    )
+}
+
+fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableProp.toCommonImmutableProp(): CommonImmutableType.CommonImmutableProp {
+    return CommonImmutableType.CommonImmutableProp(
+        { name },
+        { declaringType.toCommonImmutableType() },
+        { targetType?.toCommonImmutableType() },
+        { typeName().toString() },
+        { typeName().simplify() },
+        { isId },
+        isKey = { isKey },
+        isEmbedded = { isEmbedded },
+        { isAssociation(it) },
+        isList = { isList },
+        isTransient = { isTransient },
+        isFormula = { isFormula },
+        hasTransientResolver = { hasTransientResolver() },
+        isRecursive = { isRecursive },
+        isIdView = { annotation(IdView::class) != null },
+        isManyToManyView = { annotation(ManyToManyView::class) != null },
+        isLogicalDeleted = { isLogicalDeleted },
+        isNullable = { isNullable },
+        isExcludedFromAllScalars = { isExcludedFromAllScalars }
     )
 }
 
@@ -81,27 +122,12 @@ fun ImmutableType.toCommonImmutableType(): CommonImmutableType {
         { this.superTypes.map { it.toCommonImmutableType() } },
         {
             this.props.map { (name, prop) ->
-                CommonImmutableType.CommonImmutableProp(
-                    { name },
-                    { prop.declaringType.toCommonImmutableType() },
-                    { prop.context().getImmutableType(prop.elementType)?.toCommonImmutableType() },
-                    { prop.typeName.toString() },
-                    { prop.typeName.simplify() },
-                    { prop.isId },
-                    isKey = { prop.isKey },
-                    isEmbedded = { prop.isEmbedded },
-                    { prop.isAssociation(false) },
-                    isList = { prop.isList },
-                    isTransient = { prop.isTransient },
-                    hasTransientResolver = { prop.hasTransientResolver() },
-                    isRecursive = { prop.isRecursive },
-                    isFormula = { prop.isFormula },
-                    isIdView = { prop.getAnnotation(IdView::class.java) != null },
-                    isManyToManyView = { prop.getAnnotation(ManyToManyView::class.java) != null },
-                    isLogicalDeleted = { prop.isLogicalDeleted },
-                    isNullable = { prop.isNullable },
-                    isExcludedFromAllScalars = { prop.isExcludedFromAllScalars },
-                )
+                prop.toCommonImmutableProp()
+            }
+        },
+        {
+            this.declaredProps.map { (name, prop) ->
+                prop.toCommonImmutableProp()
             }
         }
     )
@@ -111,7 +137,8 @@ data class CommonImmutableType(
     val name: () -> String,
     val qualifiedName: () -> String,
     val superTypes: () -> List<CommonImmutableType>,
-    val props: () -> List<CommonImmutableProp>
+    val props: () -> List<CommonImmutableProp>,
+    val declaredProps: () -> List<CommonImmutableProp>,
 ) {
     data class CommonImmutableProp(
         val name: () -> String,
@@ -177,4 +204,29 @@ enum class PropType(val description: String) {
     LOGICAL_DELETED("LogicalDeleted"),
     NULLABLE("Nullable"),
     PROPERTY("Property")
+}
+
+fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
+    val project = element.project
+    val trace = getTrace(element)
+    val typeName =
+        element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
+    val commonImmutable = if (project.isJavaProject()) {
+        JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
+            ?.toCommonImmutableType() ?: return null
+    } else if (project.isKotlinProject()) {
+        (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
+            ?.toCommonImmutableType() ?: return null
+    } else {
+        return null
+    }
+
+    var currentImmutable = commonImmutable
+
+    trace.forEach { trace ->
+        currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
+            currentImmutable = it
+        }
+    }
+    return currentImmutable
 }
