@@ -19,6 +19,7 @@ A plugin that adds first-class support for Project Jimmer
 - Execute SQL to clipboard.
 - DTO type count and navigation.
 - Immutable inheritor count and navigation.
+- Provide some postfix template.
 
 ### First-class DTO development
 

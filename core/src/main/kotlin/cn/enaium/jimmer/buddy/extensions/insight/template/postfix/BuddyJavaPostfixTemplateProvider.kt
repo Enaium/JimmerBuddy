@@ -31,6 +31,12 @@ class BuddyJavaPostfixTemplateProvider : AbstractBuddyPostfixTemplateProvider() 
         JavaShowPostfixTemplate(this),
         JavaHidePostfixTemplate(this),
         JavaSetPostfixTemplate(this),
+        JavaFindByIdPostfixTemplate(this),
+        JavaFindByIdsPostfixTemplate(this),
+        JavaFindMapByIdsPostfixTemplate(this),
+        JavaFindOneByIdPostfixTemplate(this),
+        JavaDeleteByIdPostfixTemplate(this),
+        JavaDeleteByIdsPostfixTemplate(this),
     )
 
     override fun getTemplates(): Set<PostfixTemplate?> {

@@ -30,6 +30,15 @@ class BuddyKotlinPostfixTemplateProvider : AbstractBuddyPostfixTemplateProvider(
         KotlinShowPostfixTemplate(this),
         KotlinHidePostfixTemplate(this),
         KotlinSetPostfixTemplate(this),
+        KotlinQueryPostfixTemplate(this),
+        KotlinUpdatePostfixTemplate(this),
+        KotlinDeletePostfixTemplate(this),
+        KotlinFindByIdPostfixTemplate(this),
+        KotlinFindByIdsPostfixTemplate(this),
+        KotlinFindMapByIdsPostfixTemplate(this),
+        KotlinFindOneByIdPostfixTemplate(this),
+        KotlinDeleteByIdPostfixTemplate(this),
+        KotlinDeleteByIdsPostfixTemplate(this),
     )
 
     override fun getTemplates(): Set<PostfixTemplate?> {
