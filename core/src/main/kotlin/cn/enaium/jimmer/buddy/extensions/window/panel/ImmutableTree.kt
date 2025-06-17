@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
@@ -88,6 +89,21 @@ class ImmutableTree(val project: Project) : JPanel() {
                                         NewDtoFileDialog(project, select.sourceFile, select.qualifiedName).show()
                                     }
                                 })
+                                add(JMenuItem("Generate DDL").apply {
+                                    addActionListener {
+                                        val target = select.target
+                                        val commonImmutableType = if (target is PsiClass) {
+                                            target.toImmutable().toCommonImmutableType()
+                                        } else if (select.target is KtClass) {
+                                            thread { runReadOnly { target.toImmutable().toCommonImmutableType() } }
+                                        } else {
+                                            null
+                                        }
+                                        commonImmutableType?.also {
+                                            GenerateDDLDialog(project, it).show()
+                                        }
+                                    }
+                                })
                             }
                         }.show(tree, e.x, e.y)
                     } else if (e.clickCount == 2) {
@@ -127,13 +143,16 @@ class ImmutableTree(val project: Project) : JPanel() {
                             sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
                                 ?.also { psiClass ->
                                     if (psiClass.isImmutable()) {
-
                                         val newChild = ImmutableType(psiClass)
-                                        psiClass.toImmutable().toCommonImmutableType().props().forEach {
-                                            psiClass.methods.find { method -> method.name == it.name() }
-                                                ?.also { method ->
-                                                    newChild.add(ImmutableProp(method, it))
-                                                }
+                                        try {
+                                            psiClass.toImmutable().toCommonImmutableType().props().forEach {
+                                                psiClass.methods.find { method -> method.name == it.name() }
+                                                    ?.also { method ->
+                                                        newChild.add(ImmutableProp(method, it))
+                                                    }
+                                            }
+                                        } catch (e: Throwable) {
+                                            JimmerBuddy.getWorkspace(project).log.error(e)
                                         }
                                         root.add(newChild)
                                     }
@@ -151,14 +170,18 @@ class ImmutableTree(val project: Project) : JPanel() {
                         project.runReadActionSmart {
                             sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also { ktClass ->
                                 if (ktClass.isImmutable()) {
-                                    val newChild = ImmutableType(ktClass)
-                                    ktClass.toImmutable().toCommonImmutableType().props().forEach {
-                                        ktClass.getProperties().find { property -> property.name == it.name() }
-                                            ?.also { property ->
-                                                newChild.add(ImmutableProp(property, it))
-                                            }
+                                    try {
+                                        val newChild = ImmutableType(ktClass)
+                                        ktClass.toImmutable().toCommonImmutableType().props().forEach {
+                                            ktClass.getProperties().find { property -> property.name == it.name() }
+                                                ?.also { property ->
+                                                    newChild.add(ImmutableProp(property, it))
+                                                }
+                                        }
+                                        root.add(newChild)
+                                    } catch (e: Throwable) {
+                                        JimmerBuddy.getWorkspace(project).log.error(e)
                                     }
-                                    root.add(newChild)
                                 }
                             }
                         }
