@@ -17,10 +17,8 @@
 package cn.enaium.jimmer.buddy.action
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
-import cn.enaium.jimmer.buddy.utility.isDumb
-import cn.enaium.jimmer.buddy.utility.isImmutable
-import cn.enaium.jimmer.buddy.utility.visibleWithImmutable
+import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
@@ -37,7 +35,7 @@ import kotlin.io.path.extension
 /**
  * @author Enaium
  */
-class NewDtoFile : AnAction() {
+class GenerateDDL : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         if (project.isDumb()) return
@@ -47,22 +45,21 @@ class NewDtoFile : AnAction() {
                 Notifications.Bus.notify(
                     Notification(
                         JimmerBuddy.INFO_GROUP_ID,
-                        "You can only create a new DTO file from a file",
+                        "You can only generate DDL from a file",
                         NotificationType.WARNING
                     )
                 )
                 return
             }
-
-            val name = when (sourceFile.extension) {
+            val commonImmutable = when (sourceFile.extension) {
                 "java" -> {
                     sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                        ?.takeIf { it.isImmutable() }?.qualifiedName
+                        ?.takeIf { it.isImmutable() }?.toImmutable()?.toCommonImmutableType()
                 }
 
                 "kt" -> {
-                    sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                        ?.takeIf { it.isImmutable() }?.fqName?.asString()
+                    sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.takeIf { it.isImmutable() }
+                        ?.let { thread { runReadOnly { it.toImmutable().toCommonImmutableType() } } }
                 }
 
                 else -> {
@@ -70,15 +67,9 @@ class NewDtoFile : AnAction() {
                 }
             }
 
-            name?.also {
-                NewDtoFileDialog(project, sourceFile, it).show()
-            } ?: Notifications.Bus.notify(
-                Notification(
-                    JimmerBuddy.INFO_GROUP_ID,
-                    "You selected file is not a immutable type",
-                    NotificationType.WARNING
-                )
-            )
+            commonImmutable?.also {
+                GenerateDDLDialog(project, it).show()
+            }
         }
     }
 

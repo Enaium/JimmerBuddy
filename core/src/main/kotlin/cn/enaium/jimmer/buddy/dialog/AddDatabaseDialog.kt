@@ -31,7 +31,7 @@ import javax.swing.JComponent
 /**
  * @author Enaium
  */
-class AddDatabase(val select: DatabaseItem? = null) : DialogWrapper(false) {
+class AddDatabaseDialog(val select: DatabaseItem? = null) : DialogWrapper(false) {
     private val databaseModel = DatabaseModel()
 
     init {

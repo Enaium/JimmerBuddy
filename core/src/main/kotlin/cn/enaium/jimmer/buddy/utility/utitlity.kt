@@ -166,7 +166,7 @@ fun Project.isKotlinProject(): Boolean {
         return false
     }
 
-    OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots.forEach {
+    thread { OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots }.forEach {
         if (it.name.startsWith("jimmer-core-kotlin")) {
             return true
         }
