@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -211,13 +212,18 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val trace = getTrace(element)
     val typeName =
         element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
-    val commonImmutable = if (project.isJavaProject()) {
-        JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
-            ?.toCommonImmutableType() ?: return null
-    } else if (project.isKotlinProject()) {
-        (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
-            ?.toCommonImmutableType() ?: return null
-    } else {
+    val commonImmutable = try {
+        if (project.isJavaProject()) {
+            JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
+                ?.toCommonImmutableType() ?: return null
+        } else if (project.isKotlinProject()) {
+            (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
+                ?.toCommonImmutableType() ?: return null
+        } else {
+            return null
+        }
+    } catch (e: Throwable) {
+        JimmerBuddy.getWorkspace(project).log.error(e)
         return null
     }
 

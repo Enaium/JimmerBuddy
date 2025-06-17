@@ -16,10 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
-import cn.enaium.jimmer.buddy.utility.hasToManyAnnotation
-import cn.enaium.jimmer.buddy.utility.hasToOneAnnotation
-import cn.enaium.jimmer.buddy.utility.inImmutable
-import cn.enaium.jimmer.buddy.utility.type
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
@@ -42,7 +39,9 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                 }
 
                 val toManyProblem = "The prop type is a collection, but the annotation is @ToOne"
+                val noToOneProblem = "The prop type a association, but not declared @ToOne"
                 val toOneProblem = "The prop type is not a collection, but the annotation is @ToMany"
+                val noToManyProblem = "The prop type a association, but not declared @ToMany"
 
                 if (element is PsiMethod) {
                     val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
@@ -54,10 +53,19 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     ) {
                         if (element.hasToOneAnnotation()) {
                             holder.registerProblem(element, toManyProblem)
+                        } else if (returnPsiClass?.element?.typeParameters?.firstOrNull()
+                                ?.let { returnPsiClass.substitutor.substitute(it) }
+                                ?.let { PsiUtil.resolveGenericsClassInType(it) }
+                                ?.element?.isEntity() == true && !element.hasToManyAnnotation()
+                            && !element.hasTransientAnnotation()
+                        ) {
+                            holder.registerProblem(element, noToManyProblem)
                         }
                     } else {
                         if (element.hasToManyAnnotation()) {
                             holder.registerProblem(element, toOneProblem)
+                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation()) {
+                            holder.registerProblem(element, noToOneProblem)
                         }
                     }
                 } else if (element is KtProperty) {
@@ -70,10 +78,14 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     ) {
                         if (element.hasToOneAnnotation()) {
                             holder.registerProblem(element, toManyProblem)
+                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.hasTransientAnnotation()) {
+                            holder.registerProblem(element, noToManyProblem)
                         }
                     } else {
                         if (element.hasToManyAnnotation()) {
                             holder.registerProblem(element, toOneProblem)
+                        } else if (typeReference?.ktClass?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation()) {
+                            holder.registerProblem(element, noToOneProblem)
                         }
                     }
                 }
