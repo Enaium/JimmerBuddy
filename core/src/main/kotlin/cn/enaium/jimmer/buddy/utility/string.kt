@@ -63,3 +63,28 @@ fun String.toPlural(): String {
 fun String.subMiddle(left: String, right: String): String {
     return this.substringAfter(left).substringBeforeLast(right)
 }
+
+fun String.camelToSnakeCase(): String {
+    if (this.isEmpty()) return ""
+
+    val result = StringBuilder()
+    result.append(this[0].lowercaseChar())
+
+    for (i in 1 until this.length) {
+        val current = this[i]
+        val previous = this[i - 1]
+
+        if (current.isUpperCase()) {
+            if (previous.isLowerCase() ||
+                (i < this.length - 1 && this[i + 1].isLowerCase())
+            ) {
+                result.append('_')
+            }
+            result.append(current.lowercaseChar())
+        } else {
+            result.append(current)
+        }
+    }
+
+    return result.toString()
+}

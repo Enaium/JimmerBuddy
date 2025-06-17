@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.dialog
 
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
@@ -42,13 +43,20 @@ class ExecuteSqlDialog(val project: Project, val sql: String) : DialogWrapper(fa
         return borderPanel {
             addToTop(JBLabel("Recommend to enable Inline SQL Parameters in Jimmer"))
             addToCenter(
-                EditorTextField(
+                object : EditorTextField(
                     EditorFactory.getInstance().createDocument(sql),
                     project,
                     PlainTextFileType.INSTANCE,
                     false
-                ).also {
-                    it.setOneLineMode(false)
+                ) {
+                    override fun createEditor(): EditorEx {
+                        return super.createEditor().apply {
+                            isOneLineMode = false
+                            setVerticalScrollbarVisible(true)
+                            setHorizontalScrollbarVisible(true)
+                            settings.isLineNumbersShown = true
+                        }
+                    }
                 })
             addToBottom(JBLabel("Ok is copy to clipboard, Cancel is close"))
         }

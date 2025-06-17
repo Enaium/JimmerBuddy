@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dialog.AddDatabase
+import cn.enaium.jimmer.buddy.dialog.AddDatabaseDialog
 import cn.enaium.jimmer.buddy.dialog.GenerateEntityDialog
 import cn.enaium.jimmer.buddy.dialog.TypeMappingDialog
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
@@ -66,7 +66,7 @@ class DatabaseList(val project: Project) : JPanel() {
                             })
                             add(JMenuItem("Edit").apply {
                                 addActionListener {
-                                    if (AddDatabase(select).showAndGet()) {
+                                    if (AddDatabaseDialog(select).showAndGet()) {
                                         JimmerBuddySetting.INSTANCE.state.databases =
                                             JimmerBuddySetting.INSTANCE.state.databases - select
                                     }
@@ -95,7 +95,7 @@ class DatabaseList(val project: Project) : JPanel() {
                     }, null, "Refresh", Dimension(24, 24)))
                     add(ActionButton(object : AnAction(AllIcons.General.Add) {
                         override fun actionPerformed(e: AnActionEvent) {
-                            if (AddDatabase().showAndGet()) {
+                            if (AddDatabaseDialog().showAndGet()) {
                                 refresh()
                             }
                         }

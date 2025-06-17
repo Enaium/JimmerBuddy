@@ -20,6 +20,7 @@ A plugin that adds first-class support for Project Jimmer
 - DTO type count and navigation.
 - Immutable inheritor count and navigation.
 - Provide some postfix template.
+- Generate DDL from Entity.
 
 ### First-class DTO development
 
