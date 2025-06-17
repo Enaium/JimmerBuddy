@@ -28,11 +28,7 @@ import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
-import org.jetbrains.uast.UAnnotation
-import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UClassLiteralExpression
-import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.toUElementOfType
+import org.jetbrains.uast.*
 
 /**
  * @author Enaium
@@ -63,8 +59,18 @@ fun PsiClass.hasImmutableAnnotation(): Boolean {
     } == true
 }
 
+fun PsiClass.hasEntityAnnotation(): Boolean {
+    return this.modifierList?.annotations?.any { annotation ->
+        annotation.hasQualifiedName(Entity::class.qualifiedName!!)
+    } == true
+}
+
 fun PsiClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface
+}
+
+fun PsiClass.isEntity(): Boolean {
+    return hasEntityAnnotation() && isImmutable()
 }
 
 fun PsiClass.isErrorFamily(): Boolean {
@@ -81,6 +87,13 @@ fun PsiClass.hasJimmerAnnotation(): Boolean {
     return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
 }
 
+fun KtClass.hasEntityAnnotation(): Boolean {
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
+        val fqName = annotation.qualifiedName
+        fqName == Entity::class.qualifiedName!!
+    } == true
+}
+
 fun KtClass.hasImmutableAnnotation(): Boolean {
     return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
         val fqName = annotation.qualifiedName
@@ -93,6 +106,10 @@ fun KtClass.hasImmutableAnnotation(): Boolean {
 
 fun KtClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface()
+}
+
+fun KtClass.isEntity(): Boolean {
+    return hasEntityAnnotation() && isImmutable()
 }
 
 fun KtClass.isErrorFamily(): Boolean {
@@ -124,6 +141,12 @@ fun PsiMethod.hasToOneAnnotation(): Boolean {
     } == true
 }
 
+fun PsiMethod.hasTransientAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(Transient::class.qualifiedName!!)
+    } == true
+}
+
 fun PsiMethod.hasIdViewAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(IdView::class.qualifiedName!!)
@@ -143,6 +166,13 @@ fun KtProperty.hasToOneAnnotation(): Boolean {
         val fqName = annotation.fqName
         fqName == OneToOne::class.qualifiedName!!
                 || fqName == ManyToOne::class.qualifiedName!!
+    } == true
+}
+
+fun KtProperty.hasTransientAnnotation(): Boolean {
+    return this.annotations().any { annotation ->
+        val fqName = annotation.fqName
+        fqName == Transient::class.qualifiedName!!
     } == true
 }
 

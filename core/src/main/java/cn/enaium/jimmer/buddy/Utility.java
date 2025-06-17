@@ -176,26 +176,6 @@ public class Utility {
         };
     }
 
-    public static Formula formula(String sql, String[] dependencies) {
-        return new Formula() {
-
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return Formula.class;
-            }
-
-            @Override
-            public String sql() {
-                return sql;
-            }
-
-            @Override
-            public String[] dependencies() {
-                return dependencies;
-            }
-        };
-    }
-
     public static Formula formula() {
         return new Formula() {
             @Override
