@@ -309,8 +309,8 @@ fun PsiElement.annotArgName(): String? {
 }
 
 fun PsiElement.inImmutable(): Boolean {
-    return this.getParentOfType<PsiClass>(true)?.isImmutable() != true || this.getParentOfType<KtClass>(true)
-        ?.isImmutable() != true
+    return this.getParentOfType<PsiClass>(true)?.isImmutable() == true || this.getParentOfType<KtClass>(true)
+        ?.isImmutable() == true
 }
 
 fun PsiElement.isAnnotation(name: String): Boolean {
