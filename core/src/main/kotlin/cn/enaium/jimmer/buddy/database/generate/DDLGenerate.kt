@@ -19,24 +19,35 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import cn.enaium.jimmer.buddy.utility.camelToSnakeCase
+import cn.enaium.jimmer.buddy.utility.getComment
+import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
+import org.jetbrains.kotlin.idea.base.util.allScope
 
 /**
  * @author Enaium
  */
-abstract class DDLGenerate(val generateDDLModel: GenerateDDLModel) {
+abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateDDLModel) {
     fun tables(commonImmutableType: CommonImmutableType): List<Table> {
         val tables = mutableListOf<Table>()
 
         val tableName = commonImmutableType.name().camelToSnakeCase()
+
+        val psiClass =
+            JavaPsiFacade.getInstance(project).findClass(commonImmutableType.qualifiedName(), project.allScope())
+
         tables.add(
             Table(
                 "",
                 "",
                 tableName,
-                "",
+                psiClass?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
                     if (!prop.isList()) {
                         prop.toColumn(tableName)
+                            .copy(
+                                remark = psiClass?.methods?.find { it.name == prop.name() }?.getComment()
+                            )
                     } else {
                         null
                     }
@@ -133,14 +144,18 @@ abstract class DDLGenerate(val generateDDLModel: GenerateDDLModel) {
             }
             render += "\n);"
 
-            render += "\n"
-            render += table.primaryKeys.joinToString("\n") { primaryKey ->
-                "alter table ${table.name} add constraint ${primaryKey.name} primary key (${primaryKey.columns.joinToString { it.name }});"
+            if (table.primaryKeys.isNotEmpty()) {
+                render += "\n"
+                render += table.primaryKeys.joinToString("\n") { primaryKey ->
+                    "alter table ${table.name} add constraint ${primaryKey.name} primary key (${primaryKey.columns.joinToString { it.name }});"
+                }
             }
 
-            render += "\n"
-            render += table.uniqueKeys.joinToString("\n") { uniqueKey ->
-                "alter table ${table.name} add constraint ${uniqueKey.name} unique (${uniqueKey.columns.joinToString { it.name }});"
+            if (table.uniqueKeys.isNotEmpty()) {
+                render += "\n"
+                render += table.uniqueKeys.joinToString("\n") { uniqueKey ->
+                    "alter table ${table.name} add constraint ${uniqueKey.name} unique (${uniqueKey.columns.joinToString { it.name }});"
+                }
             }
 
             if (generateDDLModel.reference) {
@@ -150,10 +165,32 @@ abstract class DDLGenerate(val generateDDLModel: GenerateDDLModel) {
                 }
             }
 
+            if (generateDDLModel.comment) {
+                render += "\n"
+                render += comment(tables)
+            }
+
             render
         }
     }
 
+    open fun comment(tables: List<Table>): String {
+        var render = ""
+
+        tables.forEach { table ->
+            table.remark?.also {
+                render += "comment on table ${table.name} is '${table.remark}'\n"
+            }
+
+            table.columns.forEach { column ->
+                column.remark?.also {
+                    render += "comment on column ${table.name}.${column.name} is '${column.remark}'\n"
+                }
+            }
+        }
+
+        return render
+    }
 
     abstract fun typeMapping(type: String): String
 

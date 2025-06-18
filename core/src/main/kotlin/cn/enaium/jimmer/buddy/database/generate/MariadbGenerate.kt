@@ -17,13 +17,15 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
+import com.intellij.openapi.project.Project
 import java.time.LocalDateTime
 import java.util.*
 
 /**
  * @author Enaium
  */
-class MariadbGenerate(generateDDLModel: GenerateDDLModel) : DDLGenerate(generateDDLModel) {
+class MariadbGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
+    MySqlDDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
             String::class.java.name, String::class.qualifiedName -> "varchar(255)"

@@ -77,6 +77,7 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
                 }
                 row {
                     checkBox("Reference").bindSelected(generateDDLModel.referenceProperty)
+                    checkBox("Comment").bindSelected(generateDDLModel.commentProperty)
                 }
                 row("Primary Key Name:") {
                     textField().align(Align.FILL).bindText(generateDDLModel.primaryKeyNameProperty)
@@ -95,27 +96,27 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
     private fun generate() {
         val generateDDL = when (generateDDLModel.database) {
             DDLGenerate.Database.POSTGRES -> {
-                PostgresDDLGenerate(generateDDLModel)
+                PostgresDDLGenerate(project, generateDDLModel)
             }
 
             DDLGenerate.Database.MYSQL -> {
-                MySqlDDLGenerate(generateDDLModel)
+                MySqlDDLGenerate(project, generateDDLModel)
             }
 
             DDLGenerate.Database.MARIADB -> {
-                MariadbGenerate(generateDDLModel)
+                MariadbGenerate(project, generateDDLModel)
             }
 
             DDLGenerate.Database.SQLITE -> {
-                SQLiteDDLGenerate(generateDDLModel)
+                SQLiteDDLGenerate(project, generateDDLModel)
             }
 
             DDLGenerate.Database.H2 -> {
-                H2DDLGenerate(generateDDLModel)
+                H2DDLGenerate(project, generateDDLModel)
             }
 
             DDLGenerate.Database.ORACLE -> {
-                OracleDDLGenerate(generateDDLModel)
+                OracleDDLGenerate(project, generateDDLModel)
             }
 
         }

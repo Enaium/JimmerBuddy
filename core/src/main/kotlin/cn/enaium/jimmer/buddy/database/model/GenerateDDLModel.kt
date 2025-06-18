@@ -27,9 +27,11 @@ class GenerateDDLModel : BaseState() {
     private val graph: PropertyGraph = PropertyGraph()
     val databaseProperty = graph.property(DDLGenerate.Database.POSTGRES)
     val referenceProperty = graph.property(true)
+    val commentProperty = graph.property(false)
     val primaryKeyNameProperty = graph.property("id")
 
     val database: DDLGenerate.Database by databaseProperty
     val reference: Boolean by referenceProperty
+    val comment: Boolean by commentProperty
     val primaryKeyName: String by primaryKeyNameProperty
 }
