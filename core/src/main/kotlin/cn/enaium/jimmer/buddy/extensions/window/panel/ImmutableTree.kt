@@ -92,12 +92,16 @@ class ImmutableTree(val project: Project) : JPanel() {
                                 add(JMenuItem("Generate DDL").apply {
                                     addActionListener {
                                         val target = select.target
-                                        val commonImmutableType = if (target is PsiClass) {
-                                            target.toImmutable().toCommonImmutableType()
-                                        } else if (select.target is KtClass) {
-                                            thread { runReadOnly { target.toImmutable().toCommonImmutableType() } }
-                                        } else {
-                                            null
+                                        val commonImmutableType = thread {
+                                            runReadOnly {
+                                                if (target is PsiClass) {
+                                                    target.toImmutable().toCommonImmutableType()
+                                                } else if (select.target is KtClass) {
+                                                    target.toImmutable().toCommonImmutableType()
+                                                } else {
+                                                    null
+                                                }
+                                            }
                                         }
                                         commonImmutableType?.also {
                                             GenerateDDLDialog(project, it).show()

@@ -20,13 +20,16 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.service.PsiService
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
+import com.intellij.psi.javadoc.PsiDocComment
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.*
 
@@ -287,10 +290,6 @@ fun PsiElement.annotValue(attribute: String): UExpression? {
         ?.findAttributeValue(attribute)
 }
 
-fun UExpression.text() {
-
-}
-
 fun UExpression.string(): String? {
     return this.evaluate()?.toString()
 }
@@ -316,4 +315,22 @@ fun PsiElement.inImmutable(): Boolean {
 
 fun PsiElement.isAnnotation(name: String): Boolean {
     return (this is PsiAnnotation || this is KtAnnotationEntry || this is KtCallExpression) && this.toUElementOfType<UAnnotation>()?.qualifiedName == name
+}
+
+fun PsiElement.getComment(): String? {
+    var comment = ""
+
+    getChildOfType<KDoc>()?.also { doc ->
+        comment = doc.getAllSections().filter { it.text != "*" && it.text.isNotBlank() }.joinToString("\n") {
+            it.text.trim()
+        }
+    }
+
+    getChildOfType<PsiDocComment>()?.also { doc ->
+        comment = doc.descriptionElements.filter { it.text != "*" && it.text.isNotBlank() }.joinToString("\n") {
+            it.text.trim()
+        }
+    }
+
+    return comment.takeIf { it.isNotEmpty() }
 }

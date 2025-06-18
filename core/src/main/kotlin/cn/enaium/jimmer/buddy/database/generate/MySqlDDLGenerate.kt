@@ -17,13 +17,31 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
+import cn.enaium.jimmer.buddy.database.model.Table
+import com.intellij.openapi.project.Project
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
  * @author Enaium
  */
-class MySqlDDLGenerate(generateDDLModel: GenerateDDLModel) : DDLGenerate(generateDDLModel) {
+open class MySqlDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
+    override fun comment(tables: List<Table>): String {
+        var render = ""
+        tables.forEach { table ->
+            table.remark?.also {
+                render += "alter table ${table.name} comment '$it';\n"
+            }
+
+            table.columns.forEach { column ->
+                column.remark?.also {
+                    render += "alter table ${table.name} modify column ${column.name} comment '$it';\n"
+                }
+            }
+        }
+        return render
+    }
+
     override fun typeMapping(type: String): String {
         return when (type) {
             String::class.java.name, String::class.qualifiedName -> "varchar(255)"

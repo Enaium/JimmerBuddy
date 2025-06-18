@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
+import com.intellij.openapi.project.Project
 import java.math.BigDecimal
 import java.net.InetAddress
 import java.time.LocalDate
@@ -27,7 +28,9 @@ import java.util.*
 /**
  * @author Enaium
  */
-class PostgresDDLGenerate(generateDDLModel: GenerateDDLModel) : DDLGenerate(generateDDLModel) {
+class PostgresDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
+    DDLGenerate(project, generateDDLModel) {
+
     override fun typeMapping(type: String): String {
         return when (type) {
             String::class.java.name, String::class.qualifiedName -> "text"

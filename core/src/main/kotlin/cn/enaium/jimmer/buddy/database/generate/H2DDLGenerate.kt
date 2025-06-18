@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
+import com.intellij.openapi.project.Project
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -26,7 +27,7 @@ import java.util.*
 /**
  * @author Enaium
  */
-class H2DDLGenerate(generateDDLModel: GenerateDDLModel) : DDLGenerate(generateDDLModel) {
+class H2DDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
             String::class.java.name, String::class.qualifiedName -> "varchar(255)"
