@@ -19,9 +19,12 @@ package cn.enaium.jimmer.buddy.utility
 import cn.enaium.jimmer.buddy.Utility
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiUtil
+import com.jetbrains.rd.util.printlnError
 import net.bytebuddy.ByteBuddy
+import net.bytebuddy.implementation.FixedValue
 import net.bytebuddy.implementation.InvocationHandlerAdapter
 import net.bytebuddy.matcher.ElementMatchers
+import net.bytebuddy.matcher.ElementMatchers.named
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
@@ -690,6 +693,38 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
         ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
             it.isAccessible = true
         }.newInstance() as Annotation
+} ?: run {
+    val qualifiedName = qualifiedName ?: return null
+    val map = mutableMapOf<String, ByteArray>()
+
+    class MyClassLoader : ClassLoader(this.javaClass.classLoader) {
+        override fun loadClass(name: String, resolve: Boolean): Class<*> {
+            return map[name]?.let {
+                defineClass(name, it, 0, it.size)
+            } ?: super.loadClass(name, resolve)
+        }
+    }
+
+    val classLoader = MyClassLoader()
+    val annotationUnloaded = ByteBuddy()
+        .makeAnnotation()
+        .name(qualifiedName)
+        .make()
+    map[qualifiedName] = annotationUnloaded.bytes
+
+    val proxyName = qualifiedName + "_Proxy"
+    val proxyAnnotationUnloaded = ByteBuddy().subclass(Object::class.java)
+        .name(proxyName)
+        .implement(java.lang.annotation.Annotation::class.java)
+        .method(named("annotationType"))
+        .intercept(FixedValue.value(annotationUnloaded.typeDescription))
+
+    map[proxyName] = proxyAnnotationUnloaded.make().bytes
+    val forName = Class.forName(proxyName, true, classLoader)
+    printlnError(forName.name)
+    return forName.getDeclaredConstructor().also {
+        it.isAccessible = true
+    }.newInstance() as Annotation
 }
 
 fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
