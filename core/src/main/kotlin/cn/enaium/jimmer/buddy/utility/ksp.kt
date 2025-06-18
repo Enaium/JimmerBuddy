@@ -353,17 +353,18 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     }
 
     ktClasses.forEach { (compilable, ktClass) ->
-        ksClassDeclarationCaches[ktClass.fqName!!.asString()] = ktClass.asKSClassDeclaration(ksClassDeclarationCaches)
+        val fqName = ktClass.fqName?.asString() ?: return@forEach
+        ksClassDeclarationCaches[fqName] =
+            ktClass.asKSClassDeclaration(ksClassDeclarationCaches)
 
         if (compilable) {
             ksFiles.add(
                 createKSFile(
                     fileName = { ktClass.containingFile.name },
                     filePath = { ktClass.containingFile.virtualFile.path },
-                    packageName = { ksClassDeclarationCaches[ktClass.fqName!!.asString()]!!.packageName },
-                    declarations = { sequenceOf(ksClassDeclarationCaches[ktClass.fqName!!.asString()]!!) },
+                    packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
+                    declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
                     annotations = { sequenceOf() }
-
                 ))
         }
     }

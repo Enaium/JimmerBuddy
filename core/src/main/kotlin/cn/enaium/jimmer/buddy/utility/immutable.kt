@@ -212,8 +212,8 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val trace = getTrace(element)
     val typeName =
         element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
-    val commonImmutable = try {
-        if (project.isJavaProject()) {
+    try {
+        val commonImmutable = if (project.isJavaProject()) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
                 ?.toCommonImmutableType() ?: return null
         } else if (project.isKotlinProject()) {
@@ -222,17 +222,17 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
         } else {
             return null
         }
+
+        var currentImmutable = commonImmutable
+
+        trace.forEach { trace ->
+            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
+                currentImmutable = it
+            }
+        }
+        return currentImmutable
     } catch (e: Throwable) {
         JimmerBuddy.getWorkspace(project).log.error(e)
         return null
     }
-
-    var currentImmutable = commonImmutable
-
-    trace.forEach { trace ->
-        currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
-            currentImmutable = it
-        }
-    }
-    return currentImmutable
 }

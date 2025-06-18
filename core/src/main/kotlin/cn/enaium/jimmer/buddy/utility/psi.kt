@@ -321,8 +321,14 @@ fun PsiElement.getComment(): String? {
     var comment = ""
 
     getChildOfType<KDoc>()?.also { doc ->
-        comment = doc.getAllSections().filter { it.text != "*" && it.text.isNotBlank() }.joinToString("\n") {
-            it.text.trim()
+        comment = doc.getAllSections().filter { it.text != "*" && it.text.isNotBlank() }.joinToString("\n") { section ->
+            section.text.trim().let {
+                if (it.startsWith("* ")) {
+                    it.substring(2)
+                } else {
+                    it
+                }
+            }
         }
     }
 

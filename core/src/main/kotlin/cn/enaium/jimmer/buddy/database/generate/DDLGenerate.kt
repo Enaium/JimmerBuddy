@@ -17,12 +17,12 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.*
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType
-import cn.enaium.jimmer.buddy.utility.camelToSnakeCase
-import cn.enaium.jimmer.buddy.utility.getComment
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
+import org.jetbrains.kotlin.psi.KtClass
 
 /**
  * @author Enaium
@@ -35,18 +35,32 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
         val psiClass =
             JavaPsiFacade.getInstance(project).findClass(commonImmutableType.qualifiedName(), project.allScope())
+        val ktClass =
+            KotlinFullClassNameIndex[commonImmutableType.qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
 
         tables.add(
             Table(
                 "",
                 "",
                 tableName,
-                psiClass?.getComment(),
+                if (project.isJavaProject()) {
+                    psiClass?.getComment()
+                } else if (project.isKotlinProject()) {
+                    ktClass?.getComment()
+                } else {
+                    null
+                },
                 commonImmutableType.props().mapNotNull { prop ->
                     if (!prop.isList()) {
                         prop.toColumn(tableName)
                             .copy(
-                                remark = psiClass?.methods?.find { it.name == prop.name() }?.getComment()
+                                remark = if (project.isJavaProject()) {
+                                    psiClass?.methods?.find { it.name == prop.name() }?.getComment()
+                                } else if (project.isKotlinProject()) {
+                                    ktClass?.getProperties()?.find { it.name == prop.name() }?.getComment()
+                                } else {
+                                    null
+                                }
                             )
                     } else {
                         null
