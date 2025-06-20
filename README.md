@@ -34,6 +34,7 @@ A plugin that adds first-class support for Project Jimmer
 - Format source.
 - Structure view.
 - Visualization to create DTO file.
+- DTO designer.
 
 ## FAQ
 
