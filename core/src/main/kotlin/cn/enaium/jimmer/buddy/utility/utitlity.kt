@@ -186,6 +186,12 @@ fun Project.runReadActionSmart(block: () -> Unit) {
     }
 }
 
+fun Project.runWriteActionSmart(block: () -> Unit) {
+    DumbService.getInstance(this).runWhenSmart {
+
+    }
+}
+
 val toManyAnnotations = listOfNotNull(OneToMany::class.qualifiedName, ManyToMany::class.qualifiedName)
 val toOneAnnotations = listOfNotNull(OneToOne::class.qualifiedName, ManyToOne::class.qualifiedName)
 

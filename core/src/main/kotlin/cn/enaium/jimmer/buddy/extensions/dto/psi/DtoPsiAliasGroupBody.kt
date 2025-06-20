@@ -20,5 +20,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
  * @author Enaium
  */
 interface DtoPsiAliasGroupBody : DtoPsiElement {
+    val macros: List<DtoPsiMacro>
     val positiveProps: List<DtoPsiPositiveProp>
 }

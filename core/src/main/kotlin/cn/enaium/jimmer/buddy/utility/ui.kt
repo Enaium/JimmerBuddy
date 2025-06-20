@@ -36,12 +36,13 @@ import com.intellij.ui.components.fields.ExtendableTextField
 import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.bindText
+import com.intellij.ui.treeStructure.Tree
 import java.net.URI
-import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.pathString
-import kotlin.io.path.relativeTo
-import kotlin.io.path.toPath
+import java.util.*
+import javax.swing.tree.TreeNode
+import javax.swing.tree.TreePath
+import kotlin.io.path.*
+
 
 /**
  * @author Enaium
@@ -131,4 +132,17 @@ fun Row.fileChooserField(
                 }
             }
     return textFieldWithBrowseButton("File Chooser", null, fileChooserDescriptor).bindText(property)
+}
+
+fun Tree.expandAll(parent: TreePath) {
+    val node = parent.lastPathComponent as TreeNode
+    if (node.childCount >= 0) {
+        val e: Enumeration<*> = node.children()
+        while (e.hasMoreElements()) {
+            val n = e.nextElement() as TreeNode
+            val path = parent.pathByAddingChild(n)
+            expandAll(path)
+        }
+    }
+    expandPath(parent)
 }

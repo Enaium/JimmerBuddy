@@ -188,6 +188,7 @@
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyJavaPostfixTemplateProvider"/>
         <codeInsight.template.postfixTemplateProvider language="kotlin"
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyKotlinPostfixTemplateProvider"/>
+        <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>

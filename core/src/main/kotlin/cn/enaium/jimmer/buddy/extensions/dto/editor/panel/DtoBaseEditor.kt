@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
-interface DtoPsiPositiveProp : DtoPsiElement {
-    val prop: DtoPsiProp?
-    val alias: DtoPsiAlias?
-    val body: DtoPsiDtoBody?
-    val modifier: DtoPsiModifier?
+import com.intellij.openapi.editor.Document
+import java.awt.BorderLayout
+import javax.swing.JPanel
+
+/**
+ * @author Enaium
+ */
+abstract class DtoBaseEditor : JPanel(BorderLayout()) {
+
+    private val panel by lazy { panel() }
+
+    fun init() {
+        add(panel, BorderLayout.CENTER)
+    }
+
+    abstract fun panel(): JPanel
+
+    abstract fun save(document: Document)
 }

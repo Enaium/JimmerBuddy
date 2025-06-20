@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroupBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
@@ -26,6 +27,8 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
  * @author Enaium
  */
 class DtoPsiAliasGroupBodyImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAliasGroupBody {
+    override val macros: List<DtoPsiMacro>
+        get() = findChildren<DtoPsiMacro>("/aliasGroupBody/macro")
     override val positiveProps: List<DtoPsiPositiveProp>
         get() = findChildren<DtoPsiPositiveProp>("/aliasGroupBody/positiveProp")
 }

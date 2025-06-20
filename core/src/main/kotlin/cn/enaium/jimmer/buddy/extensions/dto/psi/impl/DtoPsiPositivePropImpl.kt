@@ -17,10 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
@@ -30,6 +27,8 @@ class DtoPsiPositivePropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiPositive
     override val alias: DtoPsiAlias?
         get() = findChild<DtoPsiAlias>("/positiveProp/alias")
 
-    override val dtoBody: DtoPsiDtoBody?
+    override val body: DtoPsiDtoBody?
         get() = findChild<DtoPsiDtoBody>("/positiveProp/dtoBody")
+    override val modifier: DtoPsiModifier?
+        get() = findChild<DtoPsiModifier>("/positiveProp/modifier")
 }
