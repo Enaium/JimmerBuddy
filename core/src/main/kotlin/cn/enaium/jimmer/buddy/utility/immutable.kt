@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -88,6 +89,9 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableType.toCommonImmutableType()
             this.declaredProperties.map { (name, prop) ->
                 prop.toCommonImmutableProp()
             }
+        },
+        {
+            this.isEmbeddable
         }
     )
 }
@@ -130,6 +134,9 @@ fun ImmutableType.toCommonImmutableType(): CommonImmutableType {
             this.declaredProps.map { (name, prop) ->
                 prop.toCommonImmutableProp()
             }
+        },
+        {
+            this.isEmbeddable
         }
     )
 }
@@ -140,6 +147,7 @@ data class CommonImmutableType(
     val superTypes: () -> List<CommonImmutableType>,
     val props: () -> List<CommonImmutableProp>,
     val declaredProps: () -> List<CommonImmutableProp>,
+    val isEmbedded: () -> Boolean
 ) {
     data class CommonImmutableProp(
         val name: () -> String,
@@ -242,5 +250,35 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     } catch (e: Throwable) {
         JimmerBuddy.getWorkspace(project).log.error(e)
         return null
+    }
+}
+
+fun CommonImmutableType.psi(project: Project): PsiElement? {
+    val psiClass =
+        JavaPsiFacade.getInstance(project).findClass(qualifiedName(), project.allScope())
+    val ktClass =
+        KotlinFullClassNameIndex[qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
+
+    return if (project.isJavaProject()) {
+        psiClass
+    } else if (project.isKotlinProject()) {
+        ktClass
+    } else {
+        null
+    }
+}
+
+fun CommonImmutableType.CommonImmutableProp.psi(project: Project): PsiElement? {
+    val psiClass =
+        JavaPsiFacade.getInstance(project).findClass(declaringType().qualifiedName(), project.allScope())
+    val ktClass =
+        KotlinFullClassNameIndex[declaringType().qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
+
+    return if (project.isJavaProject()) {
+        psiClass?.methods?.find { it.name == name() }
+    } else if (project.isKotlinProject()) {
+        ktClass?.getProperties()?.find { it.name == name() }
+    } else {
+        null
     }
 }

@@ -19,10 +19,9 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.*
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
-import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
-import org.jetbrains.kotlin.psi.KtClass
+import com.intellij.psi.PsiMethod
+import org.babyfish.jimmer.sql.PropOverride
+import org.jetbrains.kotlin.psi.KtProperty
 
 /**
  * @author Enaium
@@ -33,39 +32,73 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
         val tableName = commonImmutableType.name().camelToSnakeCase()
 
-        val psiClass =
-            JavaPsiFacade.getInstance(project).findClass(commonImmutableType.qualifiedName(), project.allScope())
-        val ktClass =
-            KotlinFullClassNameIndex[commonImmutableType.qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
-
         tables.add(
             Table(
                 "",
                 "",
                 tableName,
-                if (project.isJavaProject()) {
-                    psiClass?.getComment()
-                } else if (project.isKotlinProject()) {
-                    ktClass?.getComment()
-                } else {
-                    null
-                },
+                commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
-                    if (!prop.isList()) {
-                        prop.toColumn(tableName)
-                            .copy(
-                                remark = if (project.isJavaProject()) {
-                                    psiClass?.methods?.find { it.name == prop.name() }?.getComment()
-                                } else if (project.isKotlinProject()) {
-                                    ktClass?.getProperties()?.find { it.name == prop.name() }?.getComment()
-                                } else {
-                                    null
-                                }
-                            )
+                    if (!prop.isList() && !prop.isEmbedded()) {
+                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment())
                     } else {
                         null
                     }
-                }.toSet(),
+                }.toSet() + run {
+                    val columns = mutableSetOf<Column>()
+
+                    fun addEmbeddedProp(
+                        type: CommonImmutableType,
+                        map: MutableMap<String, String> = mutableMapOf()
+                    ) {
+                        type.props().forEach { prop ->
+                            if (prop.isEmbedded()) {
+                                prop.psi(project)?.also { psi ->
+                                    if (psi is PsiMethod) {
+                                        psi.annotations.forEach {
+                                            if (it.qualifiedName == PropOverride::class.qualifiedName) {
+                                                val prop =
+                                                    it.findAttributeValue("prop")?.toAny(String::class.java)
+                                                        ?.toString()
+                                                val columnName = it.findAttributeValue("columnName")?.toAny(
+                                                    String::class.java
+                                                )?.toString()
+
+                                                if (prop != null && columnName != null) {
+                                                    map[prop] = columnName
+                                                }
+                                            }
+                                        }
+                                    } else if (psi is KtProperty) {
+                                        psi.annotations().forEach {
+                                            if (it.fqName == PropOverride::class.qualifiedName) {
+                                                val prop = it.findArgument("prop")?.value?.toString()
+                                                val columnName = it.findArgument("columnName")?.value?.toString()
+                                                if (prop != null && columnName != null) {
+                                                    map[prop] = columnName
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                prop.targetType()?.also {
+                                    addEmbeddedProp(it, map)
+                                    map.clear()
+                                }
+                            } else if (prop.declaringType().isEmbedded()) {
+                                columns.add(prop.toColumn(tableName).let { column ->
+                                    map[prop.name()]?.let {
+                                        column.copy(it)
+                                    } ?: column
+                                })
+                            }
+                        }
+                    }
+
+                    addEmbeddedProp(commonImmutableType)
+
+                    columns
+                },
                 commonImmutableType.props().mapNotNull { prop ->
                     prop.toPrimaryKey(tableName)
                 }.toSet(),
