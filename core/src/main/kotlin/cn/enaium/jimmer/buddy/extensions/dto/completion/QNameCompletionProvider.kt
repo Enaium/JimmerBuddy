@@ -60,7 +60,7 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
                         )
                     }
 
-                }.withIcon(it.getIcon(0))
+                }.withTailText(" (from ${it.qualifiedName?.substringBeforeLast(".")})").withIcon(it.getIcon(0))
             })
         }
 
