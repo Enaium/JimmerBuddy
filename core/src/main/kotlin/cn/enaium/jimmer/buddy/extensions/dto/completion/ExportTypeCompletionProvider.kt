@@ -54,7 +54,7 @@ object ExportTypeCompletionProvider : CompletionProvider<CompletionParameters>()
                         val end: Int = context.tailOffset
                         context.document.replaceString(start, end, it.qualifiedName ?: "Unknown Name")
                     }
-                    .withTailText("(from ${it.qualifiedName?.substringBeforeLast(".")})")
+                    .withTailText(" (from ${it.qualifiedName?.substringBeforeLast(".")})")
                     .withIcon(it.getIcon(0))
             })
         }
