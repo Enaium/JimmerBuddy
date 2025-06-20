@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.utility
 
-interface DtoPsiPositiveProp : DtoPsiElement {
-    val prop: DtoPsiProp?
-    val alias: DtoPsiAlias?
-    val body: DtoPsiDtoBody?
-    val modifier: DtoPsiModifier?
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.util.TextRange
+
+/**
+ * @author Enaium
+ */
+fun Document.replaceString(range: TextRange, text: String) {
+    replaceString(range.startOffset, range.endOffset, text)
 }

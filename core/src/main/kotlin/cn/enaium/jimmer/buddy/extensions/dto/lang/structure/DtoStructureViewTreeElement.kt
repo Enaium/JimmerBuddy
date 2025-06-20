@@ -44,7 +44,7 @@ class DtoStructureViewTreeElement(val element: PsiElement) : StructureViewTreeEl
         return when (element) {
             is DtoPsiFile -> element.childrenOfType<DtoPsiRoot>().firstOrNull()?.childrenOfType<DtoPsiDtoType>()
             is DtoPsiDtoType -> element.body?.explicitProps?.filter { explicitProps -> explicitProps.aliasGroup == null }
-            is DtoPsiExplicitProp -> element.positiveProp?.dtoBody?.explicitProps
+            is DtoPsiExplicitProp -> element.positiveProp?.body?.explicitProps
             else -> emptyList<PsiElement>()
         }?.map { DtoStructureViewTreeElement(it) }?.toTypedArray() ?: emptyArray()
     }

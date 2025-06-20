@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.extensions.dto.editor
 
-interface DtoPsiPositiveProp : DtoPsiElement {
-    val prop: DtoPsiProp?
-    val alias: DtoPsiAlias?
-    val body: DtoPsiDtoBody?
-    val modifier: DtoPsiModifier?
-}
+import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.TextEditorWithPreview
+
+/**
+ * @author Enaium
+ */
+class DtoViewerSplitEditor(editor: TextEditor, visual: DtoVisualFileEditor) :
+    TextEditorWithPreview(editor, visual)

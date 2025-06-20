@@ -1,0 +1,76 @@
+/*
+ * Copyright 2025 Enaium
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
+
+import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NodeSelectedNotifier
+import com.intellij.openapi.project.Project
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.messages.Topic
+import java.awt.BorderLayout
+import javax.swing.JPanel
+
+/**
+ * @author Enaium
+ */
+class DtoInfo(project: Project) : JPanel() {
+
+    private val connection = project.messageBus.connect()
+
+    companion object {
+        val NODE_SELECTED_TOPIC = Topic.create("Node Selected", NodeSelectedNotifier::class.java)
+    }
+
+
+    val noSelected = JBLabel("No Selected", JBLabel.CENTER)
+    val panel = JPanel(BorderLayout()).apply {
+        add(noSelected, BorderLayout.CENTER)
+    }
+
+    init {
+        connection.subscribe(NODE_SELECTED_TOPIC, object : NodeSelectedNotifier {
+            override fun selectNode(node: DtoTree.DtoNode) {
+                panel.removeAll()
+                panel.repaint()
+                panel.revalidate()
+                val editor = when (node) {
+                    is DtoTree.DtoTypeNode -> {
+                        DtoTypeEditor(node)
+                    }
+
+                    is DtoTree.DtoPropNode -> {
+                        DtoPropEditor(node)
+                    }
+
+                    else -> noSelected
+                }
+
+                editor.also {
+                    panel.add(JBScrollPane(editor).apply {
+                        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+                    }, BorderLayout.CENTER)
+                }
+
+                panel.repaint()
+                panel.revalidate()
+            }
+        })
+
+        layout = BorderLayout()
+        add(panel, BorderLayout.CENTER)
+    }
+}

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.extensions.dto.editor.notifier
 
-interface DtoPsiPositiveProp : DtoPsiElement {
-    val prop: DtoPsiProp?
-    val alias: DtoPsiAlias?
-    val body: DtoPsiDtoBody?
-    val modifier: DtoPsiModifier?
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree
+
+/**
+ * @author Enaium
+ */
+interface NodeSelectedNotifier {
+    fun selectNode(node: DtoTree.DtoNode)
 }
