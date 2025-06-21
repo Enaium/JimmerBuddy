@@ -22,6 +22,7 @@ import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileTypes.PlainTextFileType
@@ -61,7 +62,7 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
         }
 
     init {
-        title = "Generate DDL"
+        title = I18n.message("dialog.generate.ddl.title")
         setSize(800, 600)
         init()
         generate()
@@ -70,20 +71,20 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
     override fun createCenterPanel(): JComponent {
         return borderPanel {
             addToTop(panel {
-                row("Database:") {
+                row(I18n.message("dialog.generate.ddl.label.database")) {
                     JimmerBuddy.Services.UI.segmentedButtonText(this, DDLGenerate.Database.entries) {
                         it.text
                     }.bind(generateDDLModel.databaseProperty)
                 }
                 row {
-                    checkBox("Reference").bindSelected(generateDDLModel.referenceProperty)
-                    checkBox("Comment").bindSelected(generateDDLModel.commentProperty)
+                    checkBox(I18n.message("dialog.generate.ddl.checkbox.reference")).bindSelected(generateDDLModel.referenceProperty)
+                    checkBox(I18n.message("dialog.generate.ddl.checkbox.comment")).bindSelected(generateDDLModel.commentProperty)
                 }
-                row("Primary Key Name:") {
+                row(I18n.message("dialog.generate.ddl.label.primaryKeyName")) {
                     textField().align(Align.FILL).bindText(generateDDLModel.primaryKeyNameProperty)
                 }
                 row {
-                    button("Generate") {
+                    button(I18n.message("dialog.generate.ddl.button.generate")) {
                         generate()
                     }
                 }

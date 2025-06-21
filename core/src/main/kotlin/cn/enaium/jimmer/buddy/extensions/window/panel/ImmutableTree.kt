@@ -23,6 +23,7 @@ import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
@@ -78,18 +79,18 @@ class ImmutableTree(val project: Project) : JPanel() {
 
                     if (SwingUtilities.isRightMouseButton(e)) {
                         JBPopupMenu().apply {
-                            add(JMenuItem("Go To").apply {
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.goto")).apply {
                                 addActionListener {
                                     navigate()
                                 }
                             })
                             if (select is ImmutableType) {
-                                add(JMenuItem("New DTO").apply {
+                                add(JMenuItem(I18n.message("toolwindow.buddy.menu.newDto")).apply {
                                     addActionListener {
                                         NewDtoFileDialog(project, select.sourceFile, select.qualifiedName).show()
                                     }
                                 })
-                                add(JMenuItem("Generate DDL").apply {
+                                add(JMenuItem(I18n.message("toolwindow.buddy.menu.generateDDL")).apply {
                                     addActionListener {
                                         val target = select.target
                                         val commonImmutableType = thread {

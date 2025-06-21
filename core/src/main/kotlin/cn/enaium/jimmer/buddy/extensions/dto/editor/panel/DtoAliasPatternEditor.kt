@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import cn.enaium.jimmer.buddy.utility.replaceString
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.ui.dsl.builder.Align
@@ -40,13 +41,13 @@ class DtoAliasPatternEditor(
 
     override fun panel(): JPanel {
         return panel {
-            row("Origin:") {
+            row(I18n.message("editor.dto.label.origin")) {
                 textField().align(Align.FILL).bindText(originProperty)
             }
             row {
                 label("->")
             }
-            row("Replacement:") {
+            row(I18n.message("editor.dto.label.replacement")) {
                 textField().align(Align.FILL).bindText(replacementProperty)
             }
         }

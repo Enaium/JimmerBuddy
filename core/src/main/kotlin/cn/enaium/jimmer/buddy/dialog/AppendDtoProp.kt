@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -44,14 +45,14 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
     private val model = Model()
 
     init {
-        title = "Append DTO Type"
+        title = I18n.message("dialog.appendDtoProp.title")
         setSize(300, 150)
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return panel {
-            row("Props:") {
+            row(I18n.message("dialog.appendDtoProp.label.props")) {
                 cell(JComboBox<CommonImmutableType.CommonImmutableProp>().apply {
                     CoroutineScope(Dispatchers.IO).launch {
                         node.target.project.runReadActionSmart {

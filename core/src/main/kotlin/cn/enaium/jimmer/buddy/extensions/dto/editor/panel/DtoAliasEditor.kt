@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.utility.replaceString
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.ui.dsl.builder.Align
@@ -42,7 +43,7 @@ class DtoAliasEditor(
 
     override fun panel(): JPanel {
         return panel {
-            row("Alias:") {
+            row(I18n.message("editor.dto.label.alias")) {
                 textField().align(Align.FILL).bindText(aliasProperty)
             }
         }

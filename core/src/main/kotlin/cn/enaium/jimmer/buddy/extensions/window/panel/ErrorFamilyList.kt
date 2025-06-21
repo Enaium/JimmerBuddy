@@ -16,17 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
-import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree.ImmutableProp
-import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree.ImmutableType
-import cn.enaium.jimmer.buddy.utility.findProjects
-import cn.enaium.jimmer.buddy.utility.hasErrorFamilyAnnotation
-import cn.enaium.jimmer.buddy.utility.isErrorFamily
-import cn.enaium.jimmer.buddy.utility.runReadActionSmart
-import cn.enaium.jimmer.buddy.utility.runReadOnly
-import cn.enaium.jimmer.buddy.utility.runWhenSmart
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
@@ -57,11 +50,7 @@ import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JLabel
-import javax.swing.JMenuItem
-import javax.swing.JPanel
-import javax.swing.JTree
-import javax.swing.SwingUtilities
+import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -90,7 +79,7 @@ class ErrorFamilyList(val project: Project) : JPanel() {
 
                     if (SwingUtilities.isRightMouseButton(e)) {
                         JBPopupMenu().apply {
-                            add(JMenuItem("Go To").apply {
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.goto")).apply {
                                 addActionListener {
                                     navigate()
                                 }
@@ -202,21 +191,6 @@ class ErrorFamilyList(val project: Project) : JPanel() {
         DefaultMutableTreeNode()
 
     private open class ErrorFamilyType(target: PsiElement) : ErrorFamilyNode(target) {
-        val sourceFile = target.containingFile.virtualFile.toNioPath()
-        val qualifiedName: String = when (target) {
-            is PsiClass -> {
-                target.qualifiedName ?: "Unknown Name"
-            }
-
-            is KtClass -> {
-                target.fqName?.asString() ?: "Unknown Name"
-            }
-
-            else -> {
-                target.text
-            }
-        }
-
         override fun isLeaf(): Boolean {
             return false
         }

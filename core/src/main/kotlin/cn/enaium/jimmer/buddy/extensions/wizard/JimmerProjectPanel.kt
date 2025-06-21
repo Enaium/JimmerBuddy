@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.wizard
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.projectLocationField
-import com.intellij.ide.IdeBundle
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.observable.properties.GraphProperty

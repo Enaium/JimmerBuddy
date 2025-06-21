@@ -26,6 +26,7 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.getTables
 import cn.enaium.jimmer.buddy.utility.packageChooserField
 import cn.enaium.jimmer.buddy.utility.relativeLocationField
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
@@ -60,14 +61,17 @@ class GenerateEntityDialog(
         try {
             getTables()
         } catch (e: Throwable) {
-            Messages.showErrorDialog("Failed to connect to database:\n${e.message}", "Error")
+            Messages.showErrorDialog(
+                I18n.message("dialog.generate.entity.message.connectFail", e.message),
+                "Error"
+            )
             JimmerBuddy.getWorkspace(project).log.error(e)
             emptySet()
         }
     )
 
     init {
-        title = "Generate Entity"
+        title = I18n.message("dialog.generate.entity.title")
         setSize(800, 600)
         init()
     }
@@ -75,39 +79,49 @@ class GenerateEntityDialog(
     override fun createCenterPanel(): JComponent {
         return borderPanel {
             addToTop(panel {
-                row("Relative Path:") {
+                row(I18n.message("dialog.generate.entity.label.relativePath")) {
                     relativeLocationField(project, generateEntityModel.relativePathProperty).align(Align.FILL)
                 }
-                row("Package Name:") {
+                row(I18n.message("dialog.generate.entity.label.packageName")) {
                     packageChooserField(project, generateEntityModel.packageNameProperty).align(Align.FILL)
                 }
-                row("Language:") {
+                row(I18n.message("dialog.generate.entity.label.language")) {
                     JimmerBuddy.Services.UI.segmentedButtonText(this, GenerateEntityModel.Language.entries) {
                         it.text
                     }.bind(generateEntityModel.languageProperty)
                 }
 
-                collapsibleGroup("Advanced") {
+                collapsibleGroup(I18n.message("dialog.generate.entity.group.advanced")) {
                     row {
-                        checkBox("Comment").bindSelected(generateEntityModel.commentProperty)
-                        checkBox("@Table").bindSelected(generateEntityModel.tableAnnotationProperty)
-                        checkBox("@Column").bindSelected(generateEntityModel.columnAnnotationProperty)
-                        checkBox("@IdView").bindSelected(generateEntityModel.idViewAnnotationProperty)
-                        checkBox("@JoinTable").bindSelected(generateEntityModel.joinTableAnnotationProperty)
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.comment")).bindSelected(
+                            generateEntityModel.commentProperty
+                        )
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.table")).bindSelected(
+                            generateEntityModel.tableAnnotationProperty
+                        )
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.column")).bindSelected(
+                            generateEntityModel.columnAnnotationProperty
+                        )
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.idView")).bindSelected(
+                            generateEntityModel.idViewAnnotationProperty
+                        )
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.joinTable")).bindSelected(
+                            generateEntityModel.joinTableAnnotationProperty
+                        )
                     }
-                    row("Primary Key Name:") {
+                    row(I18n.message("dialog.generate.entity.label.primaryKeyName")) {
                         textField().align(Align.FILL).bindText(generateEntityModel.primaryKeyNameProperty)
                     }
-                    row("Association:") {
+                    row(I18n.message("dialog.generate.entity.label.association")) {
                         JimmerBuddy.Services.UI.segmentedButtonText(this, GenerateEntityModel.Association.entries) {
                             it.text
                         }.bind(generateEntityModel.associationProperty)
                     }
-                    row("Table Name Regex:") {
+                    row(I18n.message("dialog.generate.entity.label.tableNameRegex")) {
                         textField().align(Align.FILL).bindText(generateEntityModel.tableNameRegexProperty)
                         textField().align(Align.FILL).bindText(generateEntityModel.tableNameReplaceProperty)
                     }
-                    row("Column Name Regex:") {
+                    row(I18n.message("dialog.generate.entity.label.columnNameRegex")) {
                         textField().align(Align.FILL).bindText(generateEntityModel.columnNameRegexProperty)
                         textField().align(Align.FILL).bindText(generateEntityModel.columnNameReplaceProperty)
                     }
@@ -121,7 +135,8 @@ class GenerateEntityDialog(
         val uri = databaseItem.uri
         val isDDL = uri.startsWith("file:")
 
-        var driverJarFile = databaseItem.driverFile.takeIf { it.isNotBlank() }?.let { Path(it).takeIf { path -> path.exists() } }
+        var driverJarFile =
+            databaseItem.driverFile.takeIf { it.isNotBlank() }?.let { Path(it).takeIf { path -> path.exists() } }
         val driverName = databaseItem.driverName.takeIf { it.isNotBlank() }
 
         val jdbcDriver = JdbcDriver.entries.find { uri.startsWith("jdbc:${it.scheme}") } ?: let {
@@ -129,7 +144,9 @@ class GenerateEntityDialog(
                 return@let JdbcDriver.H2
             } else if (driverJarFile == null) {
                 Messages.showErrorDialog(
-                    "Unsupported JDBC Driver(${JdbcDriver.entries.joinToString(", ") { it.scheme }})",
+                    I18n.message(
+                        "dialog.generate.entity.message.unsupportedJDBC",
+                        JdbcDriver.entries.joinToString(", ") { it.scheme }),
                     "Error"
                 )
                 return emptySet()
@@ -182,9 +199,9 @@ class GenerateEntityDialog(
                     "Error"
                 )
             } else if (databaseItem.driverFile.isNotBlank()) {
-                Messages.showErrorDialog("Driver file is not found", "Error");
+                Messages.showErrorDialog(I18n.message("dialog.generate.entity.message.driverNotFound"), "Error");
             } else {
-                Messages.showErrorDialog("Failed to find driver jar, please check your maven or gradle cache", "Error")
+                Messages.showErrorDialog(I18n.message("dialog.generate.entity.message.driverFindFail"), "Error")
             }
             return emptySet()
         }
@@ -229,12 +246,12 @@ class GenerateEntityDialog(
     override fun doOKAction() {
 
         val result = tableTreeTable.getResult().takeIf { it.isNotEmpty() } ?: run {
-            Messages.showErrorDialog("Please select table", "Error")
+            Messages.showErrorDialog(I18n.message("dialog.generate.entity.message.noSelectTable"), "Error")
             return
         }
 
         if (generateEntityModel.relativePath.isBlank()) {
-            Messages.showErrorDialog("Relative Path cannot be empty", "Error")
+            Messages.showErrorDialog(I18n.message("dialog.generate.entity.message.relativePathEmpty"), "Error")
             return
         }
 
