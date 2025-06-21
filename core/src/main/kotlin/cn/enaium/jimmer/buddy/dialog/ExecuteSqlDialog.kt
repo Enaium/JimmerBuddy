@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.dialog
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileTypes.PlainTextFileType
@@ -34,14 +35,14 @@ import javax.swing.JComponent
  */
 class ExecuteSqlDialog(val project: Project, val sql: String) : DialogWrapper(false) {
     init {
-        title = "Execute SQL"
+        title = I18n.message("dialog.executeSql.title")
         setSize(800, 600)
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return borderPanel {
-            addToTop(JBLabel("Recommend to enable Inline SQL Parameters in Jimmer"))
+            addToTop(JBLabel(I18n.message("dialog.executeSql.recommend")))
             addToCenter(
                 object : EditorTextField(
                     EditorFactory.getInstance().createDocument(sql),
@@ -58,7 +59,7 @@ class ExecuteSqlDialog(val project: Project, val sql: String) : DialogWrapper(fa
                         }
                     }
                 })
-            addToBottom(JBLabel("Ok is copy to clipboard, Cancel is close"))
+            addToBottom(JBLabel(I18n.message("dialog.executeSql.copy")))
         }
     }
 

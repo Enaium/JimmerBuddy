@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NodeSelectedNotifier
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
@@ -36,7 +37,7 @@ class DtoInfo(project: Project) : JPanel() {
     }
 
 
-    val noSelected = JBLabel("No Selected", JBLabel.CENTER)
+    val noSelected = JBLabel(I18n.message("editor.dto.label.noSelected"), JBLabel.CENTER)
     val panel = JPanel(BorderLayout()).apply {
         add(noSelected, BorderLayout.CENTER)
     }

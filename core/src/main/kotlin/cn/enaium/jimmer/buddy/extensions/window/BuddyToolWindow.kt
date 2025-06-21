@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ErrorFamilyList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
 import cn.enaium.jimmer.buddy.utility.isJimmerProject
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -36,28 +37,28 @@ class BuddyToolWindow : ToolWindowFactory {
         toolWindow.contentManager.addContent(
             toolWindow.contentManager.factory.createContent(
                 ImmutableTree(project),
-                "Immutables",
+                I18n.message("toolWindow.buddy.tab.immutables"),
                 false
             )
         )
         toolWindow.contentManager.addContent(
             toolWindow.contentManager.factory.createContent(
                 DTOList(project),
-                "DTOs",
+                I18n.message("toolWindow.buddy.tab.dto"),
                 false
             )
         )
         toolWindow.contentManager.addContent(
             toolWindow.contentManager.factory.createContent(
                 ErrorFamilyList(project),
-                "ErrorFamilies",
+                I18n.message("toolWindow.buddy.tab.errorFamilies"),
                 false
             )
         )
         toolWindow.contentManager.addContent(
             toolWindow.contentManager.factory.createContent(
                 DatabaseList(project),
-                "Databases",
+                I18n.message("toolWindow.buddy.tab.Databases"),
                 false
             )
         )

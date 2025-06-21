@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -38,14 +39,14 @@ class AppendDtoType(private val node: DtoTree.DtoTypeNode) : DialogWrapper(false
     private val model = Model()
 
     init {
-        title = "Append DTO Type"
+        title = I18n.message("dialog.appendDtoType.title")
         setSize(300, 150)
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return panel {
-            row("Name:") {
+            row(I18n.message("dialog.appendDtoType.label.name")) {
                 textField().align(Align.FILL).bindText(model.nameProperty)
             }
         }

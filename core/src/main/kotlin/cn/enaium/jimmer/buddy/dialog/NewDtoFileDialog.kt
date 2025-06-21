@@ -23,6 +23,7 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
 import com.intellij.diff.requests.SimpleDiffRequest
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
@@ -64,31 +65,31 @@ class NewDtoFileDialog(
         model.immutableName = immutableName
         model.packageName = "${immutableName.substringBeforeLast(".")}.dto"
         model.dtoFileName = immutableName.substringAfterLast(".")
-        title = "New DTO File"
+        title = I18n.message("dialog.newDtoFile.title")
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return borderPanel {
             addToTop(panel {
-                row("Immutable Name:") {
+                row(I18n.message("dialog.newDtoFile.label.immutableName")) {
                     textField().align(Align.FILL).bindText(model.immutableNameProperty)
                 }
-                row("Package Name:") {
+                row(I18n.message("dialog.newDtoFile.label.packageName")) {
                     packageChooserField(project, model.packageNameProperty).align(Align.FILL)
                 }
-                row("DTO File Name:") {
+                row(I18n.message("dialog.newDtoFile.label.dtoFileName")) {
                     textField().align(Align.FILL).bindText(model.dtoFileNameProperty)
                 }
-                row("Type Name:") {
+                row(I18n.message("dialog.newDtoFile.label.typeName")) {
                     textField().align(Align.FILL).bindText(model.typeNameProperty)
                 }
-                row("Modifier:") {
+                row(I18n.message("dialog.newDtoFile.label.modifier")) {
                     JimmerBuddy.Services.UI.segmentedButtonText(this, NewDtoFileModel.Modifier.entries) {
                         it.text
                     }.bind(model.modifierProperty)
                 }
-                row { label("Choose Properties") }
+                row { label(I18n.message("dialog.newDtoFile.label.chooseProperties")) }
             })
             if (sourceFile.extension == "kt") {
                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.also {

@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.refactoring.suggested.endOffset
@@ -49,7 +50,7 @@ class DtoModifierEditor(
 
     override fun panel(): JPanel {
         return panel {
-            row("Modifiers:") {}
+            row(I18n.message("editor.dto.label.modifiers")) {}
             row {
                 cell(JBScrollPane(JPanel(FlowLayout(FlowLayout.LEFT)).apply flow@{
                     DtoModifier.entries.map { it.name.lowercase() }.forEach { modifier ->

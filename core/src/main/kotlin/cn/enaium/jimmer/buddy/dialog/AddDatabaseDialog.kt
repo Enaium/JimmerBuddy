@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.dialog
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.fileChooserField
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.DialogWrapper
@@ -35,35 +36,35 @@ class AddDatabaseDialog(val select: DatabaseItem? = null) : DialogWrapper(false)
     private val databaseModel = DatabaseModel()
 
     init {
-        title = "Add Database"
+        title = I18n.message("dialog.addDatabase.title")
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         return panel {
-            row("URI:") {
+            row(I18n.message("dialog.addDatabase.label.uri")) {
                 fileChooserField(databaseModel.uriProperty, "sql", true).align(Align.FILL)
             }
-            row("Username:") {
+            row(I18n.message("dialog.addDatabase.label.username")) {
                 textField().align(Align.FILL).bindText(databaseModel.usernameProperty)
             }
-            row("Password:") {
+            row(I18n.message("dialog.addDatabase.label.password")) {
                 passwordField().align(Align.FILL).bindText(databaseModel.passwordProperty)
             }
-            row("Catalog:") {
+            row(I18n.message("dialog.addDatabase.label.catalog")) {
                 textField().align(Align.FILL).bindText(databaseModel.catalogProperty)
             }
-            row("Schema Pattern:") {
+            row(I18n.message("dialog.addDatabase.label.schemaPattern")) {
                 textField().align(Align.FILL).bindText(databaseModel.schemaPatternProperty)
             }
-            row("Table Name Pattern:") {
+            row(I18n.message("dialog.addDatabase.label.tableNamePattern")) {
                 textField().align(Align.FILL).bindText(databaseModel.tableNamePatternProperty)
             }
-            collapsibleGroup("Driver") {
-                row("Driver File:") {
+            collapsibleGroup(I18n.message("dialog.addDatabase.group.driver")) {
+                row(I18n.message("dialog.addDatabase.label.driverFile")) {
                     fileChooserField(databaseModel.driverFileProperty, "jar").align(Align.FILL)
                 }
-                row("Driver Name:") {
+                row(I18n.message("dialog.addDatabase.label.driverName")) {
                     textField().align(Align.FILL).bindText(databaseModel.driverNameProperty)
                 }
             }
@@ -72,7 +73,7 @@ class AddDatabaseDialog(val select: DatabaseItem? = null) : DialogWrapper(false)
 
     override fun doOKAction() {
         if (databaseModel.uri.isBlank()) {
-            Messages.showErrorDialog("URI cannot be empty", "Error")
+            Messages.showErrorDialog(I18n.message("dialog.addDatabase.message.uriEmpty"), "Error")
             return
         }
 

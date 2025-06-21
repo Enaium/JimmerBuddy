@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -91,7 +92,7 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
                 }).align(Align.FILL)
             }
             row {
-                button("Save") {
+                button(I18n.message("editor.dto.button.save")) {
                     val document =
                         FileDocumentManager.getInstance().getDocument(node.target.containingFile.virtualFile)
                             ?: return@button

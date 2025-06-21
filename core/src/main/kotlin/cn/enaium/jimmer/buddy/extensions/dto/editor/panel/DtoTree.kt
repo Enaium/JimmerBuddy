@@ -16,8 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
-import cn.enaium.jimmer.buddy.dialog.AppendDtoType
 import cn.enaium.jimmer.buddy.dialog.AppendDtoProp
+import cn.enaium.jimmer.buddy.dialog.AppendDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NeedRefreshNotifier
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
@@ -27,6 +27,7 @@ import cn.enaium.jimmer.buddy.utility.expandAll
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -87,13 +88,13 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
 
                     if (SwingUtilities.isRightMouseButton(e)) {
                         JBPopupMenu().apply {
-                            add(JMenuItem("Go To").apply {
+                            add(JMenuItem(I18n.message("editor.dto.menu.goto")).apply {
                                 addActionListener {
                                     navigate()
                                 }
                             })
                             val appendDtoType =
-                                JMenuItem("Append DTO Type").apply {
+                                JMenuItem(I18n.message("editor.dto.menu.appendDtoType")).apply {
                                     addActionListener {
                                         if (select is DtoTypeNode) {
                                             AppendDtoType(select).show()
@@ -101,7 +102,7 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
                                     }
                                 }
                             val appendDtoProp =
-                                JMenuItem("Append DTO Prop").apply {
+                                JMenuItem(I18n.message("editor.dto.menu.appendDtoProp")).apply {
                                     addActionListener {
                                         AppendDtoProp(select as DtoNode).show()
                                     }

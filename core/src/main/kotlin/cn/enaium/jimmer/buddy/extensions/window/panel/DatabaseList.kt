@@ -24,6 +24,7 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.invokeLater
 import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
@@ -59,12 +60,12 @@ class DatabaseList(val project: Project) : JPanel() {
                     val select = selectedValue ?: return
                     if (SwingUtilities.isRightMouseButton(e)) {
                         JBPopupMenu().apply {
-                            add(JMenuItem("Generate").apply {
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.generate")).apply {
                                 addActionListener {
                                     GenerateEntityDialog(project, select).show()
                                 }
                             })
-                            add(JMenuItem("Edit").apply {
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.edit")).apply {
                                 addActionListener {
                                     if (AddDatabaseDialog(select).showAndGet()) {
                                         JimmerBuddySetting.INSTANCE.state.databases =
@@ -73,7 +74,7 @@ class DatabaseList(val project: Project) : JPanel() {
                                     refresh()
                                 }
                             })
-                            add(JMenuItem("Remove").apply {
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.remove")).apply {
                                 addActionListener {
                                     JimmerBuddySetting.INSTANCE.state.databases =
                                         JimmerBuddySetting.INSTANCE.state.databases - select

@@ -721,7 +721,6 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
 
     map[proxyName] = proxyAnnotationUnloaded.make().bytes
     val forName = Class.forName(proxyName, true, classLoader)
-    printlnError(forName.name)
     return forName.getDeclaredConstructor().also {
         it.isAccessible = true
     }.newInstance() as Annotation

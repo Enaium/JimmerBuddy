@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.utility.replaceString
+import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.ui.dsl.builder.Align
@@ -41,7 +42,7 @@ class DtoNameEditor(
 
     override fun panel(): JPanel {
         return panel {
-            row("Name:") {
+            row(I18n.message("editor.dto.label.name")) {
                 textField().enabled(enable).align(Align.FILL).bindText(nameProperty)
             }
         }
