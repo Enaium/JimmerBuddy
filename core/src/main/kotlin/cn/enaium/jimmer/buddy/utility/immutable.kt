@@ -25,6 +25,7 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.findParentOfType
+import org.babyfish.jimmer.apt.MetaException
 import org.babyfish.jimmer.apt.createContext
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableProp
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
@@ -258,7 +259,10 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
             }
         }
         return currentImmutable
-    } catch (e: Throwable) {
+    } catch (e: MetaException) {
+        JimmerBuddy.getWorkspace(project).log.error(e)
+        return null
+    } catch (e: org.babyfish.jimmer.ksp.MetaException) {
         JimmerBuddy.getWorkspace(project).log.error(e)
         return null
     }
