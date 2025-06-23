@@ -134,26 +134,32 @@ fun PsiMethod.hasToManyAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(OneToMany::class.qualifiedName!!)
                 || annotation.hasQualifiedName(ManyToMany::class.qualifiedName!!)
-    } == true
+    }
 }
 
 fun PsiMethod.hasToOneAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(OneToOne::class.qualifiedName!!)
                 || annotation.hasQualifiedName(ManyToOne::class.qualifiedName!!)
-    } == true
+    }
 }
 
 fun PsiMethod.hasTransientAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(Transient::class.qualifiedName!!)
-    } == true
+    }
+}
+
+fun PsiMethod.hasManyToManyViewAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(ManyToManyView::class.qualifiedName!!)
+    }
 }
 
 fun PsiMethod.hasIdViewAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(IdView::class.qualifiedName!!)
-    } == true
+    }
 }
 
 fun KtProperty.hasToManyAnnotation(): Boolean {
@@ -161,7 +167,7 @@ fun KtProperty.hasToManyAnnotation(): Boolean {
         val fqName = annotation.fqName
         fqName == OneToMany::class.qualifiedName!!
                 || fqName == ManyToMany::class.qualifiedName!!
-    } == true
+    }
 }
 
 fun KtProperty.hasToOneAnnotation(): Boolean {
@@ -169,21 +175,28 @@ fun KtProperty.hasToOneAnnotation(): Boolean {
         val fqName = annotation.fqName
         fqName == OneToOne::class.qualifiedName!!
                 || fqName == ManyToOne::class.qualifiedName!!
-    } == true
+    }
 }
 
 fun KtProperty.hasTransientAnnotation(): Boolean {
     return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == Transient::class.qualifiedName!!
-    } == true
+    }
+}
+
+fun KtProperty.hasManyToManyViewAnnotation(): Boolean {
+    return this.annotations().any { annotation ->
+        val fqName = annotation.fqName
+        fqName == ManyToManyView::class.qualifiedName!!
+    }
 }
 
 fun KtProperty.hasIdViewAnnotation(): Boolean {
     return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == IdView::class.qualifiedName!!
-    } == true
+    }
 }
 
 fun PsiMethod.getTarget(): PsiClass? {
