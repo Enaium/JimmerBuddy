@@ -60,7 +60,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                     ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
                     ?.takeIf { it.isNotBlank() }?.also { value ->
                         methodElement.containingClass?.also { c ->
-                            if (c.methods.none { it.name == value }) {
+                            if (c.allMethods.none { it.name == value }) {
                                 holder.registerProblem(methodElement, basePropNotExists)
                             }
                         }
@@ -78,7 +78,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 methodElement.containingClass?.also { c ->
-                    if (c.methods.none { it.name == baseProp }) {
+                    if (c.allMethods.none { it.name == baseProp }) {
                         holder.registerProblem(element, basePropNotExists)
                     }
                 }
@@ -106,7 +106,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                         }
 
                         propertyElement.containingClass()?.also { c ->
-                            if (c.getProperties().none { it.name == value }) {
+                            if (c.findPropertyByName(value, true) == null) {
                                 holder.registerProblem(element, basePropNotExists)
                             }
                         }
@@ -122,7 +122,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 propertyElement.containingClass()?.also { c ->
-                    if (c.getProperties().none { it.name == baseProp }) {
+                    if (c.findPropertyByName(baseProp ?: return, true) == null) {
                         holder.registerProblem(element, basePropNotExists)
                     }
                 }
