@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isAutoScalar
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.toHtml
 import com.intellij.lang.documentation.AbstractDocumentationProvider
@@ -53,7 +54,7 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
                                 }
                             }
                         }
-                        commonImmutableProps.filter { isAutoScalar(it) }
+                        commonImmutableProps.filter { it.isAutoScalar() }
                     }
 
                     "allReferences" -> {
@@ -125,16 +126,5 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
 
     private fun isAutoReference(baseProp: CommonImmutableType.CommonImmutableProp): Boolean {
         return baseProp.isAssociation(true) && !baseProp.isList() && !baseProp.isTransient()
-    }
-
-    private fun isAutoScalar(baseProp: CommonImmutableType.CommonImmutableProp): Boolean {
-        return !baseProp.isFormula() &&
-                !baseProp.isTransient() &&
-                !baseProp.isIdView() &&
-                !baseProp.isManyToManyView() &&
-                !baseProp.isList() &&
-                !baseProp.isAssociation(true) &&
-                !baseProp.isLogicalDeleted() &&
-                !baseProp.isExcludedFromAllScalars()
     }
 }

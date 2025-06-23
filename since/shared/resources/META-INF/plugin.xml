@@ -116,6 +116,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.SuperTypeInspection"
         />
+        <localInspection
+                displayName="Unload"
+                shortName="Unload"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.UnloadInspection"
+        />
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
