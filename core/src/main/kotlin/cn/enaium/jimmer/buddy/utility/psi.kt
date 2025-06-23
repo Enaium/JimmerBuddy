@@ -340,3 +340,11 @@ fun PsiElement.getComment(): String? {
 
     return comment.takeIf { it.isNotEmpty() }
 }
+
+fun PsiType.resolveClass(): PsiClass? {
+    return PsiUtil.resolveClassInClassTypeOnly(this)
+}
+
+fun PsiType.resolveGenericsClass(parameter: PsiTypeParameter): PsiClass? {
+    return PsiUtil.resolveGenericsClassInType(this).substitutor.substitute(parameter)?.resolveClass()
+}

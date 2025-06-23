@@ -196,6 +196,17 @@ data class CommonImmutableType(
                     PropType.PROPERTY
                 }
             }
+
+            fun CommonImmutableProp.isAutoScalar(): Boolean {
+                return !isFormula() &&
+                        !isTransient() &&
+                        !isIdView() &&
+                        !isManyToManyView() &&
+                        !isList() &&
+                        !isAssociation(true) &&
+                        !isLogicalDeleted() &&
+                        !isExcludedFromAllScalars()
+            }
         }
 
         override fun toString(): String {
