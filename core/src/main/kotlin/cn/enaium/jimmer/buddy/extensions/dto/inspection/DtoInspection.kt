@@ -126,7 +126,7 @@ class DtoInspection : LocalInspectionTool() {
             val column = dtoAst.colNumber
             element.findElementAt(document.getLineStartOffset(line) + column)?.also { current ->
                 dtoAst.message?.also { message ->
-                    holder.registerProblem(current, message)
+                    holder.registerProblem(current, message.substringAfter(" : "))
                 }
             }
         } catch (_: Throwable) {
