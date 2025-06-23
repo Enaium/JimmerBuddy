@@ -49,12 +49,12 @@ class MappedByInspection : AbstractLocalInspectionTool() {
                         if (it.getTarget() != methodElement.containingClass) {
                             holder.registerProblem(
                                 element,
-                                "The mappedBy prop type is not match"
+                                I18n.message("inspection.annotation.mappedBy.propTypeNotMatch")
                             )
                         }
                     } ?: holder.registerProblem(
                         element,
-                        "The mappedBy prop is not found"
+                        I18n.message("inspection.annotation.mappedBy.propNotFound")
                     )
                 }
             }

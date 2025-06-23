@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.annotations
 import cn.enaium.jimmer.buddy.utility.getAllProperties
 import cn.enaium.jimmer.buddy.utility.isImmutable
@@ -35,7 +36,7 @@ class IdAnnotationInspection : AbstractLocalInspectionTool() {
         holder: ProblemsHolder,
         isOnTheFly: Boolean
     ) {
-        val descriptionTemplate = "Entity does not have an id property"
+        val descriptionTemplate = I18n.message("inspection.annotation.id.notHaveId")
         if (element is PsiClass && element.isImmutable() && element.annotations
                 .any { it.qualifiedName == Entity::class.qualifiedName }
         ) {

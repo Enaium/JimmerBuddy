@@ -20,10 +20,10 @@ import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.endOffset
+import cn.enaium.jimmer.buddy.utility.startOffset
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
-import com.intellij.refactoring.suggested.endOffset
-import com.intellij.refactoring.suggested.startOffset
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.Align

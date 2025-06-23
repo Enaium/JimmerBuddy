@@ -43,7 +43,7 @@ class OrderedPropAnnotationInspection : AbstractLocalInspectionTool() {
         ) {
             val name = element.toUElementOfType<UAnnotation>()?.findAttributeValue("value")?.string() ?: return
             element.getParentOfType<PsiMethod>(true)?.getTarget()?.allMethods?.find { it.name == name }
-                ?: holder.registerProblem(element, "The property is not found")
+                ?: holder.registerProblem(element, I18n.message("inspection.annotation.orderedProp.propNotFound"))
         }
 
         if ((element is KtAnnotationEntry || element is KtCallExpression) && toManyAnnotations.contains(
@@ -53,7 +53,7 @@ class OrderedPropAnnotationInspection : AbstractLocalInspectionTool() {
         ) {
             val name = element.toUElementOfType<UAnnotation>()?.findAttributeValue("value")?.string() ?: return
             element.getParentOfType<KtProperty>(true)?.getTarget()?.getAllProperties()?.find { it.name == name }
-                ?: holder.registerProblem(element, "The property is not found")
+                ?: holder.registerProblem(element, I18n.message("inspection.annotation.orderedProp.propNotFound"))
         }
     }
 }

@@ -63,7 +63,7 @@ class UnloadInspection : AbstractLocalInspectionTool() {
 
                         if (!allScalarFields) {
                             element.firstChild?.lastChild?.also { name ->
-                                holder.registerProblem(name, "The prop is unload")
+                                holder.registerProblem(name, I18n.message("inspection.unloaded"))
                             }
                         }
                     }
@@ -94,7 +94,7 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                         }
                         if (!allScalarFields) {
                             element.lastChild?.firstChild?.also { name ->
-                                holder.registerProblem(name, "The prop is unload")
+                                holder.registerProblem(name, I18n.message("inspection.unloaded"))
                             }
                         }
                     }
@@ -246,31 +246,43 @@ class UnloadInspection : AbstractLocalInspectionTool() {
 
     private fun KtQualifiedExpression.findFetcherExpression(): KtQualifiedExpression? {
         var expression: KtExpression? = null
+        var query: KtCallExpression? = null
 
-        firstChild?.lastChild?.also { query ->
-            if (query is KtCallExpression) {
-                query.lambdaArguments[0].getLambdaExpression()?.functionLiteral?.bodyBlockExpression
-                    ?.getChildrenOfType<KtCallExpression>()?.lastOrNull()?.also { select ->
-                        select.valueArguments[0].also { fetch ->
-                            fetch.getChildOfType<KtQualifiedExpression>()
-                                ?.getChildOfType<KtCallExpression>()
-                                ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments[0]?.getChildOfType<KtQualifiedExpression>()
-                                ?.also { fetcherExpression ->
-                                    expression = fetcherExpression
-                                }
-                            fetch.getChildOfType<KtQualifiedExpression>()
-                                ?.getChildOfType<KtCallExpression>()
-                                ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments[0]?.getChildOfType<KtNameReferenceExpression>()
-                                ?.also { fetcherExpression ->
-                                    expression = fetcherExpression
-                                }
-                        }
-                    }
+        firstChild?.lastChild?.also {
+            if (it is KtCallExpression) {
+                query = it
             }
         }
 
-        lastChild?.also { query ->
-            if (query is KtCallExpression) {
+        if (query == null) {
+            lastChild?.also {
+                if (it is KtCallExpression) {
+                    query = it
+                }
+            }
+        }
+
+        if (query is KtCallExpression) {
+            query.lambdaArguments[0].getLambdaExpression()?.functionLiteral?.bodyBlockExpression
+                ?.getChildrenOfType<KtCallExpression>()?.lastOrNull()?.also { select ->
+                    select.valueArguments[0].also { fetch ->
+
+                        val fetchArg = fetch.getChildOfType<KtQualifiedExpression>()
+                            ?.getChildOfType<KtCallExpression>()
+                            ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments[0]
+
+                        fetchArg?.getChildOfType<KtQualifiedExpression>()
+                            ?.also { fetcherExpression ->
+                                expression = fetcherExpression
+                            }
+                        fetchArg?.getChildOfType<KtNameReferenceExpression>()
+                            ?.also { fetcherExpression ->
+                                expression = fetcherExpression
+                            }
+                    }
+                }
+
+            if (expression == null) {
                 val ktFun = query.firstChild.reference?.resolve() as? KtNamedFunction
                 if (query.valueArguments.size > 1 && ktFun?.valueParameters[0]?.typeReference?.type()?.fqName == Fetcher::class.qualifiedName) {
                     expression = query.valueArguments[0].firstChild as? KtExpression

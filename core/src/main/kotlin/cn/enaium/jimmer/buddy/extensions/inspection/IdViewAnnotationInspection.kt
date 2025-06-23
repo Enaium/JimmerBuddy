@@ -40,9 +40,9 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
             return
         }
 
-        val noValue = "The prop type is a collection, but the annotation hasn't value"
-        val basePropNotExists = "The base prop doesn't exists"
-        val propNotCollection = "The prop type has generic, but the prop type isn't a collection"
+        val noValue = I18n.message("inspection.annotation.idView.withoutValue")
+        val basePropNotExists = I18n.message("inspection.annotation.idView.basePropNotExist")
+        val propNotCollection = I18n.message("inspection.annotation.idView.propIsNonCollection")
 
         if (!element.isAnnotation(IdView::class.qualifiedName!!)) return
         element.getParentOfType<PsiMethod>(true)?.also { methodElement ->

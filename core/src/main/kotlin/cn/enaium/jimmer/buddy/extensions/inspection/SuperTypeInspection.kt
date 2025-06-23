@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.annotations
 import cn.enaium.jimmer.buddy.utility.isImmutable
 import cn.enaium.jimmer.buddy.utility.type
@@ -37,7 +38,7 @@ class SuperTypeInspection : AbstractLocalInspectionTool() {
         holder: ProblemsHolder,
         isOnTheFly: Boolean
     ) {
-        val descriptionTemplate = "Super type must be annotated with @MappedSuperclass"
+        val descriptionTemplate = I18n.message("inspection.annotation.mappedSuperclass.without")
         if (element is PsiClass && element.isImmutable()) {
             element.getChildrenOfType<PsiReferenceList>().forEach { psiReferenceList ->
                 psiReferenceList.getChildrenOfType<PsiJavaCodeReferenceElement>()

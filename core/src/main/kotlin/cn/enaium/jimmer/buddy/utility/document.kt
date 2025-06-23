@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.utility
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
 
 /**
  * @author Enaium
@@ -25,3 +26,9 @@ import com.intellij.openapi.util.TextRange
 fun Document.replaceString(range: TextRange, text: String) {
     replaceString(range.startOffset, range.endOffset, text)
 }
+
+val PsiElement.startOffset: Int
+    get() = textRange.startOffset
+
+val PsiElement.endOffset: Int
+    get() = textRange.endOffset

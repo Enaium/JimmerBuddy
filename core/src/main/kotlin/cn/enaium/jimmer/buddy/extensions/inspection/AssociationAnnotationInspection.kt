@@ -38,10 +38,10 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     return
                 }
 
-                val toManyProblem = "The prop type is a collection, but the annotation is @ToOne"
-                val noToOneProblem = "The prop type a association, but not declared @ToOne"
-                val toOneProblem = "The prop type is not a collection, but the annotation is @ToMany"
-                val noToManyProblem = "The prop type a association, but not declared @ToMany"
+                val toManyProblem = I18n.message("inspection.annotation.association.collectionToOne")
+                val noToOneProblem = I18n.message("inspection.annotation.association.withoutToOne")
+                val toOneProblem = I18n.message("inspection.annotation.association.nonCollectionToMany")
+                val noToManyProblem = I18n.message("inspection.annotation.association.withoutToMany")
 
                 if (element is PsiMethod) {
                     val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }

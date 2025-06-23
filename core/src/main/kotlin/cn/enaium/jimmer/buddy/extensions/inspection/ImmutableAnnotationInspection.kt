@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClass
@@ -31,8 +32,7 @@ class ImmutableAnnotationInspection : AbstractLocalInspectionTool() {
         holder: ProblemsHolder,
         isOnTheFly: Boolean
     ) {
-        val descriptionTemplate =
-            "You can not use @Immutable annotation on here because Immutable must be an interface."
+        val descriptionTemplate = I18n.message("inspection.annotation.immutable.targetIncorrect")
         if (element is PsiClass && element.hasImmutableAnnotation() && !element.isInterface) {
             holder.registerProblem(
                 element.nameIdentifier ?: return,

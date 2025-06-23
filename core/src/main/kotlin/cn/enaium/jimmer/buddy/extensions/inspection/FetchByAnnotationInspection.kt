@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.classLiteral
 import cn.enaium.jimmer.buddy.utility.string
 import com.intellij.codeInspection.ProblemsHolder
@@ -31,7 +32,6 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
-import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 import org.jetbrains.uast.*
 
 /**
@@ -66,15 +66,15 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                 }?.fields?.firstOrNull { field -> (field.hasExplicitModifier(PsiModifier.STATIC) || field.containingClass?.isInterface == true) && field.name == value }
                     ?.also {
                         val canonicalText = it.type.canonicalText
-                        if (canonicalText.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                            holder.registerProblem(element, "The property type is not a fetcher")
+                        if (!canonicalText.startsWith(Fetcher::class.qualifiedName!!)) {
+                            holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.notFetcher"))
                         } else if (canonicalText.substringAfter("<")
                                 .substringBefore(">") != (element.parent as? PsiTypeElement)?.type?.canonicalText
                         ) {
-                            holder.registerProblem(element, "The fetcher type is not match")
+                            holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.typeNotMatch"))
                         }
                     } ?: run {
-                    holder.registerProblem(element, "The fetch field is not found")
+                    holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.fieldNotFound"))
                 }
             }
         } else if (element is KtAnnotationEntry) {
@@ -96,14 +96,14 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                         .also {
                             val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
                             if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                                holder.registerProblem(element, "The property type is not a fetcher")
+                                holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.notFetcher"))
                             } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
                                 != element.getParentOfType<KtTypeReference>(true)
                                     .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
                             ) {
-                                holder.registerProblem(element, "The fetcher type is not match")
+                                holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.typeNotMatch"))
                             }
-                        } ?: holder.registerProblem(element, "The fetch property is not found")
+                        } ?: holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.fieldNotFound"))
                 }
             }
         }

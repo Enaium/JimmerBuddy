@@ -53,7 +53,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                     methodElement?.body?.also {
                         holder.registerProblem(
                             element,
-                            "The dependencies is empty"
+                            I18n.message("inspection.annotation.formula.dependenciesEmpty")
                         )
                     }
                     return
@@ -67,7 +67,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                         containingClass?.findMethodsByName(it, true)?.takeIf { it.isNotEmpty() }?.also {
                             containingClass = it.first().getTarget()
                         } ?: run {
-                            holder.registerProblem(element, "The dependency '$it' does not exist")
+                            holder.registerProblem(element, I18n.message("inspection.annotation.formula.dependencyNotExist", it))
                             return@also
                         }
                     }
@@ -84,7 +84,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                             propertyElement.getter?.also {
                                 holder.registerProblem(
                                     element,
-                                    "The dependencies is empty"
+                                    I18n.message("inspection.annotation.formula.dependenciesEmpty")
                                 )
                             }
                             return@also
@@ -96,7 +96,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                         containingClass?.findPropertyByName(it, true)?.also {
                             containingClass = (it as KtProperty).getTarget()
                         } ?: run {
-                            holder.registerProblem(element, "The dependency '$it' does not exist")
+                            holder.registerProblem(element, I18n.message("inspection.annotation.formula.dependencyNotExist", it))
                             return@also
                         }
                     }
