@@ -699,6 +699,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
         }.map { it.name }.toTypedArray())).intercept(
             InvocationHandlerAdapter.of { proxy, method, args ->
                 this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
+                    ?.arrayWrapper(method.returnType)
                     ?: method.invoke(it)
             }
         ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
@@ -761,6 +762,42 @@ fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
         else -> {
             null
         }
+    }
+}
+
+fun Any.arrayWrapper(returnType: Class<*>): Any {
+    return if (returnType.name.startsWith("[L")) {
+        when (this) {
+            is Long -> {
+                arrayOf(this)
+            }
+
+            is Int -> {
+                arrayOf(this)
+            }
+
+            is Short -> {
+                arrayOf(this)
+            }
+
+            is Byte -> {
+                arrayOf(this)
+            }
+
+            is Boolean -> {
+                arrayOf(this)
+            }
+
+            is String -> {
+                arrayOf(this)
+            }
+
+            else -> {
+                this
+            }
+        }
+    } else {
+        this
     }
 }
 
