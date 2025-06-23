@@ -64,7 +64,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     } else {
                         if (element.hasToManyAnnotation()) {
                             holder.registerProblem(element, toOneProblem)
-                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation()) {
+                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation() && !element.hasManyToManyViewAnnotation()) {
                             holder.registerProblem(element, noToOneProblem)
                         }
                     }
@@ -78,7 +78,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     ) {
                         if (element.hasToOneAnnotation()) {
                             holder.registerProblem(element, toManyProblem)
-                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.hasTransientAnnotation()) {
+                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.hasTransientAnnotation() && !element.hasManyToManyViewAnnotation()) {
                             holder.registerProblem(element, noToManyProblem)
                         }
                     } else {
