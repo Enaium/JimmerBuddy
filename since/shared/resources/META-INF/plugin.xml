@@ -160,6 +160,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.DtoInspection"
         />
+        <localInspection
+                displayName="ExportInspection"
+                shortName="ExportInspection"
+                groupName="Jimmer"
+                language="JimmerBuddy.DTO"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.ExportInspection"
+        />
         <annotator language="JimmerBuddy.DTO"
                    implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoHighlightAnnotator"/>
         <completion.contributor language="JimmerBuddy.DTO"
