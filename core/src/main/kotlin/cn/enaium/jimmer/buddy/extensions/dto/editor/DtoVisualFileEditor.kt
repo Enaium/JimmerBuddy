@@ -16,33 +16,30 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor
 
-import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoInfo
-import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoDesigner
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.JBSplitter
-import com.intellij.ui.OnePixelSplitter
-import org.jetbrains.kotlin.tools.projectWizard.wizard.ui.borderPanel
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 
 /**
  * @author Enaium
  */
-class DtoVisualFileEditor(private val project: Project, private val file: VirtualFile) : UserDataHolderBase(),
+class DtoVisualFileEditor(project: Project, private val file: VirtualFile) : UserDataHolderBase(),
     FileEditor {
+
+    val panel = DtoDesigner(project, file)
+
+    init {
+        Disposer.register(this, panel)
+    }
+
     override fun getComponent(): JComponent {
-        return borderPanel {
-            addToCenter(
-                OnePixelSplitter(true, 0.5f).apply {
-                    firstComponent = DtoTree(project, file)
-                    secondComponent = DtoInfo(project)
-                }
-            )
-        }
+        return panel
     }
 
     override fun getPreferredFocusedComponent(): JComponent? {
