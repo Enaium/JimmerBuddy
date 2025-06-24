@@ -23,7 +23,6 @@ import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import com.intellij.icons.AllIcons
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
@@ -252,51 +251,36 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
 
         override fun toString(): String {
-            return when (target) {
-                is PsiClass -> {
-                    target.name ?: "Unknown Name"
-                }
-
-                is KtClass -> {
-                    target.name ?: "Unknown Name"
-                }
-
-                else -> {
-                    target.text
-                }
-            }
+            return qualifiedName.substringAfterLast(".")
         }
     }
 
     private open class ImmutableProp(target: PsiElement, val prop: CommonImmutableType.CommonImmutableProp) :
         ImmutableNode(target) {
+        val name = when (target) {
+            is PsiMethod -> {
+                target.name
+            }
+
+            is KtProperty -> {
+                (target.name ?: "Unknown Name")
+            }
+
+            else -> {
+                target.text
+            }
+        }.let { name ->
+            "$name: ${prop.simpleTypeName()} (${prop.type().description})".let { typeName ->
+                prop.targetType()?.let { targetType -> "$typeName -> ${targetType.name()}" } ?: typeName
+            }
+        }
 
         override fun isLeaf(): Boolean {
             return true
         }
 
         override fun toString(): String {
-            return thread {
-                runReadOnly {
-                    when (target) {
-                        is PsiMethod -> {
-                            target.name
-                        }
-
-                        is KtProperty -> {
-                            (target.name ?: "Unknown Name")
-                        }
-
-                        else -> {
-                            target.text
-                        }
-                    }.let { name ->
-                        "$name: ${prop.simpleTypeName()} (${prop.type().description})".let { typeName ->
-                            prop.targetType()?.let { targetType -> "$typeName -> ${targetType.name()}" } ?: typeName
-                        }
-                    }
-                }
-            }
+            return name
         }
     }
 }
