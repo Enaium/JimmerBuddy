@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.classLiteral
+import cn.enaium.jimmer.buddy.utility.method
 import cn.enaium.jimmer.buddy.utility.string
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.*
@@ -68,10 +69,15 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                         val canonicalText = it.type.canonicalText
                         if (!canonicalText.startsWith(Fetcher::class.qualifiedName!!)) {
                             holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.notFetcher"))
-                        } else if (canonicalText.substringAfter("<")
-                                .substringBefore(">") != (element.parent as? PsiTypeElement)?.type?.canonicalText
-                        ) {
-                            holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.typeNotMatch"))
+                        } else {
+                            val typeParameter = canonicalText.substringAfter("<")
+                                .substringBefore(">")
+                            if (typeParameter != (element.parent as? PsiTypeElement)?.type?.canonicalText && typeParameter != element.method()?.returnType?.canonicalText) {
+                                holder.registerProblem(
+                                    element,
+                                    I18n.message("inspection.annotation.fetchBy.typeNotMatch")
+                                )
+                            }
                         }
                     } ?: run {
                     holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.fieldNotFound"))
@@ -96,14 +102,23 @@ class FetchByAnnotationInspection : AbstractLocalInspectionTool() {
                         .also {
                             val canonicalText = (it.toUElement() as? UField)?.type?.canonicalText
                             if (canonicalText?.startsWith(Fetcher::class.qualifiedName!!) == false) {
-                                holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.notFetcher"))
+                                holder.registerProblem(
+                                    element,
+                                    I18n.message("inspection.annotation.fetchBy.notFetcher")
+                                )
                             } else if (canonicalText?.substringAfter("<")?.substringBefore(">")
                                 != element.getParentOfType<KtTypeReference>(true)
                                     .toUElementOfType<UTypeReferenceExpression>()?.type?.canonicalText
                             ) {
-                                holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.typeNotMatch"))
+                                holder.registerProblem(
+                                    element,
+                                    I18n.message("inspection.annotation.fetchBy.typeNotMatch")
+                                )
                             }
-                        } ?: holder.registerProblem(element, I18n.message("inspection.annotation.fetchBy.fieldNotFound"))
+                        } ?: holder.registerProblem(
+                        element,
+                        I18n.message("inspection.annotation.fetchBy.fieldNotFound")
+                    )
                 }
             }
         }
