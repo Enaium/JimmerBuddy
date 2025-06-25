@@ -16,15 +16,19 @@
 
 package cn.enaium.jimmer.buddy.action
 
+import cn.enaium.jimmer.buddy.utility.classLiteral
 import cn.enaium.jimmer.buddy.utility.findProjectDir
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMember
 import org.babyfish.jimmer.internal.GeneratedBy
+import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.uast.UClass
@@ -33,7 +37,7 @@ import org.jetbrains.uast.toUElementOfType
 /**
  * @author Enaium
  */
-class GoToDtoFile : AnAction() {
+class GoToGeneratedByFile : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val dataContext = e.dataContext
         dataContext.getData(CommonDataKeys.PSI_ELEMENT)?.also { psiElement ->
@@ -55,13 +59,22 @@ class GoToDtoFile : AnAction() {
             ((element ?: psiElement).toUElementOfType<UClass>())?.also { uClass ->
                 val generatedBy =
                     uClass.uAnnotations.find { it.qualifiedName == GeneratedBy::class.qualifiedName } ?: return@also
-                val file = generatedBy.findAttributeValue("file")?.evaluate()?.toString() ?: return@also
-                val projectDir = findProjectDir(psiElement.containingFile.virtualFile.toNioPath()) ?: return@also
-                val dtoFile = projectDir.resolve(file.substringAfter("/"))
-                val psiFile =
-                    PsiManager.getInstance(psiElement.project).findFile(dtoFile.toFile().toVirtualFile() ?: return@also)
-                        ?: return@also
-                psiFile.navigate(true)
+                generatedBy.findAttributeValue("file")?.evaluate()?.toString()?.also { file ->
+                    val projectDir = findProjectDir(psiElement.containingFile.virtualFile.toNioPath()) ?: return@also
+                    val dtoFile = projectDir.resolve(file.substringAfter("/"))
+                    val psiFile =
+                        PsiManager.getInstance(psiElement.project)
+                            .findFile(dtoFile.toFile().toVirtualFile() ?: return@also)
+                            ?: return@also
+                    psiFile.navigate(true)
+                }
+                generatedBy.findAttributeValue("type")?.classLiteral()?.also { qualifiedName ->
+                    (JavaPsiFacade.getInstance(psiElement.project)
+                        .findClass(qualifiedName, psiElement.project.allScope())
+                        ?: KotlinFullClassNameIndex[qualifiedName, psiElement.project, psiElement.project.allScope()].firstOrNull())?.also {
+                        it.navigate(true)
+                    }
+                }
             }
         }
     }
@@ -83,11 +96,8 @@ class GoToDtoFile : AnAction() {
                     null
                 }
             }
-            ((element ?: psiElement)
-                .toUElementOfType<UClass>())?.uAnnotations?.find { it.qualifiedName == GeneratedBy::class.qualifiedName }
-                ?.also { generated ->
-                    e.presentation.isVisible = generated.findAttributeValue("file")?.toString()?.isNotBlank() == true
-                }
+            e.presentation.isVisible = ((element
+                ?: psiElement).toUElementOfType<UClass>())?.uAnnotations?.find { it.qualifiedName == GeneratedBy::class.qualifiedName } != null
         }
     }
 
