@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.Utility
+import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiUtil
 import net.bytebuddy.ByteBuddy
@@ -30,6 +31,7 @@ import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -204,6 +206,22 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                     null
                 }
             }
+        },
+        getTypeParameters = {
+            this.typeParameters.map {
+                createTypeParameter(
+                    getSimpleName = { createName(it.name!!) },
+                    asType = {
+                        createDeclaredType(
+                            getQualifiedName = { it.qualifiedName!! },
+                            asElement = {
+                                it.asTypeElement(caches)
+                            },
+                            getTypeArguments = { emptyList() }
+                        )
+                    },
+                )
+            }
         }
     ).also {
         caches[this.qualifiedName!!] = it
@@ -216,7 +234,7 @@ data class Apt(
     val sources: List<Source>,
 )
 
-fun psiClassesToApt(
+fun Project.psiClassesToApt(
     compilableClasses: CopyOnWriteArraySet<PsiClass>,
     cacheClasses: CopyOnWriteArraySet<PsiClass>
 ): Apt {
@@ -356,22 +374,9 @@ fun psiClassesToApt(
                     }
 
                     override fun getTypeElement(name: CharSequence): TypeElement? {
-                        return typeElementCaches[name.toString()] ?: createTypeElement(
-                            getKind = { ElementKind.CLASS },
-                            getQualifiedName = { createName(name.toString()) },
-                            getSimpleName = { createName(name.toString().substringAfterLast(".")) },
-                            getEnclosingElement = {
-                                createPackageElement(
-                                    getQualifiedName = { createName(name.toString().substringBeforeLast(".")) }
-                                )
-                            },
-                            getEnclosedElements = { emptyList() },
-                            asType = {
-                                createDeclaredType(
-                                    getQualifiedName = { name.toString() },
-                                    asElement = { createTypeElement(getQualifiedName = { createName(name.toString()) }) })
-                            }
-                        )
+                        return typeElementCaches[name.toString()] ?: JavaPsiFacade.getInstance(this@psiClassesToApt)
+                            .findClass(name.toString(), this@psiClassesToApt.allScope())
+                            ?.asTypeElement(typeElementCaches)
                     }
 
                     override fun getElementValuesWithDefaults(a: AnnotationMirror): Map<out ExecutableElement, AnnotationValue> {
