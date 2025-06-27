@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.utility
 import cn.enaium.jimmer.buddy.Utility
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
+import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.util.PsiUtil
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.implementation.FixedValue
@@ -472,21 +473,15 @@ fun Project.psiClassesToApt(
                                 t1Element.contentEquals(t2Element)
 
                             if (!eq) {
-                                if (t2Element == "java.lang.Number") {
-                                    eq = when (t1Element) {
-                                        java.lang.Byte::class.qualifiedName,
-                                        java.lang.Short::class.qualifiedName,
-                                        java.lang.Integer::class.qualifiedName,
-                                        java.lang.Long::class.qualifiedName,
-                                        java.lang.Float::class.qualifiedName,
-                                        java.lang.Double::class.qualifiedName,
-                                        java.math.BigInteger::class.qualifiedName,
-                                        java.math.BigDecimal::class.qualifiedName -> true
-
-                                        else -> false
-                                    }
-                                } else if (t2Element == "java.lang.Enum") {
+                                if (t2Element == "java.lang.Enum") {
                                     eq = typeElementCaches[t1Element]?.kind == ElementKind.ENUM
+                                } else {
+                                    val project = this@psiClassesToApt
+                                    val psiClass =
+                                        JavaPsiFacade.getInstance(project).findClass(t2Element, project.allScope())
+                                            ?: return false
+                                    eq = t1Element in ClassInheritorsSearch.search(psiClass, project.allScope(), true)
+                                        .map { it.qualifiedName }
                                 }
                             }
                             eq
