@@ -327,7 +327,7 @@ object JimmerBuddy {
 
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
-                    val (pe, rootElements, sources) = psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
+                    val (pe, rootElements, sources) = project.psiClassesToApt(psiCaches, javaImmutablePsiClassCache)
                     val currentModule = project.modules.find { it.name.endsWith(".$src") }
                     val aptOptions = currentModule?.let { module ->
                         CompilerConfiguration.getInstance(project)
@@ -385,7 +385,10 @@ object JimmerBuddy {
         suspend fun dtoProcessJava(projects: Set<GenerateProject>) {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             project.runReadActionSmart {
-                val (pe, rootElements, sources) = psiClassesToApt(CopyOnWriteArraySet(), javaImmutablePsiClassCache)
+                val (pe, rootElements, sources) = project.psiClassesToApt(
+                    CopyOnWriteArraySet(),
+                    javaImmutablePsiClassCache
+                )
                 projects.forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.forEach { sourceFile ->
                         val currentModule = project.modules.find { it.name.endsWith(".$src") }
@@ -454,7 +457,10 @@ object JimmerBuddy {
 
                     val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
 
-                    val (resolver, environment, sources) = ktClassToKsp(ktClassCaches, kotlinImmutableKtClassCache)
+                    val (resolver, environment, sources) = project.ktClassToKsp(
+                        ktClassCaches,
+                        kotlinImmutableKtClassCache
+                    )
                     try {
 
 
@@ -489,7 +495,7 @@ object JimmerBuddy {
         suspend fun dtoProcessKotlin(projects: Set<GenerateProject>) {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             project.runReadActionSmart {
-                val (resolver, environment, sources) = ktClassToKsp(
+                val (resolver, environment, sources) = project.ktClassToKsp(
                     CopyOnWriteArraySet(),
                     kotlinImmutableKtClassCache
                 )

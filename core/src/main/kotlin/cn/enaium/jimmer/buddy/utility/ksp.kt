@@ -19,11 +19,15 @@ package cn.enaium.jimmer.buddy.utility
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
+import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.JimmerProcessor
+import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -330,6 +334,15 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         },
         asType = {
             this.asStarProjectedType()
+        },
+        typeParameters = {
+            this.typeParameters.map {
+                createKSTypeParameter(
+                    name = {
+                        createKSName(it.name!!)
+                    },
+                )
+            }
         }
     ).also {
         caches[this.fqName!!.asString()] = it
@@ -342,7 +355,10 @@ data class Ksp(
     val sources: List<Source>,
 )
 
-fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: CopyOnWriteArraySet<KtClass>): Ksp {
+fun Project.ktClassToKsp(
+    compilableClasses: CopyOnWriteArraySet<KtClass>,
+    cacheClasses: CopyOnWriteArraySet<KtClass>
+): Ksp {
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
@@ -441,7 +457,7 @@ fun ktClassToKsp(compilableClasses: CopyOnWriteArraySet<KtClass>, cacheClasses: 
     )
 }
 
-private fun createResolver(
+private fun Project.createResolver(
     caches: Map<String, KSClassDeclaration>,
     newFiles: Sequence<KSFile> = emptySequence(),
 ): Resolver {
@@ -539,13 +555,19 @@ private fun createResolver(
                 "kotlin.collections.List" -> list
                 "kotlin.collections.Map" -> map
                 else -> caches[name.asString()]
-            } ?: createKSClassDeclaration(
-                classKind = { ClassKind.CLASS },
-                qualifiedName = { createKSName(name.asString()) },
-                simpleName = { createKSName(name.asString().substringAfterLast(".")) },
-                packageName = { createKSName(name.asString().substringBeforeLast(".")) },
-                asType = { createKSType(declaration = { this@createKSClassDeclaration }) }
-            )
+            } ?: run {
+                var cd =
+                    (KotlinFullClassNameIndex[name.asString(), this@createResolver, this@createResolver.allScope()].firstOrNull() as? KtClass)
+                        ?.asKSClassDeclaration(caches.toMutableMap())
+
+                if (cd == null) {
+                    cd = JavaPsiFacade.getInstance(this@createResolver)
+                        .findClass(name.asString(), this@createResolver.allScope())
+                        ?.asKSClassDeclaration(caches.toMutableMap())
+                }
+
+                cd
+            }
         }
 
         @KspExperimental
@@ -1164,6 +1186,81 @@ private fun createKSTypeArgument(
 
         override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
             return visitor.visitTypeArgument(this, data)
+        }
+    }
+}
+
+private fun createKSTypeParameter(
+    bounds: () -> Sequence<KSTypeReference> = { TODO("Not yet implemented") },
+    isReified: () -> Boolean = { TODO("Not yet implemented") },
+    name: () -> KSName,
+    variance: () -> Variance = { TODO("Not yet implemented") },
+    containingFile: () -> KSFile? = { TODO("Not yet implemented") },
+    docString: () -> String? = { TODO("Not yet implemented") },
+    packageName: () -> KSName = { TODO("Not yet implemented") },
+    parentDeclaration: () -> KSDeclaration? = { TODO("Not yet implemented") },
+    qualifiedName: () -> KSName? = { TODO("Not yet implemented") },
+    simpleName: () -> KSName = { TODO("Not yet implemented") },
+    typeParameters: () -> List<KSTypeParameter> = { TODO("Not yet implemented") },
+    modifiers: () -> Set<Modifier> = { TODO("Not yet implemented") },
+    location: () -> Location = { TODO("Not yet implemented") },
+    origin: () -> Origin = { TODO("Not yet implemented") },
+    parent: () -> KSNode? = { TODO("Not yet implemented") },
+    annotations: () -> Sequence<KSAnnotation> = { TODO("Not yet implemented") },
+    isActual: () -> Boolean = { TODO("Not yet implemented") },
+    isExpect: () -> Boolean = { TODO("Not yet implemented") },
+    findActuals: () -> Sequence<KSDeclaration> = { emptySequence() },
+    findExpects: () -> Sequence<KSDeclaration> = { emptySequence() },
+): KSTypeParameter {
+    return object : KSTypeParameter {
+        override val bounds: Sequence<KSTypeReference>
+            get() = bounds()
+        override val isReified: Boolean
+            get() = isReified()
+        override val name: KSName
+            get() = name()
+        override val variance: Variance
+            get() = variance()
+        override val containingFile: KSFile?
+            get() = containingFile()
+        override val docString: String?
+            get() = docString()
+        override val packageName: KSName
+            get() = packageName()
+        override val parentDeclaration: KSDeclaration?
+            get() = parentDeclaration()
+        override val qualifiedName: KSName?
+            get() = qualifiedName()
+        override val simpleName: KSName
+            get() = simpleName()
+        override val typeParameters: List<KSTypeParameter>
+            get() = typeParameters()
+        override val modifiers: Set<Modifier>
+            get() = modifiers()
+        override val location: Location
+            get() = location()
+        override val origin: Origin
+            get() = origin()
+        override val parent: KSNode?
+            get() = parent()
+
+        override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
+            return visitor.visitTypeParameter(this, data)
+        }
+
+        override val annotations: Sequence<KSAnnotation>
+            get() = annotations()
+        override val isActual: Boolean
+            get() = isActual()
+        override val isExpect: Boolean
+            get() = isExpect()
+
+        override fun findActuals(): Sequence<KSDeclaration> {
+            return findActuals()
+        }
+
+        override fun findExpects(): Sequence<KSDeclaration> {
+            return findExpects()
         }
     }
 }

@@ -54,7 +54,7 @@ class DtoInspection : LocalInspectionTool() {
                     val typeClass =
                         JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope()) ?: return
                     val (pe, rootElements, sources) =
-                        psiClassesToApt(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
+                        project.psiClassesToApt(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
                     val context = createContext(
                         pe.elementUtils,
                         pe.typeUtils,
@@ -92,7 +92,7 @@ class DtoInspection : LocalInspectionTool() {
                         KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass
                             ?: return
                     val (resolver, environment, sources) =
-                        ktClassToKsp(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
+                        project.ktClassToKsp(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
                     val context = Context(resolver, environment)
                     val dtoFile = DtoFile(object : OsFile {
                         override fun getAbsolutePath(): String {
