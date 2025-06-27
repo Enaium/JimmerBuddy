@@ -37,7 +37,7 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
-        val text = e.text.subMiddle("\"","\"")
+        val text = e.text.subMiddle("\"", "\"")
 
         val props = getProps(e)
 
@@ -59,10 +59,10 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
             }
 
             val result = mutableMapOf<String, PsiElement>()
-            element.getParentOfType<PsiAnnotation>(true)?.method()?.getTarget()?.methods?.forEach {
+            element.getParentOfType<PsiAnnotation>(true)?.method()?.getTarget()?.allMethods?.forEach {
                 result[it.name] = it
             }
-            element.getParentOfType<KtAnnotationEntry>(true)?.property()?.getTarget()?.getProperties()?.forEach {
+            element.getParentOfType<KtAnnotationEntry>(true)?.property()?.getTarget()?.getAllProperties()?.forEach {
                 result[it.name ?: "Unknown name"] = it
             }
             return result

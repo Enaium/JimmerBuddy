@@ -45,7 +45,7 @@ class MappedByInspection : AbstractLocalInspectionTool() {
                 val mappedBy = element.findAttributeValue("mappedBy")?.toAny(String::class.java)?.toString()
                     ?.takeIf { it.isNotBlank() } ?: return@also
                 methodElement.getTarget()?.also {
-                    it.methods.find { method -> method.name == mappedBy }?.also {
+                    it.allMethods.find { method -> method.name == mappedBy }?.also {
                         if (it.getTarget() != methodElement.containingClass) {
                             holder.registerProblem(
                                 element,
@@ -66,9 +66,9 @@ class MappedByInspection : AbstractLocalInspectionTool() {
                     val mappedBy =
                         it.findArgument("mappedBy")?.value?.toString()
                             ?: return@also
-                    propertyElement.getTarget()?.also {
-                        it.getProperties().find { property -> property.name == mappedBy }?.also {
-                            if (it.getTarget() != propertyElement.containingClass()) {
+                    propertyElement.getTarget()?.also { ktClass ->
+                        ktClass.findPropertyByName(mappedBy, true)?.also { namedDeclaration ->
+                            if ((namedDeclaration as? KtProperty)?.getTarget() != propertyElement.containingClass()) {
                                 holder.registerProblem(
                                     element,
                                     "The mappedBy prop type is not match"
