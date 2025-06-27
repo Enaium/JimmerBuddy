@@ -48,12 +48,17 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                     val trace = element.getTrace(execute)
                     if (!fetcher.contains(trace.joinToString("."))) {
                         var allScalarFields = false
+                        val resolveMethod = element.resolveMethod() ?: return
+
+                        if (resolveMethod.name == "id") {
+                            return
+                        }
+
                         if (fetcher.contains(trace.toMutableList().also {
                                 it.removeLast()
                                 it.add("allScalarFields")
                             }.joinToString("."))
                         ) {
-                            val resolveMethod = element.resolveMethod() ?: return
                             if (resolveMethod.containingClass?.toImmutable()?.toCommonImmutableType()?.props()
                                     ?.find { it.name() == resolveMethod.name }?.isAutoScalar() == true
                             ) {
@@ -79,13 +84,18 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                     val trace = element.getTrace(execute)
                     if (!fetcher.contains(trace.joinToString("."))) {
                         var allScalarFields = false
+                        val property =
+                            ((element.lastChild as? KtNameReferenceExpression)?.reference?.resolve() as? KtProperty)
+
+                        if (property?.name == "id") {
+                            return
+                        }
+
                         if (fetcher.contains(trace.toMutableList().also {
                                 it.removeLast()
                                 it.add("allScalarFields")
                             }.joinToString("."))
                         ) {
-                            val property =
-                                ((element.lastChild as? KtNameReferenceExpression)?.reference?.resolve() as? KtProperty)
                             if (property?.containingClass()?.toImmutable()?.toCommonImmutableType()?.props()
                                     ?.find { it.name() == property.name }?.isAutoScalar() == true
                             ) {
