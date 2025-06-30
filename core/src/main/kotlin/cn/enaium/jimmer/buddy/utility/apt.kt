@@ -250,21 +250,6 @@ fun Project.psiClassesToApt(
 
     psiClasses.forEach { (compilable, psiClass) ->
         typeElementCaches[psiClass.qualifiedName!!] = psiClass.asTypeElement(typeElementCaches)
-        psiClass.interfaces.forEach { klass ->
-            typeElementCaches[klass.qualifiedName!!] = klass.asTypeElement(typeElementCaches)
-        }
-        psiClass.methods.forEach { method ->
-            val returnType = method.returnType?.resolveClass()
-            if (returnType?.typeParameters?.size == 0) {
-                typeElementCaches[returnType.qualifiedName!!] == returnType.asTypeElement(typeElementCaches)
-            } else if (returnType?.typeParameters?.size == 1) {
-                val resolveGenericsClass =
-                    method.returnType?.resolveGenericsClass(returnType.typeParameters[0]) ?: return@forEach
-                typeElementCaches[resolveGenericsClass.qualifiedName!!] == resolveGenericsClass.asTypeElement(
-                    typeElementCaches
-                )
-            }
-        }
     }
 
     val sources = mutableListOf<Source>()
@@ -445,13 +430,9 @@ fun Project.psiClassesToApt(
                 return object : Types {
                     override fun asElement(t: TypeMirror): Element? {
                         return typeElementCaches[t.toString()]
-                            ?: if (t.toString() == "java.util.List") {
-                                createTypeElement(
-                                    getQualifiedName = { createName("java.util.List") },
-                                )
-                            } else {
-                                null
-                            }
+                            ?: JavaPsiFacade.getInstance(this@psiClassesToApt)
+                                .findClass(t.toString(), this@psiClassesToApt.allScope())
+                                ?.asTypeElement(typeElementCaches)
                     }
 
                     override fun isSameType(
