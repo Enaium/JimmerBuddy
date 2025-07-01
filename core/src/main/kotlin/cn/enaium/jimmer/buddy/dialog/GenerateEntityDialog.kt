@@ -23,11 +23,9 @@ import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
 import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.dialog.panel.TableTreeTable
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.utility.getTables
-import cn.enaium.jimmer.buddy.utility.packageChooserField
-import cn.enaium.jimmer.buddy.utility.relativeLocationField
-import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.dsl.builder.Align
@@ -152,6 +150,14 @@ class GenerateEntityDialog(
                 return emptySet()
             } else {
                 null
+            }
+        }
+
+        if (driverJarFile == null && jdbcDriver != null) {
+            thread { OrderEnumerator.orderEntries(project).runtimeOnly().classesRoots }.forEach {
+                if (it.name.startsWith(jdbcDriver.artifact)) {
+                    driverJarFile = Path(it.path.substringBefore("!"))
+                }
             }
         }
 
