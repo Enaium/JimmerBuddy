@@ -23,11 +23,11 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.expandAll
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import com.intellij.icons.AllIcons
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -130,6 +130,7 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
     }
 
     fun refresh() {
+        project.isDisposed && return
         val psiFile = file.toPsiFile(project) ?: return
         val psiRoot = psiFile.getChildOfType<DtoPsiRoot>() ?: return
         root.removeAllChildren()
