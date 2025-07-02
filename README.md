@@ -1,59 +1,93 @@
 # JimmerBuddy
 
-A plugin that adds first-class support for Project Jimmer
+A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jimmer](https://github.com/babyfish-ct/jimmer), enhancing Java and Kotlin development with advanced code generation, navigation, and productivity features.
+
+---
 
 ## Features
 
-### First-class Java or Kotlin development
+### Entity & DDL Support
+- Generate entities from database or DDL, with fine-grained selection of tables and columns.
+- Generate DDL from entities.
+- Jimmer Project Wizard for quick project setup.
 
-- Automatically generate `draft`, `fetcher`, `props` etc. class for Immutable.
-- List all Immutables, DTOs and ErrorFamilies in the project.
-- Generate entity from database or ddl and choose which table or columns to generate.
-- Jimmer Project Wizard.
-- Inspection for immutable and prop such as `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula`
-  etc.
-- Navigate to immutable or prop such as `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
-- Completion for `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula` etc.
-- Generate all set of Draft
-- DTO class member go to DTO file.
+### Immutable & DTO Enhancements
+- Auto-generate `draft`, `fetcher`, `props`, and related classes for Immutables.
+- List all Immutables, DTOs, and ErrorFamilies in your project.
+- Auto-generate `view`, `input`, `specification`, and more for DTOs.
+- DTO designer and visualization tools.
+- Structure view and navigation for DTOs and Immutables.
+- Syntax highlighting, checking, and native compiler checks for DTO files.
+- Format and organize DTO source code.
+
+### Navigation & Productivity
+- Navigate to Immutables, DTOs, and properties (e.g., `@OneToOne`, `@ManyToMany`, `@IdView`, `@Formula`).
+- Completion and inspection for Jimmer annotations and properties.
+- Postfix templates for common Jimmer patterns (Java & Kotlin).
+- Count and navigate DTO types and immutable inheritors.
 - Execute SQL to clipboard.
-- DTO type count and navigation.
-- Immutable inheritor count and navigation.
-- Provide some postfix template.
-- Generate DDL from Entity.
 
-### First-class DTO development
+### Automation & Quality
+- Automatic import management for DTOs (`export`, `implements`, `userProp`, etc.).
+- Auto-generation of sources on file changes (with debounce).
+- Error reporting and inspection for common issues.
 
-- Automatically generate `view`, `input`, `specification` etc. class for DTO.
-- Syntax highlight.
-- Syntax check.
-- Native compiler check.
-- Navigation to `type`, `prop`, `import`, `annotation`, etc.
-- Completion `export`, `package`, `import`, `prop`, `macro`, `config` etc.
-- Automatically import for `export`, `implements`, `userProp` etc.
-- Format source.
-- Structure view.
-- Visualization to create DTO file.
-- DTO designer.
+---
+
+## Installation
+
+1. **From JetBrains Marketplace:**
+   - Open IntelliJ IDEA.
+   - Go to `Settings` > `Plugins` > `Marketplace`.
+   - Search for `JimmerBuddy` and install.
+   - Restart the IDE if prompted.
+
+2. **From Source:**
+   - Clone this repository.
+   - Build the plugin using Gradle: `./gradlew build`
+   - Install the generated plugin ZIP via `Settings` > `Plugins` > `Install Plugin from Disk...`
+
+---
+
+## Usage
+
+- **Entity/DTO Generation:**
+  - Edit your Java, Kotlin, or DTO files. JimmerBuddy will auto-generate supporting code after a short delay.
+  - Use the context menu or project wizard for advanced generation options.
+- **Navigation:**
+  - Use `Go to` actions or structure views to quickly jump between Immutables, DTOs, and their properties.
+- **Postfix Templates:**
+  - Type supported postfixes (e.g., `.findById`, `.deleteById`) and press Tab to expand.
+- **Error Inspection:**
+  - Check the plugin log tool window for issues or errors.
+
+---
 
 ## FAQ
 
-### Why is the plugin not available
+**Q: Why is the plugin not available after installation?**
+- Wait for project indexing to complete, then reopen the project.
 
-- Please wait for the project to be indexed, then reopen the project
+**Q: When does the plugin generate draft, props, etc.?**
+- When you change Java or Kotlin source files, generation occurs after a 2-second delay.
 
-### What time will the plugin generate draft, props, etc.?
+**Q: When does the plugin generate DTO view, input, etc.?**
+- When you change DTO source files, generation occurs after a 2-second delay.
 
-- When you change the Java or Kotlin source, then wait 2 seconds
+**Q: Why is generated source different from Jimmer's apt/ksp?**
+- Jimmer's apt/ksp will generate the full source during your project build. JimmerBuddy provides instant feedback and navigation during development.
 
-### What time will the plugin generate the DTO view, input, etc.?
+**Q: Why is source not generated for Immutable and DTO?**
+- Check the plugin log tool window for errors. If issues persist, please create an issue on GitHub.
 
-- When you change the DTO source, then wait 2 seconds
+---
 
-### Why does the plugin not generate source for Immutable and DTO
+## Contributing
 
-- Please check the plugin log tool window on the bottom or the left bottom, then create an issue
+Contributions are welcome! Please open issues or pull requests for bug fixes, features, or documentation improvements.
 
-### Why generated source is not same as the Jimmer's apt/ksp
+---
 
-Do not worry, the Jimmer's apt/ksp will generate full source when your project builds.
+## License
+
+This project is licensed under the [Apache 2.0 License](LICENSE).

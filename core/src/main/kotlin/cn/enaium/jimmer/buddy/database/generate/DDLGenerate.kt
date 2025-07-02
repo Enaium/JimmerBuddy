@@ -19,8 +19,10 @@ package cn.enaium.jimmer.buddy.database.generate
 import cn.enaium.jimmer.buddy.database.model.*
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.babyfish.jimmer.sql.PropOverride
+import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
 
 /**
@@ -40,7 +42,30 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
                     if (!prop.isList() && !prop.isEmbedded()) {
-                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment())
+                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment()).let {
+                            val psi = prop.psi(project)
+                            val name = when (psi) {
+                                is PsiMethod -> {
+                                    psi.modifierList.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
+                                        ?.findAttributeValue("name")?.toAny(String::class.java)?.toString()
+                                }
+
+                                is KtProperty -> {
+                                    psi.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
+                                        ?.findArgument("name")?.value?.toString()
+                                }
+
+                                else -> {
+                                    null
+                                }
+                            }
+
+                            if (name != null) {
+                                it.copy(name = name)
+                            } else {
+                                it
+                            }
+                        }
                     } else {
                         null
                     }
@@ -108,7 +133,31 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 commonImmutableType.props().mapNotNull { prop ->
                     prop.toUniqueKey(tableName)
                 }.toSet()
-            )
+            ).let { table ->
+                val psi = commonImmutableType.psi(project)
+                val name = when (psi) {
+                    is PsiClass -> {
+                        psi.modifierList?.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                            ?.findAttributeValue("name")
+                            ?.toAny(String::class.java)?.toString()
+                    }
+
+                    is KtClass -> {
+                        psi.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                            ?.findArgument("name")?.value?.toString()
+                    }
+
+                    else -> {
+                        null
+                    }
+                }
+
+                if (name != null) {
+                    table.copy(name = name)
+                } else {
+                    table
+                }
+            }
         )
         return tables
     }
@@ -226,12 +275,12 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
         tables.forEach { table ->
             table.remark?.also {
-                render += "comment on table ${table.name} is '${table.remark}'\n"
+                render += "comment on table ${table.name} is '${table.remark}';\n"
             }
 
             table.columns.forEach { column ->
                 column.remark?.also {
-                    render += "comment on column ${table.name}.${column.name} is '${column.remark}'\n"
+                    render += "comment on column ${table.name}.${column.name} is '${column.remark}';\n"
                 }
             }
         }

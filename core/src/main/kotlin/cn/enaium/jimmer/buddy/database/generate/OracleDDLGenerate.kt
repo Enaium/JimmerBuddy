@@ -30,19 +30,19 @@ import java.util.*
 class OracleDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
-            String::class.java.name, String::class.qualifiedName -> "varchar2"
-            Byte::class.java.name, Byte::class.qualifiedName -> "number(3)"
-            Short::class.java.name, Short::class.qualifiedName -> "number(5)"
-            Int::class.java.name, Int::class.qualifiedName -> "number(10)"
-            Long::class.java.name, Long::class.qualifiedName -> "number(19)"
-            Float::class.java.name, Float::class.qualifiedName -> "number(10, 5)"
-            Double::class.java.name, Double::class.qualifiedName -> "number(19, 5)"
-            Boolean::class.java.name, Boolean::class.qualifiedName -> "number(1)"
-            BigDecimal::class.qualifiedName -> "number(19, 5)"
-            LocalDateTime::class.qualifiedName, java.util.Date::class.qualifiedName -> "timestamp"
-            LocalDate::class.qualifiedName -> "date"
-            LocalTime::class.qualifiedName -> "timestamp"
-            UUID::class.qualifiedName -> "varchar2(36)"
+            String::class.java.name, String::class.java.name -> "varchar2"
+            Byte::class.java.name, Byte::class.java.name, Byte::class.qualifiedName -> "number(3)"
+            Short::class.java.name, Short::class.java.name, Short::class.qualifiedName -> "number(5)"
+            Int::class.java.name, Int::class.java.name, Int::class.qualifiedName -> "number(10)"
+            Long::class.java.name, Long::class.java.name, Long::class.qualifiedName -> "number(19)"
+            Float::class.java.name, Float::class.java.name, Float::class.qualifiedName -> "number(10, 5)"
+            Double::class.java.name, Double::class.java.name, Double::class.qualifiedName -> "number(19, 5)"
+            Boolean::class.java.name, Boolean::class.java.name, Boolean::class.qualifiedName -> "number(1)"
+            BigDecimal::class.java.name -> "number(19, 5)"
+            LocalDateTime::class.java.name, java.util.Date::class.java.name -> "timestamp"
+            LocalDate::class.java.name -> "date"
+            LocalTime::class.java.name -> "timestamp"
+            UUID::class.java.name -> "varchar2(36)"
             else -> "varchar2"
         }
     }

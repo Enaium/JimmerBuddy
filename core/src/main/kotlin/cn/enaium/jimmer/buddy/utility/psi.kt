@@ -41,8 +41,16 @@ fun KtClass.annotations(): List<PsiService.Annotation> {
     return JimmerBuddy.Services.PSI.annotations(this)
 }
 
+fun KtClass.findAnnotation(name: String): PsiService.Annotation? {
+    return this.annotations().find { it.fqName == name }
+}
+
 fun KtProperty.annotations(): List<PsiService.Annotation> {
     return JimmerBuddy.Services.PSI.annotations(this)
+}
+
+fun KtProperty.findAnnotation(name: String): PsiService.Annotation? {
+    return this.annotations().find { it.fqName == name }
 }
 
 fun KtTypeReference.type(): PsiService.Type {
@@ -218,6 +226,32 @@ fun KtProperty.getTarget(): KtClass? {
         } else {
             it.ktClass
         }
+    }
+}
+
+fun PsiClass.hasTableAnnotation(): Boolean {
+    return this.modifierList?.annotations?.any { annotation ->
+        annotation.hasQualifiedName(Table::class.qualifiedName!!)
+    } == true
+}
+
+fun KtClass.hasTableAnnotation(): Boolean {
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
+        val fqName = annotation.qualifiedName
+        fqName == Table::class.qualifiedName!!
+    } == true
+}
+
+fun PsiMethod.hasColumnAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(Column::class.qualifiedName!!)
+    }
+}
+
+fun KtProperty.hasColumnAnnotation(): Boolean {
+    return this.annotations().any { annotation ->
+        val fqName = annotation.fqName
+        fqName == Column::class.qualifiedName!!
     }
 }
 
