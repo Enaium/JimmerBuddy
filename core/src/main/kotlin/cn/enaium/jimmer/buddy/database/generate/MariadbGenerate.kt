@@ -28,19 +28,19 @@ class MariadbGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
     MySqlDDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
-            String::class.java.name, String::class.qualifiedName -> "varchar(255)"
-            Byte::class.java.name, java.lang.Byte::class.qualifiedName, Byte::class.qualifiedName -> "tinyint"
-            Short::class.java.name, java.lang.Short::class.qualifiedName, Short::class.qualifiedName -> "smallint"
-            Int::class.java.name, java.lang.Integer::class.qualifiedName, Int::class.qualifiedName -> "int"
-            Long::class.java.name, java.lang.Long::class.qualifiedName, Long::class.qualifiedName -> "bigint"
-            Float::class.java.name, java.lang.Float::class.qualifiedName, Float::class.qualifiedName -> "float"
-            Double::class.java.name, java.lang.Double::class.qualifiedName, Double::class.qualifiedName -> "double"
-            Boolean::class.java.name, java.lang.Boolean::class.qualifiedName, Boolean::class.qualifiedName -> "bool"
-            LocalDateTime::class.qualifiedName, java.util.Date::class.qualifiedName -> "datetime"
-            java.time.LocalDate::class.qualifiedName -> "date"
-            java.time.LocalTime::class.qualifiedName -> "time"
-            java.util.Date::class.qualifiedName -> "datetime"
-            UUID::class.qualifiedName -> "uuid"
+            String::class.java.name, String::class.java.name -> "varchar(255)"
+            Byte::class.java.name, java.lang.Byte::class.java.name, Byte::class.qualifiedName -> "tinyint"
+            Short::class.java.name, java.lang.Short::class.java.name, Short::class.qualifiedName -> "smallint"
+            Int::class.java.name, java.lang.Integer::class.java.name, Int::class.qualifiedName -> "int"
+            Long::class.java.name, java.lang.Long::class.java.name, Long::class.qualifiedName -> "bigint"
+            Float::class.java.name, java.lang.Float::class.java.name, Float::class.qualifiedName -> "float"
+            Double::class.java.name, java.lang.Double::class.java.name, Double::class.qualifiedName -> "double"
+            Boolean::class.java.name, java.lang.Boolean::class.java.name, Boolean::class.qualifiedName -> "bool"
+            LocalDateTime::class.java.name, java.util.Date::class.java.name -> "datetime"
+            java.time.LocalDate::class.java.name -> "date"
+            java.time.LocalTime::class.java.name -> "time"
+            java.util.Date::class.java.name -> "datetime"
+            UUID::class.java.name -> "uuid"
             else -> "varchar(255)"
         }
     }
