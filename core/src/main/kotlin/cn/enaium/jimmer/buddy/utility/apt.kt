@@ -28,6 +28,7 @@ import net.bytebuddy.matcher.ElementMatchers
 import net.bytebuddy.matcher.ElementMatchers.named
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
+import org.babyfish.jimmer.Scalar
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.sql.*
@@ -669,6 +670,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     Transient::class.qualifiedName -> Utility._transient()
     Serialized::class.qualifiedName -> Utility.serialized()
     LogicalDeleted::class.qualifiedName -> Utility.logicalDeleted()
+    Scalar::class.qualifiedName -> Utility.scalar()
     Nullable::class.qualifiedName -> Utility.nullable()
     else -> null
 }?.let {

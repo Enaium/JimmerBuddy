@@ -20,14 +20,11 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.JimmerProcessor
-import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -51,6 +48,8 @@ fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration>
                 ClassKind.INTERFACE
             } else if (this.isEnum) {
                 ClassKind.ENUM_CLASS
+            } else if (this.isAnnotationType) {
+                ClassKind.ANNOTATION_CLASS
             } else {
                 ClassKind.CLASS
             }
@@ -92,7 +91,31 @@ fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration>
             }.asSequence()
         },
         parentDeclaration = { null },
-        annotations = { emptySequence() },
+        annotations = {
+            this.annotations.mapNotNull { annotation ->
+                val fqName =
+                    annotation.qualifiedName?.takeIf { jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it) }
+                        ?: return@mapNotNull null
+                createKSAnnotation(
+                    annotationType =
+                        createKSTypeReference(
+                            resolve = {
+                                createKSType(
+                                    declaration = {
+                                        project.findKtClass(fqName)?.asKSClassDeclaration(caches)
+                                            ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
+                                            ?: createKSClassDeclaration(
+                                                classKind = { ClassKind.ANNOTATION_CLASS },
+                                                qualifiedName = { createKSName(fqName) },
+                                                simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                                                packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                                                annotations = { emptySequence() })
+                                    })
+                            }),
+                    shortName = { createKSName(fqName.substringAfterLast(".")) },
+                )
+            }.asSequence()
+        },
         declarations = { emptySequence() },
         asStarProjectedType = {
             createKSType(
@@ -135,6 +158,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                 ClassKind.INTERFACE
             } else if (isEnum()) {
                 ClassKind.ENUM_CLASS
+            } else if (isAnnotation()) {
+                ClassKind.ANNOTATION_CLASS
             } else {
                 ClassKind.CLASS
             }
@@ -154,18 +179,21 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         parentDeclaration = { null },
         annotations = {
             this.annotations().mapNotNull { annotation ->
-                val fqName = annotation.fqName ?: return@mapNotNull null
+                val fqName = annotation.fqName?.takeIf { jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it) }
+                    ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType = createKSTypeReference(
                         resolve = {
                             createKSType(
                                 declaration = {
-                                    createKSClassDeclaration(
-                                        classKind = { ClassKind.ANNOTATION_CLASS },
-                                        qualifiedName = { createKSName(fqName) },
-                                        simpleName = { createKSName(fqName.substringAfterLast(".")) },
-                                        packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                                        annotations = { emptySequence() })
+                                    project.findKtClass(fqName)?.asKSClassDeclaration(caches)
+                                        ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
+                                        ?: createKSClassDeclaration(
+                                            classKind = { ClassKind.ANNOTATION_CLASS },
+                                            qualifiedName = { createKSName(fqName) },
+                                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                                            annotations = { emptySequence() })
                                 })
                         }), shortName = {
                         createKSName(fqName.substringAfterLast("."))
@@ -191,26 +219,22 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                         },
                         annotations = {
                             property.annotations().mapNotNull { annotation ->
-                                val fqName = annotation.fqName ?: return@mapNotNull null
+                                val fqName = annotation.fqName?.takeIf {
+                                    jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it)
+                                } ?: return@mapNotNull null
                                 createKSAnnotation(
                                     annotationType = createKSTypeReference(
                                         resolve = {
                                             createKSType(
                                                 declaration = {
-                                                    createKSClassDeclaration(
-                                                        classKind = { ClassKind.ANNOTATION_CLASS },
-                                                        qualifiedName = { createKSName(fqName) },
-                                                        simpleName = {
-                                                            createKSName(
-                                                                fqName.substringAfterLast(".")
-                                                            )
-                                                        },
-                                                        packageName = {
-                                                            createKSName(
-                                                                fqName.substringBeforeLast(".")
-                                                            )
-                                                        },
-                                                        annotations = { emptySequence() })
+                                                    project.findKtClass(fqName)?.asKSClassDeclaration(caches)
+                                                        ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
+                                                        ?: createKSClassDeclaration(
+                                                            classKind = { ClassKind.ANNOTATION_CLASS },
+                                                            qualifiedName = { createKSName(fqName) },
+                                                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                                                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                                                            annotations = { emptySequence() })
                                                 })
                                         }), shortName = {
                                         createKSName(fqName.substringAfterLast("."))
@@ -557,13 +581,10 @@ private fun Project.createResolver(
                 else -> caches[name.asString()]
             } ?: run {
                 var cd =
-                    (KotlinFullClassNameIndex[name.asString(), this@createResolver, this@createResolver.allScope()].firstOrNull() as? KtClass)
-                        ?.asKSClassDeclaration(caches.toMutableMap())
+                    (findKtClass(name.asString()))?.asKSClassDeclaration(caches.toMutableMap())
 
                 if (cd == null) {
-                    cd = JavaPsiFacade.getInstance(this@createResolver)
-                        .findClass(name.asString(), this@createResolver.allScope())
-                        ?.asKSClassDeclaration(caches.toMutableMap())
+                    cd = findPsiClass(name.asString())?.asKSClassDeclaration(caches.toMutableMap())
                 }
 
                 cd

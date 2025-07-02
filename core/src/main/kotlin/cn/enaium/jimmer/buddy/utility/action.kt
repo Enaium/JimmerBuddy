@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.utility
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
@@ -30,7 +31,7 @@ import kotlin.io.path.extension
 fun AnActionEvent.visibleWithImmutable() {
     val project = this.project ?: return
     val dataContext = this.dataContext
-    dataContext.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPath()?.takeIf { it.toFile().isFile }
+    dataContext.getData(CommonDataKeys.VIRTUAL_FILE)?.toNioPathOrNull()?.takeIf { it.toFile().isFile }
         ?.also { sourceFile ->
             this.presentation.isVisible = when (sourceFile.extension) {
                 "java" -> {

@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy;
 
 import org.babyfish.jimmer.Formula;
 import org.babyfish.jimmer.Immutable;
+import org.babyfish.jimmer.Scalar;
 import org.babyfish.jimmer.error.ErrorFamily;
 import org.babyfish.jimmer.error.ErrorField;
 import org.babyfish.jimmer.sql.*;
@@ -499,6 +500,15 @@ public class Utility {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return LogicalDeleted.class;
+            }
+        };
+    }
+
+    public static Scalar scalar() {
+        return new Scalar() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Scalar.class;
             }
         };
     }
