@@ -2,47 +2,47 @@
 
 ## Install
 
-###  Prerequisites
+### Prerequisites
 
-- Intellij `2023.1` or later.
+- IntelliJ IDEA 2023.1 or later
 
-### Install in Intellij
+### Install via IntelliJ
 
 1. Open IntelliJ IDEA.
 2. Go to `File` > `Settings` > `Plugins`.
 3. Click `Marketplace`.
 4. Search for `JimmerBuddy` and install it.
 
-### Install online
+### Install Online
 
-1. Open [the link](https://plugins.jetbrains.com/plugin/26622-jimmer-buddy)
-2. Click `Get` button.
+1. Open [this link](https://plugins.jetbrains.com/plugin/26622-jimmer-buddy).
+2. Click the `Get` button.
 
-### Install offline
+### Install Offline
 
-1. Open [the link](https://plugins.jetbrains.com/plugin/26622-jimmer-buddy)
-2. Click `versions` button.
+1. Open [this link](https://plugins.jetbrains.com/plugin/26622-jimmer-buddy).
+2. Click the `Versions` button.
 3. Download the latest version.
-4. Install the plugin from `File` > `Settings` > `Plugins` > `Install plugin from disk...`.
+4. In IntelliJ, go to `File` > `Settings` > `Plugins` > `Install plugin from disk...` and select the downloaded file.
 
 ## FAQ
 
 ### Why is the plugin not available?
 
-- Please wait for the project to be indexed, then reopen the project
+- Please wait for the project to finish indexing, then reopen the project.
 
-### What time will the plugin generate draft, props, etc.?
+### When does the plugin generate draft, props, etc.?
 
-- When you change the Java or Kotlin source, then wait 2 seconds
+- When you change Java or Kotlin source files, wait about 2 seconds.
 
-### What time will the plugin generate the DTO view, input, etc.?
+### When does the plugin generate DTO view, input, etc.?
 
-- When you change the DTO source, then wait 2 seconds
+- When you change DTO source files, wait about 2 seconds.
 
-### Why does the plugin not generate source for Immutable and DTO
+### Why doesn't the plugin generate source for Immutable and DTO?
 
-- Please check the plugin log tool window on the bottom or the left bottom, then create an issue
+- Please check the plugin log tool window at the bottom or lower left, then create an issue if needed.
 
-### Why generated source is not same as the Jimmer's apt/ksp
+### Why is the generated source different from Jimmer's apt/ksp?
 
-Do not worry, the Jimmer's apt/ksp will generate full source when your project builds.
+- Don't worry, Jimmer's apt/ksp will generate the full source when your project builds.

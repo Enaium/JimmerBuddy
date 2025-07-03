@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "JimmerBuddy"
   text: "对Jimmer的一流支持"
-  tagline: "一个Intellij插件"
+  tagline: "一个IntelliJ插件"
   image:
     src: /logo.svg
     alt: VitePress
@@ -21,11 +21,11 @@ hero:
 
 features:
   - icon: 🎯
-    title: 专注代码
+    title: 专注你的代码
     details: 检查关于Jimmer注解的代码
   - icon: ❤️
     title: 享受Jimmer的强大功能
-    details: 有用的代码补全代码分析等
+    details: 提供有用的代码补全、代码分析等
   - icon: 🚀
     title: 快速生成代码
     details: 无需清理和编译项目即可生成代码

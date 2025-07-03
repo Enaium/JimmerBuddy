@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "JimmerBuddy"
   text: "First-class support for Project Jimmer"
-  tagline: "A Intellij Plugin"
+  tagline: "An IntelliJ Plugin"
   image:
     src: /logo.svg
     alt: VitePress
@@ -21,13 +21,13 @@ hero:
 
 features:
   - icon: 🎯
-    title: Focus on You Code
-    details: Chcek your code about Jimmer annotations
+    title: Focus on Your Code
+    details: Check your code for Jimmer annotations
   - icon: ❤️
     title: Enjoy the Power of Jimmer
     details: Helpful code completion, code analysis, and more
   - icon: 🚀
-    title: Fast to generate code
-    details: Generate code without cleaning and compiling the project
+    title: Fast Code Generation
+    details: Generate code instantly without cleaning or compiling the project
 ---
 

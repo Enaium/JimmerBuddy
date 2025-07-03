@@ -1,51 +1,51 @@
 # Inspection
 
-JimmerBuddy provide some inspection features to help you find problems in your code.
+JimmerBuddy provides several inspection features to help you identify problems in your code.
 
-## Association
+## Association Annotations
 
-Check some annotations of the association.
+Checks for correct usage of association annotations:
 
-- `@OneToOne` and `@ManyToOne` can not at collection property.
-- `@OneToMany` and `@ManyToMany` can not at non-collection property.
+- `@OneToOne` and `@ManyToOne` cannot be used on collection properties.
+- `@OneToMany` and `@ManyToMany` cannot be used on non-collection properties.
 
-## MappedBy
+## MappedBy Property
 
-Check the `mappedBy` property of the association.
+Checks the `mappedBy` property of associations:
 
-- `mappedBy` prop must exist.
-- `mappedBy` prop type must match the inverse property type.
+- The `mappedBy` property must exist.
+- The `mappedBy` property type must match the inverse property type.
 
-## IdView
+## IdView Annotation
 
-Check the `@IdView` annotation.
+Checks the `@IdView` annotation:
 
-- `value` must exist if the property is a collection.
-- Property type must be a collection if the type is a generic type.
-- Base prop must exist.
+- The `value` must exist if the property is a collection.
+- The property type must be a collection if the type is generic.
+- The base property must exist.
 
-## Formula
+## Formula Annotation
 
-Check the `@Formula` annotation.
+Checks the `@Formula` annotation:
 
-- `dependencies` must exist.
+- The `dependencies` property must exist.
 
-## FetchBy
+## FetchBy Annotation
 
-Check the `@FetchBy` annotation.
+Checks the `@FetchBy` annotation:
 
-- Property must be a fetcher.
-- Property must exist.
-- Fetcher type must match the fetch type.
+- The property must be a fetcher.
+- The property must exist.
+- The fetcher type must match the fetch type.
 
-## Immutable
+## Immutable Annotations
 
-Check some annotations about Immutable such as  `@Immutable`, `@Entity`, `@MappedSuperclass`, and `@Embeddable`.
+Checks for correct usage of immutable-related annotations such as `@Immutable`, `@Entity`, `@MappedSuperclass`, and `@Embeddable`:
 
-- Must on the interface.
+- Must be used on interfaces.
 
-## OrderedProp
+## OrderedProp Annotation
 
-Check the `@OrderedProp` annotation.
+Checks the `@OrderedProp` annotation:
 
-- `value` must exist.
+- The `value` property must exist.

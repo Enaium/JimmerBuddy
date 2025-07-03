@@ -1,10 +1,14 @@
-# Postfix Template
+# Postfix Templates
 
-## produce
+JimmerBuddy provides a set of postfix templates to help you quickly generate common code patterns for Jimmer entities and drafts. Below are the available templates and their effects.
+
+## Produce: Create Draft Instance
 
 ```java
 Author.produce
 ```
+
+Expands to:
 
 ```java
 AuthorDraft.$.produce(draft -> {
@@ -12,61 +16,73 @@ AuthorDraft.$.produce(draft -> {
 });
 ```
 
-## loaded
+## Loaded: Check if Draft is Loaded
 
 ```java
 draft.loaded
 ```
 
+Expands to:
+
 ```java
 ImmutableObjects.isLoaded(draft, )
 ```
 
-## unload
+## Unload: Unload a Draft
 
 ```java
 draft.unload
 ```
 
+Expands to:
+
 ```java
 ImmutableObjects.unload(draft, )
 ```
 
-## show
+## Show: Show a Draft
 
 ```java
 draft.show
 ```
 
+Expands to:
+
 ```java
 ImmutableObjects.show(draft, )
 ```
 
-## hide
+## Hide: Hide a Draft
 
 ```java
 draft.hide
 ```
 
+Expands to:
+
 ```java
 ImmutableObjects.hide(draft, )
 ```
 
-## set
+## Set: Set a Value on a Draft
 
 ```java
 draft.set
 ```
 
+Expands to:
+
 ```java
 ImmutableObjects.set(draft, )
 ```
 
-## query
+## Query: Create a Query (Kotlin)
 
 ```kotlin
 Author.query
 ```
+
+Expands to:
 
 ```kotlin
 sql.createQuery(Author::class) {
@@ -74,11 +90,13 @@ sql.createQuery(Author::class) {
 }
 ```
 
-## update
+## Update: Create an Update (Kotlin)
 
 ```kotlin
 Author.update
 ```
+
+Expands to:
 
 ```kotlin
 sql.createUpdate(Author::class) {
@@ -86,11 +104,13 @@ sql.createUpdate(Author::class) {
 }
 ```
 
-## delete
+## Delete: Create a Delete (Kotlin)
 
 ```kotlin
 Author.delete
 ```
+
+Expands to:
 
 ```kotlin
 sql.createDelete(Author::class) {
@@ -98,61 +118,73 @@ sql.createDelete(Author::class) {
 }
 ```
 
-## fbi
+## fbi: Find by ID
 
 ```java
 Author.fbi
 ```
 
+Expands to:
+
 ```java
 sql.findById(Author.class, )
 ```
 
-## fbis
+## fbis: Find by IDs
 
 ```java
 Author.fbis
 ```
 
+Expands to:
+
 ```java
 sql.findByIds(Author.class, )
 ```
 
-## fobi
+## fobi: Find One by ID
 
 ```java
 Author.fobi
 ```
 
+Expands to:
+
 ```java
 sql.findOneById(Author.class, )
 ```
 
-## fmbis
+## fmbis: Find Map by IDs
 
 ```java
 Author.fmbis
 ```
 
+Expands to:
+
 ```java
 sql.findMapByIds(Author.class, )
 ```
 
-## dbi
+## dbi: Delete by ID
 
 ```java
 Author.dbi
 ```
 
+Expands to:
+
 ```java
 sql.deleteById(Author.class, )
 ```
 
-## dbis
+## dbis: Delete by IDs
 
 ```java
 Author.dbis
 ```
+
+Expands to:
 
 ```java
 sql.deleteByIds(Author.class, )

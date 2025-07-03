@@ -1,51 +1,51 @@
 # 检查
 
-JimmerBuddy 提供了一些检查功能来帮助您发现代码中的问题。
+JimmerBuddy 提供了多种检查功能，帮助你发现代码中的问题。
 
-## 关联
+## 关联注解
 
-检查关联的一些注释。
+检查关联注解的正确用法：
 
 - `@OneToOne` 和 `@ManyToOne` 不能用于集合属性。
 - `@OneToMany` 和 `@ManyToMany` 不能用于非集合属性。
 
-## MappedBy
+## mappedBy 属性
 
-检查关联的 `mappedBy` 属性。
+检查关联的 `mappedBy` 属性：
 
-- `mappedBy` 属性必须存在。
+- 必须存在 `mappedBy` 属性。
 - `mappedBy` 属性类型必须与反向属性类型匹配。
 
-## IdView
+## IdView 注解
 
-检查 `@IdView` 注释。
+检查 `@IdView` 注解：
 
-- `value` 必须存在，如果属性是集合。
-- 如果类型是泛型类型，则属性类型必须是集合。
-- 基础属性必须存在。
+- 如果属性为集合，必须存在 `value`。
+- 如果类型为泛型，属性类型必须为集合。
+- 必须存在基础属性。
 
-## Formula
+## Formula 注解
 
-检查 `@Formula` 注释。
+检查 `@Formula` 注解：
 
-- `dependencies` 必须存在。
+- 必须存在 `dependencies` 属性。
 
-## FetchBy
+## FetchBy 注解
 
-检查 `@FetchBy` 注释。
+检查 `@FetchBy` 注解：
 
-- 属性必须是`Fetcher`。
+- 属性必须为 fetcher。
 - 属性必须存在。
-- `Fetcher`类型必须与获抓取类型匹配。
+- fetcher 类型必须与 fetch 类型匹配。
 
-## Immutable
+## 不变类相关注解
 
-检查一些关于 Immutable 的注释，例如 `@Immutable`、`@Entity`、`@MappedSuperclass` 和 `@Embeddable`。
+检查 `@Immutable`、`@Entity`、`@MappedSuperclass` 和 `@Embeddable` 等注解的用法：
 
-- 必须在接口上。
+- 必须用于接口上。
 
-## OrderedProp
+## OrderedProp 注解
 
-检查 `@OrderedProp` 注释。
+检查 `@OrderedProp` 注解：
 
-- `value` 必须存在。
+- 必须存在 `value` 属性。

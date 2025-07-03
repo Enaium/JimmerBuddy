@@ -1,39 +1,39 @@
 # What is JimmerBuddy?
 
-JimmerBuddy is a intellij plugin for project jimmer. Before, you needed to clean and build the project manually to generate the code. Now, you can generate any code when you change the source code.
+JimmerBuddy is an IntelliJ plugin for the Jimmer project. Previously, you needed to manually clean and build the project to generate code. Now, you can generate code automatically whenever you change the source code.
 
 ::: tip
-Just want to try it out? Skip to the [Quick Start](./quickstart.md)
+Just want to try it out? Skip to the [Quickstart](./quickstart.md)
 :::
 
-## First-class Java/Kotlin development
+## First-class Java/Kotlin Development
 
-- Automatically generate code from your source code. such as `draft`, `fetcher`, `props` etc.
+- Automatically generate code from your source code, such as `draft`, `fetcher`, `props`, etc.
 - List all `Immutables`, `DTOs`, and `ErrorFamilies` in the project.
-- Generate entity from database or ddl file.
+- Generate entities from a database or DDL file.
 - Jimmer project wizard.
-- Inspection for jimmer annotations.
-- Navigate to Immutable or Prop.
-- Complation for jimmer annotations.
-- Genreate all set of Draft.
-- DTO class member go to DTO file.
+- Inspections for Jimmer annotations.
+- Navigate to `Immutable` or `Prop`.
+- Completion for Jimmer annotations.
+- Generate all sets of `Draft`.
+- Navigate from DTO class members to DTO files.
 - Execute SQL to clipboard.
 - DTO type count and navigation.
 - Immutable inheritor count and navigation.
 
-## First-class DTO development
+## First-class DTO Development
 
-- Automatically generate `view`, `input`, `specification` etc. class for DTO.
-- Syntax highlight.
-- Syntax check.
-- Native compiler check.
+- Automatically generate `view`, `input`, `specification`, etc. classes for DTOs.
+- Syntax highlighting.
+- Syntax checking.
+- Native compiler checking.
 - Navigation to `type`, `prop`, `import`, `annotation`, etc.
-- Completion `export`, `package`, `import`, `prop`, `macro`, `config` etc.
-- Automatically import for `export`, `implements`, `userProp` etc.
-- Format source.
+- Completion for `export`, `package`, `import`, `prop`, `macro`, `config`, etc.
+- Automatic import for `export`, `implements`, `userProp`, etc.
+- Format source code.
 - Structure view.
-- Visualization to create DTO file.
+- Visualize and create DTO files.
 
-## Supported annotations
+## Supported Annotations
 
 `@Entity`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@IdView`, `@Formula`
