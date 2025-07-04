@@ -28,29 +28,11 @@ import com.intellij.openapi.util.Computable
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.squareup.javapoet.TypeName
-import org.babyfish.jimmer.Formula
-import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.Scalar
-import org.babyfish.jimmer.error.ErrorFamily
-import org.babyfish.jimmer.error.ErrorField
-import org.babyfish.jimmer.sql.Column
-import org.babyfish.jimmer.sql.Embeddable
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.GeneratedValue
-import org.babyfish.jimmer.sql.Id
-import org.babyfish.jimmer.sql.IdView
-import org.babyfish.jimmer.sql.JoinColumn
-import org.babyfish.jimmer.sql.JoinTable
-import org.babyfish.jimmer.sql.Key
-import org.babyfish.jimmer.sql.LogicalDeleted
 import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.ManyToManyView
 import org.babyfish.jimmer.sql.ManyToOne
-import org.babyfish.jimmer.sql.MappedSuperclass
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
-import org.babyfish.jimmer.sql.Serialized
-import org.babyfish.jimmer.sql.Version
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
@@ -65,7 +47,6 @@ import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
-import kotlin.jvm.Transient
 
 
 /**
@@ -308,29 +289,4 @@ fun Project.findKtClass(name: String): KtClass? {
     return KotlinFullClassNameIndex[name, this, this.allScope()].firstOrNull() as? KtClass
 }
 
-val jimmerAnnotations = listOf(
-    Immutable::class,
-    Entity::class,
-    MappedSuperclass::class,
-    Embeddable::class,
-    ErrorFamily::class,
-    ErrorField::class,
-    Id::class,
-    IdView::class,
-    Key::class,
-    Version::class,
-    Formula::class,
-    OneToOne::class,
-    OneToMany::class,
-    ManyToOne::class,
-    ManyToMany::class,
-    ManyToManyView::class,
-    Column::class,
-    GeneratedValue::class,
-    JoinColumn::class,
-    JoinTable::class,
-    Transient::class,
-    Serialized::class,
-    LogicalDeleted::class,
-    Scalar::class
-)
+val jimmerAnnotationPrefixe = Scalar::class.java.packageName

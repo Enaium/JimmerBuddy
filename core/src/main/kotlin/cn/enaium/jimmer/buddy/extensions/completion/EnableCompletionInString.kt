@@ -17,28 +17,20 @@
 package cn.enaium.jimmer.buddy.extensions.completion
 
 import cn.enaium.jimmer.buddy.utility.annotName
+import cn.enaium.jimmer.buddy.utility.jimmerAnnotationPrefixe
 import com.intellij.codeInsight.completion.CompletionConfidence
 import com.intellij.codeInsight.completion.SkipAutopopupInStrings
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ThreeState
-import org.babyfish.jimmer.Immutable
-import org.babyfish.jimmer.client.FetchBy
-import org.babyfish.jimmer.sql.Entity
 
 /**
  * @author Enaium
  */
 class EnableCompletionInString : CompletionConfidence() {
-    private val jimmerAnnotationPrefixes = listOf(
-        Immutable::class.qualifiedName!!.substringBeforeLast("."),
-        Entity::class.qualifiedName!!.substringBeforeLast("."),
-        FetchBy::class.qualifiedName!!.substringBeforeLast("."),
-    )
-
     override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState {
         val inString = SkipAutopopupInStrings.isInStringLiteral(contextElement)
-        val inJimmerAnnotation = jimmerAnnotationPrefixes.any { contextElement.annotName()?.startsWith(it) == true }
+        val inJimmerAnnotation = contextElement.annotName()?.startsWith(jimmerAnnotationPrefixe) == true
 
         return if (inString && inJimmerAnnotation) {
             ThreeState.NO

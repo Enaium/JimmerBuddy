@@ -1,8 +1,8 @@
 [versions]
-kotlin = "2.1.21"
-ksp = "2.1.21+"
-intellij = "2.5.0"
-jimmer = "0.9.94"
+kotlin = "2.2.0"
+ksp = "2.2.0+"
+intellij = "2.6.0"
+jimmer = "0.9.96"
 byteBuddy = "1.17.1"
 kotlinpoet = "2.0.0"
 javapoet = "1.13.0"

@@ -94,7 +94,7 @@ fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration>
         annotations = {
             this.annotations.mapNotNull { annotation ->
                 val fqName =
-                    annotation.qualifiedName?.takeIf { jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it) }
+                    annotation.qualifiedName?.takeIf { it.startsWith(jimmerAnnotationPrefixe) }
                         ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType =
@@ -178,8 +178,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
         parentDeclaration = { null },
         annotations = {
-            this.annotations().mapNotNull { annotation ->
-                val fqName = annotation.fqName?.takeIf { jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it) }
+                this.annotations().mapNotNull { annotation ->
+                val fqName = annotation.fqName?.takeIf { it.startsWith(jimmerAnnotationPrefixe) }
                     ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType = createKSTypeReference(
@@ -220,7 +220,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                         annotations = {
                             property.annotations().mapNotNull { annotation ->
                                 val fqName = annotation.fqName?.takeIf {
-                                    jimmerAnnotations.map { ja -> ja.qualifiedName }.contains(it)
+                                    it.startsWith(jimmerAnnotationPrefixe)
                                 } ?: return@mapNotNull null
                                 createKSAnnotation(
                                     annotationType = createKSTypeReference(
