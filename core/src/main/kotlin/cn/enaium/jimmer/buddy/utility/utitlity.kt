@@ -189,7 +189,7 @@ fun Project.isAndroidProject(): Boolean {
 
     return thread {
         OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
-    }.any { it.name.startsWith("android") }
+    }.any { it.name.startsWith("android-device-provider") }
 }
 
 fun Project.runWhenSmart(block: () -> Unit) {
