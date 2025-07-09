@@ -20,8 +20,6 @@ import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeParts
 import com.intellij.lang.ASTNode
-import com.intellij.openapi.util.NlsSafe
-import com.intellij.psi.PsiElement
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 class DtoPsiTypePartsImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiTypeParts {

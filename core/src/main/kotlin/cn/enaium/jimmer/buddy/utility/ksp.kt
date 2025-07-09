@@ -178,7 +178,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
         parentDeclaration = { null },
         annotations = {
-                this.annotations().mapNotNull { annotation ->
+            this.annotations().mapNotNull { annotation ->
                 val fqName = annotation.fqName?.takeIf { it.startsWith(jimmerAnnotationPrefixe) }
                     ?: return@mapNotNull null
                 createKSAnnotation(

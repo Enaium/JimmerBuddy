@@ -23,7 +23,6 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
 import com.intellij.diff.requests.SimpleDiffRequest
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType

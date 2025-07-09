@@ -19,7 +19,6 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
@@ -115,7 +114,7 @@ class ErrorFamilyList(val project: Project) : JPanel() {
                 GenerateProject.generate(
                     projects,
                     setOf("main", "test"),
-                    GenerateProject.Language.JAVA
+                    GenerateProject.SourceRootType.JAVA
                 ).forEach { (_, sourceFiles, _) ->
                     sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {
@@ -136,7 +135,7 @@ class ErrorFamilyList(val project: Project) : JPanel() {
                 GenerateProject.generate(
                     projects,
                     setOf("main", "test"),
-                    GenerateProject.Language.KOTLIN
+                    GenerateProject.SourceRootType.KOTLIN
                 ).forEach { (_, sourceFiles, _) ->
                     sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {

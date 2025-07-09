@@ -140,7 +140,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 GenerateProject.generate(
                     projects,
                     setOf("main", "test"),
-                    GenerateProject.Language.JAVA
+                    GenerateProject.SourceRootType.JAVA
                 ).forEach { (_, sourceFiles, _) ->
                     sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {
@@ -168,7 +168,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 GenerateProject.generate(
                     projects,
                     setOf("main", "test"),
-                    GenerateProject.Language.KOTLIN
+                    GenerateProject.SourceRootType.KOTLIN
                 ).forEach { (_, sourceFiles, _) ->
                     sourceFiles.forEach { sourceFile ->
                         project.runReadActionSmart {

@@ -19,9 +19,9 @@ package cn.enaium.jimmer.buddy.dialog
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager

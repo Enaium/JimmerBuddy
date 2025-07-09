@@ -1,8 +1,8 @@
 plugins {
     java
-#foreach($plugin in $plugins)
-    alias(libs.plugins.${plugin.alias})
-#end
+    #foreach($plugin in $plugins)
+        alias(libs.plugins.${plugin.alias})
+    #end
 }
 
 group = "${GROUP}"
@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-#foreach($library in $libraries)
-    ${library.configuration}(libs.${library.alias})
-#end
+    #foreach($library in $libraries)
+            ${library.configuration}(libs.${library.alias})
+    #end
 }

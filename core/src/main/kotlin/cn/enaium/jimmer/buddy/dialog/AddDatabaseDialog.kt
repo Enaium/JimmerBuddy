@@ -18,8 +18,8 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
-import cn.enaium.jimmer.buddy.utility.fileChooserField
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.fileChooserField
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.DialogWrapper

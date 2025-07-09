@@ -19,11 +19,9 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.DtoFileType
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.FileViewProvider
-import org.antlr.intellij.adaptor.psi.ScopeNode
 import javax.swing.Icon
 
 class DtoPsiFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, DtoLanguage), DtoPsiElement {

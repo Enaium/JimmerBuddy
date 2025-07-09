@@ -160,10 +160,16 @@ fun Project.isJavaProject(): Boolean {
         return false
     }
 
-    return modules.any { module ->
-        CompilerConfiguration.getInstance(this).getAnnotationProcessingConfiguration(module).processorPath.split(
-            File.pathSeparator
-        ).any { it.contains("jimmer-apt") }
+    return if (isAndroidProject()) {
+        !isKotlinProject() && thread {
+            OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
+        }.any { it.name.startsWith("jimmer-core") }
+    } else {
+        modules.any { module ->
+            CompilerConfiguration.getInstance(this).getAnnotationProcessingConfiguration(module).processorPath.split(
+                File.pathSeparator
+            ).any { it.contains("jimmer-apt") }
+        }
     }
 }
 
@@ -171,13 +177,19 @@ fun Project.isKotlinProject(): Boolean {
     if (isDisposed) {
         return false
     }
+    return thread {
+        OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
+    }.any { it.name.startsWith("jimmer-core-kotlin") }
+}
 
-    thread { OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots }.forEach {
-        if (it.name.startsWith("jimmer-core-kotlin")) {
-            return true
-        }
+fun Project.isAndroidProject(): Boolean {
+    if (isDisposed) {
+        return false
     }
-    return false
+
+    return thread {
+        OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
+    }.any { it.name.startsWith("android") }
 }
 
 fun Project.runWhenSmart(block: () -> Unit) {
@@ -189,12 +201,6 @@ fun Project.runWhenSmart(block: () -> Unit) {
 fun Project.runReadActionSmart(block: () -> Unit) {
     DumbService.getInstance(this).runReadActionInSmartMode {
         block()
-    }
-}
-
-fun Project.runWriteActionSmart(block: () -> Unit) {
-    DumbService.getInstance(this).runWhenSmart {
-
     }
 }
 

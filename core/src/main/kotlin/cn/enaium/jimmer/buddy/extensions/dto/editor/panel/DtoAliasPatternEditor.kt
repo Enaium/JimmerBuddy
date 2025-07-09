@@ -17,8 +17,8 @@
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
-import cn.enaium.jimmer.buddy.utility.replaceString
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.replaceString
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.ui.dsl.builder.Align

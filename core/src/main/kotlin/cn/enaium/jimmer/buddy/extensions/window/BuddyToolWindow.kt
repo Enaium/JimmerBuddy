@@ -20,8 +20,8 @@ import cn.enaium.jimmer.buddy.extensions.window.panel.DTOList
 import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ErrorFamilyList
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
-import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory

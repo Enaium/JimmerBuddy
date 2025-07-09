@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 import com.intellij.lang.ASTNode
-import com.intellij.openapi.util.NlsSafe
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiReference

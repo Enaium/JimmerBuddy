@@ -17,11 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.annotArgName
-import cn.enaium.jimmer.buddy.utility.annotName
-import cn.enaium.jimmer.buddy.utility.annotValue
-import cn.enaium.jimmer.buddy.utility.classLiteral
-import cn.enaium.jimmer.buddy.utility.subMiddle
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.refactoring.extractMethod.newImpl.ExtractMethodHelper.hasExplicitModifier
@@ -33,7 +29,6 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
-import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.toUElementOfType
 
@@ -50,7 +45,7 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
-        val text = e.text.subMiddle("\"","\"")
+        val text = e.text.subMiddle("\"", "\"")
 
         val props = getProps(e)
 

@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.pattern
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import com.intellij.patterns.PsiElementPattern
 import com.intellij.psi.PsiElement
 

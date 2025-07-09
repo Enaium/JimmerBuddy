@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.index
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.isImmutable
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.*

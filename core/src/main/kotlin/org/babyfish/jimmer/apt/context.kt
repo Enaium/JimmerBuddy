@@ -17,7 +17,7 @@
 package org.babyfish.jimmer.apt
 
 import org.babyfish.jimmer.dto.compiler.DtoModifier
-import java.util.Locale
+import java.util.*
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment

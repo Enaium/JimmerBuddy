@@ -17,18 +17,10 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
-import cn.enaium.jimmer.buddy.utility.isDumb
-import cn.enaium.jimmer.buddy.utility.isGeneratedFile
-import cn.enaium.jimmer.buddy.utility.isJavaProject
-import cn.enaium.jimmer.buddy.utility.isKotlinProject
-import cn.enaium.jimmer.buddy.utility.runReadOnly
-import cn.enaium.jimmer.buddy.utility.runWriteOnly
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeEvent
@@ -82,14 +74,14 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                         it.sourcesProcessJava(
                             JimmerBuddy.GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.Language.JAVA
+                                JimmerBuddy.GenerateProject.SourceRootType.JAVA
                             )
                         )
                     } else if (path.extension == "dto") {
                         it.dtoProcessJava(
                             JimmerBuddy.GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.Language.DTO
+                                JimmerBuddy.GenerateProject.SourceRootType.DTO
                             )
                         )
                     }
@@ -100,17 +92,26 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                     if (path.extension == "kt" && runReadOnly {
                             psiFile.getChildOfType<KtClass>()?.hasJimmerAnnotation()
                         } == true) {
-                        it.sourceProcessKotlin(
-                            JimmerBuddy.GenerateProject.generate(
+                        it.sourcesProcessKotlin(
+                            GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.Language.KOTLIN
+                                listOf(GenerateProject.SourceRootType.KOTLIN) +
+                                        if (project.isAndroidProject()) {
+                                            listOf(
+                                                GenerateProject.SourceRootType.JAVA_KOTLIN,
+                                                GenerateProject.SourceRootType.JVM_MAIN_KOTLIN,
+                                                GenerateProject.SourceRootType.ANDROID_MAIN_KOTLIN
+                                            )
+                                        } else {
+                                            emptyList()
+                                        }
                             )
                         )
                     } else if (path.extension == "dto") {
                         it.dtoProcessKotlin(
-                            JimmerBuddy.GenerateProject.generate(
+                            GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.Language.DTO
+                                GenerateProject.SourceRootType.DTO
                             )
                         )
                     }

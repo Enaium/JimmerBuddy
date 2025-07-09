@@ -17,11 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNegativeProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiUserProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.icons.AllIcons
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode

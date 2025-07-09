@@ -18,22 +18,16 @@ package cn.enaium.jimmer.buddy.extensions.wizard
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.projectLocationField
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.ide.util.projectWizard.WizardContext
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
-import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.observable.util.joinCanonicalPath
-import com.intellij.openapi.observable.util.transform
-import com.intellij.openapi.ui.BrowseFolderDescriptor.Companion.withPathToTextConvertor
-import com.intellij.openapi.ui.BrowseFolderDescriptor.Companion.withTextToPathConvertor
-import com.intellij.openapi.ui.TextFieldWithBrowseButton
-import com.intellij.openapi.ui.getCanonicalPath
 import com.intellij.openapi.ui.getPresentablePath
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.ui.UIBundle
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.Panel
+import com.intellij.ui.dsl.builder.bindText
 import java.io.File
 
 /**

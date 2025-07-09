@@ -17,13 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.insight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.annotations
-import cn.enaium.jimmer.buddy.utility.findPropertyByName
-import cn.enaium.jimmer.buddy.utility.getTarget
-import cn.enaium.jimmer.buddy.utility.isImmutable
-import cn.enaium.jimmer.buddy.utility.mappedByAnnotations
-import cn.enaium.jimmer.buddy.utility.toAny
-import cn.enaium.jimmer.buddy.utility.type
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder

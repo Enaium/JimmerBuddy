@@ -7,13 +7,13 @@
     <dependencyManagement>
         <dependencies>
             #foreach($dependencyManagement in $dependencyManagements)
-            <dependency>
-                <groupId>${dependencyManagement.id}</groupId>
-                <artifactId>${dependencyManagement.name}</artifactId>
-                <version>${${dependencyManagement.versionRef}}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
+                <dependency>
+                    <groupId>${dependencyManagement.id}</groupId>
+                    <artifactId>${dependencyManagement.name}</artifactId>
+                    <version>${${dependencyManagement.versionRef}}</version>
+                    <type>pom</type>
+                    <scope>import</scope>
+                </dependency>
             #end
         </dependencies>
     </dependencyManagement>
@@ -25,19 +25,19 @@
 
     <properties>
         #foreach($version in $versions)
-        <${version.name}>${version.version}</${version.name}>
+            <${version.name}>${version.version}</${version.name}>
         #end
     </properties>
 
     <dependencies>
         #foreach($librarie in $libraries)
-        <dependency>
-            <groupId>${librarie.group}</groupId>
-            <artifactId>${librarie.name}</artifactId>
-            #if($librarie.versionRef)
-            <version>${${librarie.versionRef}}</version>
-            #end
-        </dependency>
+            <dependency>
+                <groupId>${librarie.group}</groupId>
+                <artifactId>${librarie.name}</artifactId>
+                #if($librarie.versionRef)
+                    <version>${${librarie.versionRef}}</version>
+                #end
+            </dependency>
         #end
     </dependencies>
 
@@ -58,11 +58,11 @@
                 </configuration>
             </plugin>
             #foreach($plugin in $plugins)
-            <plugin>
-                <groupId>${plugin.id}</groupId>
-                <artifactId>${plugin.name}</artifactId>
-                <version>${${plugin.versionRef}}</version>
-            </plugin>
+                <plugin>
+                    <groupId>${plugin.id}</groupId>
+                    <artifactId>${plugin.name}</artifactId>
+                    <version>${${plugin.versionRef}}</version>
+                </plugin>
             #end
         </plugins>
     </build>

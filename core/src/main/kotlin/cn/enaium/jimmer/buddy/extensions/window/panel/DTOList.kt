@@ -39,11 +39,7 @@ import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.nio.file.Path
-import javax.swing.JLabel
-import javax.swing.JList
-import javax.swing.JPanel
-import javax.swing.ListCellRenderer
-import javax.swing.SwingConstants
+import javax.swing.*
 import kotlin.io.path.nameWithoutExtension
 
 class DTOList(project: Project) : JPanel() {
@@ -72,7 +68,7 @@ class DTOList(project: Project) : JPanel() {
                 GenerateProject.generate(
                     findProjects(project.guessProjectDir()!!.toNioPath()),
                     setOf("main", "test"),
-                    GenerateProject.Language.DTO
+                    GenerateProject.SourceRootType.DTO
                 ).forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.forEach { dto ->
                         names.add(DtoItem(dto.nameWithoutExtension, dto))

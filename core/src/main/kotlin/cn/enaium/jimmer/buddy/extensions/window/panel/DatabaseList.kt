@@ -22,9 +22,9 @@ import cn.enaium.jimmer.buddy.dialog.GenerateEntityDialog
 import cn.enaium.jimmer.buddy.dialog.TypeMappingDialog
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.invokeLater
 import com.intellij.icons.AllIcons
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton

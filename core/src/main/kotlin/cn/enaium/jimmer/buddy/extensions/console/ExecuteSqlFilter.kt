@@ -30,7 +30,6 @@ import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.jetbrains.rd.util.printlnError
 import java.awt.Cursor
 import java.awt.Graphics
 import java.awt.Point

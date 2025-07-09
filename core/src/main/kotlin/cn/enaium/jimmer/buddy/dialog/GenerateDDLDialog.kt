@@ -20,9 +20,9 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.database.generate.*
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread
-import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileTypes.PlainTextFileType

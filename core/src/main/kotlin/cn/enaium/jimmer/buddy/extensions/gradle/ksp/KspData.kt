@@ -16,10 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.gradle.ksp
 
-import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
-import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.model.Key
 import com.intellij.openapi.externalSystem.model.ProjectKeys
+import com.intellij.openapi.externalSystem.model.project.AbstractExternalEntityData
+import com.intellij.openapi.externalSystem.model.project.ModuleData
 
 /**
  * @author Enaium

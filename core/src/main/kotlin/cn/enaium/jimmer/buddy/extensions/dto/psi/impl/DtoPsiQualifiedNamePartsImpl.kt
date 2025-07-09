@@ -17,8 +17,8 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 

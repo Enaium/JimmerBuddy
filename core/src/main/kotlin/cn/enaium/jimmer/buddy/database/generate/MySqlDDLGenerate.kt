@@ -25,7 +25,8 @@ import java.time.LocalDateTime
 /**
  * @author Enaium
  */
-open class MySqlDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
+open class MySqlDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
+    DDLGenerate(project, generateDDLModel) {
     override fun comment(tables: List<Table>): String {
         var render = ""
         tables.forEach { table ->

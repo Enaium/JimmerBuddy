@@ -41,7 +41,7 @@ object OrderedPropPsiReferenceProvider : PsiReferenceProvider() {
 
     private class Reference(e: PsiElement) : PsiReferenceBase<PsiElement>(e) {
 
-        val text = e.text.subMiddle("\"","\"")
+        val text = e.text.subMiddle("\"", "\"")
 
         val props = getProps(e)
 

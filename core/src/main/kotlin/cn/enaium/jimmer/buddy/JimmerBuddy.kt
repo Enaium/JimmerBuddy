@@ -124,40 +124,52 @@ object JimmerBuddy {
         val src: String
     ) {
         companion object {
-            suspend fun generate(projects: Set<Path>, srcSets: Set<String>, language: Language): Set<GenerateProject> =
+            suspend fun generate(
+                projects: Set<Path>,
+                srcSets: Set<String>,
+                sourceRootTypes: List<SourceRootType>
+            ): Set<GenerateProject> =
+                sourceRootTypes.map { generate(projects, srcSets, it) }.flatten().toSet()
+
+            suspend fun generate(
+                projects: Set<Path>,
+                srcSets: Set<String>,
+                sourceRootType: SourceRootType
+            ): Set<GenerateProject> =
                 withContext(Dispatchers.IO) {
                     projects.map { project ->
                         srcSets.map { src ->
                             GenerateProject(
                                 projectDir = project,
-                                project.resolve("src/${src}/${language.dir}").walk()
-                                    .filter { it.extension == language.extension }.toSet(),
+                                project.resolve("src/${src}/${sourceRootType.dir}").walk()
+                                    .filter { it.extension == sourceRootType.extension }.toSet(),
                                 src
                             )
                         }
                     }.flatten().toSet()
                 }
 
-            suspend fun generate(sourceFile: Path, language: Language): Set<GenerateProject> =
+            suspend fun generate(sourceFile: Path, sourceRootTypes: List<SourceRootType>): Set<GenerateProject> =
+                sourceRootTypes.map { generate(sourceFile, it) }.flatten().toSet()
+
+            suspend fun generate(sourceFile: Path, sourceRootType: SourceRootType): Set<GenerateProject> =
                 withContext(Dispatchers.IO) {
                     setOfNotNull(findProjectDir(sourceFile)?.let { project ->
                         project.resolve("src").toFile().walk().maxDepth(1)
-                            .find { sourceFile.startsWith(it.toPath().resolve(language.dir)) }?.name?.let { src ->
+                            .find { sourceFile.startsWith(it.toPath().resolve(sourceRootType.dir)) }?.name?.let { src ->
                                 GenerateProject(project, setOf(sourceFile), src)
                             }
                     })
                 }
         }
 
-        enum class Language(val dir: String, val extension: String) {
+        enum class SourceRootType(val dir: String, val extension: String) {
             JAVA("java", "java"),
             KOTLIN("kotlin", "kt"),
+            JAVA_KOTLIN("java", "kt"),
+            JVM_MAIN_KOTLIN("jvmMain", "kt"),
+            ANDROID_MAIN_KOTLIN("androidMain", "kt"),
             DTO("dto", "dto")
-        }
-
-
-        override fun hashCode(): Int {
-            return projectDir.hashCode()
         }
 
         override fun equals(other: Any?): Boolean {
@@ -167,9 +179,17 @@ object JimmerBuddy {
             other as GenerateProject
 
             if (projectDir != other.projectDir) return false
+            if (sourceFiles != other.sourceFiles) return false
             if (src != other.src) return false
 
             return true
+        }
+
+        override fun hashCode(): Int {
+            var result = projectDir.hashCode()
+            result = 31 * result + sourceFiles.hashCode()
+            result = 31 * result + src.hashCode()
+            return result
         }
     }
 
@@ -196,29 +216,38 @@ object JimmerBuddy {
                             GenerateProject.generate(
                                 projects,
                                 setOf("main", "test"),
-                                GenerateProject.Language.JAVA
+                                GenerateProject.SourceRootType.JAVA
                             )
                         )
                         dtoProcessJava(
                             GenerateProject.generate(
                                 projects,
                                 setOf("main", "test"),
-                                GenerateProject.Language.DTO
+                                GenerateProject.SourceRootType.DTO
                             )
                         )
                     } else if (project.isKotlinProject()) {
-                        sourceProcessKotlin(
+                        sourcesProcessKotlin(
                             GenerateProject.generate(
                                 projects,
                                 setOf("main", "test"),
-                                GenerateProject.Language.KOTLIN
+                                listOf(GenerateProject.SourceRootType.KOTLIN) +
+                                        if (project.isAndroidProject()) {
+                                            listOf(
+                                                GenerateProject.SourceRootType.JAVA_KOTLIN,
+                                                GenerateProject.SourceRootType.JVM_MAIN_KOTLIN,
+                                                GenerateProject.SourceRootType.ANDROID_MAIN_KOTLIN
+                                            )
+                                        } else {
+                                            emptyList()
+                                        }
                             )
                         )
                         dtoProcessKotlin(
                             GenerateProject.generate(
                                 projects,
                                 setOf("main", "test"),
-                                GenerateProject.Language.DTO
+                                GenerateProject.SourceRootType.DTO
                             )
                         )
                     }
@@ -244,13 +273,21 @@ object JimmerBuddy {
                 return if (isMavenProject(projectDir)) {
                     projectDir.resolve("target/generated-sources/annotations")
                 } else if (isGradleProject(projectDir)) {
-                    projectDir.resolve("build/generated/sources/annotationProcessor/java/${src}")
+                    if (project.isAndroidProject()) {
+                        projectDir.resolve("build/generated/ap_generated_sources/debug/out")
+                    } else {
+                        projectDir.resolve("build/generated/sources/annotationProcessor/java/${src}")
+                    }
                 } else {
                     null
                 }
             } else if (project.isKotlinProject()) {
                 return if (isGradleProject(projectDir)) {
-                    projectDir.resolve("build/generated/ksp/${src}/kotlin")
+                    if (project.isAndroidProject()) {
+                        projectDir.resolve("build/generated/ksp/debug/kotlin")
+                    } else {
+                        projectDir.resolve("build/generated/ksp/${src}/kotlin")
+                    }
                 } else if (isMavenProject(projectDir)) {
                     projectDir.resolve("target/generated/ksp/${src}/kotlin")
                 } else {
@@ -442,7 +479,7 @@ object JimmerBuddy {
             asyncRefreshSources(needRefresh)
         }
 
-        suspend fun sourceProcessKotlin(projects: Set<GenerateProject>) {
+        suspend fun sourcesProcessKotlin(projects: Set<GenerateProject>) {
             val needRefresh = mutableListOf<Pair<Source, Path>>()
             projects.forEach { (projectDir, sourceFiles, src) ->
                 sourceFiles.isEmpty() && return@forEach
@@ -466,7 +503,7 @@ object JimmerBuddy {
 
                         val kspOptions = getKspOptions(project)
 
-                        log.info("SourceProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size} KSPOptions:${kspOptions}")
+                        log.info("SourcesProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size} KSPOptions:${kspOptions}")
 
                         val option = createKspOption(
                             kspOptions,

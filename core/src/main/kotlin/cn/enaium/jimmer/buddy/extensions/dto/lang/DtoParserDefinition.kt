@@ -21,7 +21,6 @@ import cn.enaium.jimmer.buddy.dto.DtoParser
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLexerAdaptor
 import cn.enaium.jimmer.buddy.extensions.dto.DtoParserAdaptor
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroupBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.impl.*
 import com.intellij.lang.ASTNode
