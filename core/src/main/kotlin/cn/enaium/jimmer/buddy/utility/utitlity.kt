@@ -295,4 +295,4 @@ fun Project.findKtClass(name: String): KtClass? {
     return KotlinFullClassNameIndex[name, this, this.allScope()].firstOrNull() as? KtClass
 }
 
-val jimmerAnnotationPrefixe = Scalar::class.java.packageName
+val jimmerAnnotationPrefixe: String = Scalar::class.java.packageName

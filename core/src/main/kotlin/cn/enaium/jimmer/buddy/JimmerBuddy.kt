@@ -209,7 +209,7 @@ object JimmerBuddy {
             init = true
             project.runWhenSmart {
                 val projects = findProjects(project.guessProjectDir()?.toNioPath()!!)
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     log.info("Project ${project.name} is initializing")
                     if (project.isJavaProject()) {
                         sourcesProcessJava(
@@ -499,8 +499,6 @@ object JimmerBuddy {
                         kotlinImmutableKtClassCache
                     )
                     try {
-
-
                         val kspOptions = getKspOptions(project)
 
                         log.info("SourcesProcessKotlin Project:${projectDir.name}:${src} KtClassCaches:${kotlinImmutableKtClassCache.size} KSPOptions:${kspOptions}")

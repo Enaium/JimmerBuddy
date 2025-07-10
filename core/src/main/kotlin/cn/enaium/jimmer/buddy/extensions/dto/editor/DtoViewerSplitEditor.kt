@@ -23,4 +23,4 @@ import com.intellij.openapi.fileEditor.TextEditorWithPreview
  * @author Enaium
  */
 class DtoViewerSplitEditor(editor: TextEditor, visual: DtoVisualFileEditor) :
-    TextEditorWithPreview(editor, visual)
+    TextEditorWithPreview(editor, visual, "", Layout.SHOW_EDITOR)

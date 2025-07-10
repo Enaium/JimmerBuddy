@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class DelayedExecutionQueue(
     private val defaultDelay: Long,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     private val tasks = ConcurrentHashMap<String, Job>()
 

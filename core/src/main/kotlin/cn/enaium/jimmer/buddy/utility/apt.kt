@@ -185,7 +185,7 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
         },
         getAnnotationMirrors = {
             this.modifierList?.annotations?.mapNotNull {
-                it.findAnnotation()?.let {
+                it.takeIf { it.qualifiedName?.startsWith(jimmerAnnotationPrefixe) == true }?.findAnnotation()?.let {
                     createAnnotationMirror(
                         it,
                         caches

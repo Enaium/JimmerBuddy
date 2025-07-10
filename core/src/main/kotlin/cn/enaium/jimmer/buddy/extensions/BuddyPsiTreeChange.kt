@@ -72,16 +72,16 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                             psiFile.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
                         } == true) {
                         it.sourcesProcessJava(
-                            JimmerBuddy.GenerateProject.generate(
+                            GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.SourceRootType.JAVA
+                                GenerateProject.SourceRootType.JAVA
                             )
                         )
                     } else if (path.extension == "dto") {
                         it.dtoProcessJava(
-                            JimmerBuddy.GenerateProject.generate(
+                            GenerateProject.generate(
                                 path,
-                                JimmerBuddy.GenerateProject.SourceRootType.DTO
+                                GenerateProject.SourceRootType.DTO
                             )
                         )
                     }
