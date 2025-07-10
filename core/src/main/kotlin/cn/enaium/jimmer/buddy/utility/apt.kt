@@ -133,7 +133,8 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                             method.modifierList.annotations.mapNotNull {
                                 it.findAnnotation()?.let {
                                     createAnnotationMirror(
-                                        it
+                                        it,
+                                        caches
                                     )
                                 }
                             }
@@ -172,6 +173,8 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                 ElementKind.INTERFACE
             } else if (this.isEnum) {
                 ElementKind.ENUM
+            } else if (this.isAnnotationType) {
+                ElementKind.ANNOTATION_TYPE
             } else {
                 ElementKind.CLASS
             }
@@ -179,6 +182,16 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
         getModifiers = { setOf(Modifier.PUBLIC) },
         getAnnotation = { anno ->
             this.modifierList?.annotations?.find { it.hasQualifiedName(anno.name) }?.findAnnotation()
+        },
+        getAnnotationMirrors = {
+            this.modifierList?.annotations?.mapNotNull {
+                it.findAnnotation()?.let {
+                    createAnnotationMirror(
+                        it,
+                        caches
+                    )
+                }
+            } ?: emptyList()
         },
         getEnclosingElement = {
             createPackageElement(
@@ -689,7 +702,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
             it.isAccessible = true
         }.newInstance() as Annotation
 } ?: run {
-    val qualifiedName = qualifiedName ?: return null
+    val qualifiedName = qualifiedName?.takeIf { !it.startsWith("java.") } ?: return null
     val map = mutableMapOf<String, ByteArray>()
 
     class MyClassLoader : ClassLoader(this.javaClass.classLoader) {
@@ -801,29 +814,31 @@ private fun createAnnotationValue(
     }
 }
 
-private fun createAnnotationMirror(
-    anno: Annotation
+private fun PsiClass.createAnnotationMirror(
+    anno: Annotation,
+    caches: MutableMap<String, TypeElement>
 ): AnnotationMirror {
     return object : AnnotationMirror {
         override fun getAnnotationType(): DeclaredType {
             return createDeclaredType(
                 getQualifiedName = { anno.annotationClass.qualifiedName!! },
                 asElement = {
-                    createTypeElement(
-                        getQualifiedName = { createName(anno.annotationClass.qualifiedName!!) },
-                        getSimpleName = { createName(anno.annotationClass.simpleName!!) },
-                        getEnclosingElement = {
-                            createPackageElement(
-                                getQualifiedName = {
-                                    createName(
-                                        anno.annotationClass.qualifiedName!!.substringBeforeLast(
-                                            "."
+                    project.findPsiClass(anno.annotationClass.qualifiedName!!)?.asTypeElement(caches)
+                        ?: createTypeElement(
+                            getQualifiedName = { createName(anno.annotationClass.qualifiedName!!) },
+                            getSimpleName = { createName(anno.annotationClass.simpleName!!) },
+                            getEnclosingElement = {
+                                createPackageElement(
+                                    getQualifiedName = {
+                                        createName(
+                                            anno.annotationClass.qualifiedName!!.substringBeforeLast(
+                                                "."
+                                            )
                                         )
-                                    )
-                                }
-                            )
-                        }
-                    )
+                                    }
+                                )
+                            }
+                        )
                 })
         }
 
