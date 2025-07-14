@@ -8,6 +8,7 @@ export default defineAdditionalConfig({
       { text: "首页", link: "/zh" },
       { text: "指南", link: "/zh/guide/what-is-jimmerbuddy" },
       { text: "参考", link: "/zh/reference/feature-inspection" },
+      { text: "设置", link: "/zh/setting/setting-icon" },
     ],
     sidebar: {
       "/zh/guide/": {
@@ -33,6 +34,11 @@ export default defineAdditionalConfig({
             text: "参考",
             base: "/zh/reference/",
             link: "feature-inspection",
+          },
+          {
+            text: "设置",
+            base: "/zh/setting/",
+            link: "setting-icon",
           },
         ],
       },
@@ -66,6 +72,23 @@ export default defineAdditionalConfig({
               { text: "结构视图", link: "structure-view" },
               { text: "可视化创建", link: "visualization-create" },
             ],
+          },
+        ],
+      },
+      "/zh/setting/": {
+        base: "/zh/setting/",
+        items: [
+          {
+            text: "图标",
+            link: "setting-icon",
+          },
+          {
+            text: "自动生成",
+            link: "setting-auto-generate",
+          },
+          {
+            text: "启动时生成",
+            link: "setting-generate-when-startup",
           },
         ],
       },

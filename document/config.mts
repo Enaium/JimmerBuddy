@@ -8,6 +8,7 @@ export default defineAdditionalConfig({
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/what-is-jimmerbuddy" },
       { text: "Reference", link: "/reference/feature-inspection" },
+      { text: "Setting", link: "/setting/setting-icon" },
     ],
     sidebar: {
       "/guide/": {
@@ -33,6 +34,11 @@ export default defineAdditionalConfig({
             text: "Reference",
             base: "/reference/",
             link: "feature-inspection",
+          },
+          {
+            text: "Setting",
+            base: "/setting/",
+            link: "setting-icon",
           },
         ],
       },
@@ -67,6 +73,23 @@ export default defineAdditionalConfig({
               { text: "Visualization Create", link: "visualization-create" },
               { text: "Hover", link: "hover" },
             ],
+          },
+        ],
+      },
+      "/setting/": {
+        base: "/setting/",
+        items: [
+          {
+            text: "Icon",
+            link: "setting-icon",
+          },
+          {
+            text: "Auto Generate",
+            link: "setting-auto-generate",
+          },
+          {
+            text: "Generate When Startup",
+            link: "setting-generate-when-startup",
           },
         ],
       },
