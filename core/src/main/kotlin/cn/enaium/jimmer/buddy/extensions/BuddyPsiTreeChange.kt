@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
@@ -57,6 +58,9 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
     }
 
     private fun onChange(psiFile: PsiFile) {
+        if (!JimmerBuddySetting.INSTANCE.state.autoGenerate) {
+            return
+        }
         val path = try {
             psiFile.virtualFile.toNioPath()
         } catch (_: Throwable) {
@@ -67,7 +71,6 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
         JimmerBuddy.DEQ.schedule("PsiChange") {
             if (project.isJavaProject() && !project.isDumb()) {
                 JimmerBuddy.getWorkspace(project).also {
-                    it.init()
                     if (path.extension == "java" && runReadOnly {
                             psiFile.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
                         } == true) {
@@ -88,7 +91,6 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                 }
             } else if (project.isKotlinProject() && !project.isDumb()) {
                 JimmerBuddy.getWorkspace(project).also {
-                    it.init()
                     if (path.extension == "kt" && runReadOnly {
                             psiFile.getChildOfType<KtClass>()?.hasJimmerAnnotation()
                         } == true) {

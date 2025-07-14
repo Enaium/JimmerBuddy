@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
-import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -379,34 +378,25 @@ data class Ksp(
     val sources: List<Source>,
 )
 
-fun Project.ktClassToKsp(
-    compilableClasses: CopyOnWriteArraySet<KtClass>,
-    cacheClasses: CopyOnWriteArraySet<KtClass>
+fun Project.ktClassesToKsp(
+    ktClasses: Set<KtClass>
 ): Ksp {
     val ksFiles = mutableListOf<KSFile>()
     val ksClassDeclarationCaches = mutableMapOf<String, KSClassDeclaration>()
 
-    val ktClasses = mapOf(
-        true to compilableClasses, false to cacheClasses
-    ).flatMap { (compilable, classes) ->
-        classes.map { compilable to it }
-    }
-
-    ktClasses.forEach { (compilable, ktClass) ->
+    ktClasses.forEach { ktClass ->
         val fqName = ktClass.fqName?.asString() ?: return@forEach
         ksClassDeclarationCaches[fqName] =
             ktClass.asKSClassDeclaration(ksClassDeclarationCaches)
 
-        if (compilable) {
-            ksFiles.add(
-                createKSFile(
-                    fileName = { ktClass.containingFile.name },
-                    filePath = { ktClass.containingFile.virtualFile.path },
-                    packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
-                    declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
-                    annotations = { sequenceOf() }
-                ))
-        }
+        ksFiles.add(
+            createKSFile(
+                fileName = { ktClass.containingFile.name },
+                filePath = { ktClass.containingFile.virtualFile.path },
+                packageName = { ksClassDeclarationCaches[fqName]!!.packageName },
+                declarations = { sequenceOf(ksClassDeclarationCaches[fqName]!!) },
+                annotations = { sequenceOf() }
+            ))
     }
     val sources = mutableListOf<Source>()
     return Ksp(

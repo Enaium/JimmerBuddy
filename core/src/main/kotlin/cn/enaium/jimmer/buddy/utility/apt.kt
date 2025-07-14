@@ -39,7 +39,6 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
 import java.util.*
-import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
@@ -250,19 +249,11 @@ data class Apt(
 )
 
 fun Project.psiClassesToApt(
-    compilableClasses: CopyOnWriteArraySet<PsiClass>,
-    cacheClasses: CopyOnWriteArraySet<PsiClass>
+    psiClasses: Set<PsiClass>
 ): Apt {
     val typeElementCaches = mutableMapOf<String, TypeElement>()
 
-    val psiClasses = listOf(
-        true to compilableClasses,
-        false to cacheClasses
-    ).flatMap { (compilable, classes) ->
-        classes.map { compilable to it }
-    }.reversed().distinctBy { it.second.qualifiedName }
-
-    psiClasses.forEach { (compilable, psiClass) ->
+    psiClasses.forEach { psiClass ->
         typeElementCaches[psiClass.qualifiedName!!] = psiClass.asTypeElement(typeElementCaches)
     }
 
