@@ -33,7 +33,7 @@ import javax.swing.Icon
  */
 class JimmerIconProvider : IconProvider() {
     override fun getIcon(p0: PsiElement, p1: Int): Icon? {
-        if (!JimmerBuddySetting.INSTANCE.state.logo) {
+        if (!JimmerBuddySetting.INSTANCE.state.icon) {
             return null
         }
 

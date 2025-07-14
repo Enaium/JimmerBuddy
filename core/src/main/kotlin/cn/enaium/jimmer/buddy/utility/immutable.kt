@@ -40,7 +40,7 @@ import org.jetbrains.kotlin.psi.KtClass
  * @author Enaium
  */
 fun PsiClass.toImmutable(): ImmutableType {
-    val (pe, typeElements, sources) = project.psiClassesToApt(copyOnWriteSetOf(this), copyOnWriteSetOf())
+    val (pe, typeElements, sources) = project.psiClassesToApt(setOf(this))
     val context = createContext(pe.elementUtils, pe.typeUtils, pe.filer)
     return context.getImmutableType(pe.elementUtils.getTypeElement(this.qualifiedName!!))
 }
@@ -70,7 +70,7 @@ fun ImmutableProp.toCommonImmutableProp(): CommonImmutableType.CommonImmutablePr
 }
 
 fun KtClass.toImmutable(): org.babyfish.jimmer.ksp.immutable.meta.ImmutableType {
-    val (resolver, environment, sources) = project.ktClassToKsp(copyOnWriteSetOf(this), copyOnWriteSetOf())
+    val (resolver, environment, sources) = project.ktClassesToKsp(copyOnWriteSetOf(this))
     val context = Context(resolver, environment)
     val classDeclarationByName = resolver.getClassDeclarationByName(this.fqName!!.asString())!!
     return context.typeOf(classDeclarationByName)

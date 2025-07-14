@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 
@@ -25,6 +26,6 @@ import com.intellij.openapi.startup.ProjectActivity
  */
 class BuddyStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
-        JimmerBuddy.getWorkspace(project).init()
+        JimmerBuddy.getWorkspace(project).init(JimmerBuddySetting.INSTANCE.state.generateWhenStartup)
     }
 }

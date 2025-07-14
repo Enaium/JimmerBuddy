@@ -41,7 +41,7 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
     }
 
     override fun createPopup(context: DataContext): ListPopup {
-        val initialize = ActionManager.getInstance().getAction("cn.enaium.jimmer.buddy.action.Initialize")
+        val initialize = ActionManager.getInstance().getAction("JimmerBuddy.Initialize")
         return JBPopupFactory.getInstance().createActionGroupPopup(
             JimmerBuddy.NAME,
             DefaultActionGroup(listOf(initialize)),

@@ -36,7 +36,6 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.io.Reader
-import java.util.concurrent.CopyOnWriteArraySet
 import javax.lang.model.element.TypeElement
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
@@ -54,7 +53,7 @@ class DtoInspection : LocalInspectionTool() {
                     val typeClass =
                         JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope()) ?: return
                     val (pe, rootElements, sources) =
-                        project.psiClassesToApt(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
+                        project.psiClassesToApt(setOf(typeClass))
                     val context = createContext(
                         pe.elementUtils,
                         pe.typeUtils,
@@ -92,7 +91,7 @@ class DtoInspection : LocalInspectionTool() {
                         KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass
                             ?: return
                     val (resolver, environment, sources) =
-                        project.ktClassToKsp(CopyOnWriteArraySet(), copyOnWriteSetOf(typeClass))
+                        project.ktClassesToKsp(setOf(typeClass))
                     val context = Context(resolver, environment)
                     val dtoFile = DtoFile(object : OsFile {
                         override fun getAbsolutePath(): String {
