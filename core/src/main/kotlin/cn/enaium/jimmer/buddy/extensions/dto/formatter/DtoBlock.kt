@@ -35,10 +35,15 @@ class DtoBlock(
     val spacingBuilder: SpacingBuilder
 ) : AbstractBlock(node, wrap, alignment) {
     override fun buildChildren(): List<DtoBlock> {
-        return generateSequence(
-            myNode::getFirstChildNode,
-            ASTNode::getTreeNext
-        ).filter { it.elementType != TokenType.WHITE_SPACE }.map { DtoBlock(it, wrap, null, spacingBuilder) }.toList()
+        return try {
+            generateSequence(
+                myNode::getFirstChildNode,
+                ASTNode::getTreeNext
+            ).filter { it.elementType != TokenType.WHITE_SPACE }.map { DtoBlock(it, wrap, null, spacingBuilder) }
+                .toList()
+        } catch (_: Throwable) {
+            return emptyList()
+        }
     }
 
     val body = TokenSet.create(

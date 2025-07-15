@@ -16,13 +16,17 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPart
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeParts
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 class DtoPsiTypePartsImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiTypeParts {
-    override val parts: List<DtoPsiPart>
-        get() = findChildren<DtoPsiPart>("/typeParts/part")
+    override val qualifiedNameParts: DtoPsiQualifiedNameParts?
+        get() = findChild<DtoPsiQualifiedNameParts>("/typeParts/qualifiedNameParts")
+
+    override fun qualifiedName(): String? {
+        return qualifiedNameParts?.qualifiedName
+    }
 }

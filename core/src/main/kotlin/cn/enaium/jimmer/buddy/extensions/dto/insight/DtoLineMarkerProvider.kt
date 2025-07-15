@@ -40,7 +40,7 @@ class DtoLineMarkerProvider : RelatedItemLineMarkerProvider() {
             val dtoPsiRoot = element.findParentOfType<DtoPsiRoot>() ?: return
             val exportType = dtoPsiRoot.qualifiedName() ?: return
             val exportPackage =
-                dtoPsiRoot.exportStatement?.packageParts?.qualifiedName ?: "${exportType.substringBeforeLast(".")}.dto"
+                dtoPsiRoot.exportStatement?.packageParts?.qualifiedName() ?: "${exportType.substringBeforeLast(".")}.dto"
 
             val target =
                 JavaPsiFacade.getInstance(element.project).findClass("$exportPackage.$name", element.project.allScope())

@@ -19,4 +19,12 @@ package cn.enaium.jimmer.buddy.extensions.dto
 import cn.enaium.jimmer.buddy.dto.DtoLexer
 import org.antlr.intellij.adaptor.lexer.ANTLRLexerAdaptor
 
-object DtoLexerAdaptor : ANTLRLexerAdaptor(DtoLanguage, DtoLexer(null))
+object DtoLexerAdaptor : ANTLRLexerAdaptor(DtoLanguage, DtoLexer(null)) {
+    override fun advance() {
+        try {
+            super.advance()
+        } catch (_: Throwable) {
+            
+        }
+    }
+}

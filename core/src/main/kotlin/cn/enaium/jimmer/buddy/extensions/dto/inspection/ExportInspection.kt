@@ -35,7 +35,7 @@ class ExportInspection : LocalInspectionTool() {
             override fun visitElement(element: PsiElement) {
                 if (element is DtoPsiExportStatement) {
                     element.typeParts?.also { typeParts ->
-                        typeParts.qualifiedName.also {
+                        typeParts.qualifiedName()?.also {
                             if ((JavaPsiFacade.getInstance(element.project).findClass(it, element.project.allScope())
                                     ?: KotlinFullClassNameIndex[it, element.project, element.project.allScope()].firstOrNull()) == null
                             ) {

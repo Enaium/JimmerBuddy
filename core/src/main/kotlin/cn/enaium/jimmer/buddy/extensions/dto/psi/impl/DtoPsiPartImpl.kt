@@ -30,13 +30,15 @@ class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
         val parentElement = parent
         val facade = JavaPsiFacade.getInstance(project)
         if (parentElement is DtoPsiTypeParts) {
-            return if (parentElement.parts.last() == this) {
-                facade.findClass(parentElement.qualifiedName, project.allScope())
-            } else {
-                facade
-                    .findPackage(
-                        parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1)
-                            .joinToString(".") { it.text })
+            parentElement.qualifiedNameParts?.also { qualifiedNameParts ->
+                return if (qualifiedNameParts.parts.last() == this) {
+                    facade.findClass(parentElement.qualifiedName() ?: return null, project.allScope())
+                } else {
+                    facade
+                        .findPackage(
+                            qualifiedNameParts.parts.subList(0, qualifiedNameParts.parts.indexOf(this) + 1)
+                                .joinToString(".") { it.text })
+                }
             }
         }
 
@@ -87,9 +89,12 @@ class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
         }
 
         if (parentElement is DtoPsiPackageParts) {
-            return facade
-                .findPackage(
-                    parentElement.parts.subList(0, parentElement.parts.indexOf(this) + 1).joinToString(".") { it.text })
+            parentElement.qualifiedNameParts?.also { qualifiedNameParts ->
+                return facade
+                    .findPackage(
+                        qualifiedNameParts.parts.subList(0, qualifiedNameParts.parts.indexOf(this) + 1)
+                            .joinToString(".") { it.text })
+            }
         }
         return null
     }

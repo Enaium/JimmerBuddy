@@ -37,12 +37,12 @@ exportStatement
 
 typeParts
     :
-    part (DOT part)*
+    qualifiedNameParts
     ;
 
 packageParts
     :
-    part (DOT part)*
+    qualifiedNameParts
     ;
 
 part

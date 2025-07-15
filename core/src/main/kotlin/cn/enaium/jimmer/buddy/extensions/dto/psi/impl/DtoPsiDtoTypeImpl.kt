@@ -46,7 +46,7 @@ class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType
         val dtoPsiRoot = findParentOfType<DtoPsiRoot>() ?: return null
         val exportType = dtoPsiRoot.qualifiedName() ?: return null
         val exportPackage =
-            dtoPsiRoot.exportStatement?.packageParts?.qualifiedName ?: "${exportType.substringBeforeLast(".")}.dto"
+            dtoPsiRoot.exportStatement?.packageParts?.qualifiedName() ?: "${exportType.substringBeforeLast(".")}.dto"
         val target =
             JavaPsiFacade.getInstance(project).findClass("$exportPackage.$name", project.allScope())
                 ?: return null

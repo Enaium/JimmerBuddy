@@ -56,6 +56,6 @@ class DtoPsiRootImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiRoot {
     }
 
     override fun qualifiedName(): String? {
-        return exportStatement?.typeParts?.qualifiedName
+        return exportStatement?.typeParts?.qualifiedName()
     }
 }
