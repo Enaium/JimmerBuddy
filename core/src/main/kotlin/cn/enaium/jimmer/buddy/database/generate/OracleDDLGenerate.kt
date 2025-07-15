@@ -30,7 +30,7 @@ import java.util.*
 class OracleDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
-            String::class.java.name, String::class.java.name -> "varchar2"
+            String::class.java.name, String::class.java.name, String::class.qualifiedName -> "varchar2"
             Byte::class.java.name, Byte::class.java.name, Byte::class.qualifiedName -> "number(3)"
             Short::class.java.name, Short::class.java.name, Short::class.qualifiedName -> "number(5)"
             Int::class.java.name, Int::class.java.name, Int::class.qualifiedName -> "number(10)"

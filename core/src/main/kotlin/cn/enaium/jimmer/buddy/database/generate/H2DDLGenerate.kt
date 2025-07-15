@@ -30,7 +30,7 @@ import java.util.*
 class H2DDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
-            String::class.java.name, String::class.java.name -> "varchar(255)"
+            String::class.java.name, String::class.java.name, String::class.qualifiedName -> "varchar(255)"
             Byte::class.java.name, java.lang.Byte::class.java.name, Byte::class.qualifiedName -> "tinyint"
             Short::class.java.name, java.lang.Short::class.java.name, Short::class.qualifiedName -> "smallint"
             Int::class.java.name, java.lang.Integer::class.java.name, Int::class.qualifiedName -> "int"

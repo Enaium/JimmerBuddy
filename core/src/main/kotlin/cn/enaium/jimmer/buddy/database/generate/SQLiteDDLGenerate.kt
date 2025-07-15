@@ -30,7 +30,7 @@ import java.util.*
 class SQLiteDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
     override fun typeMapping(type: String): String {
         return when (type) {
-            String::class.java.name, String::class.java.name -> "text"
+            String::class.java.name, String::class.java.name, String::class.qualifiedName -> "text"
             Byte::class.java.name, java.lang.Byte::class.java.name, Byte::class.qualifiedName -> "tinyint"
             Short::class.java.name, java.lang.Short::class.java.name, Short::class.qualifiedName -> "smallint"
             Int::class.java.name, java.lang.Integer::class.java.name, Int::class.qualifiedName -> "int"

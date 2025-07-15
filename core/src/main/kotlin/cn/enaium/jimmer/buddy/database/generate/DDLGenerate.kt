@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import org.babyfish.jimmer.sql.Key
 import org.babyfish.jimmer.sql.PropOverride
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
@@ -132,7 +133,9 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 }.toMutableSet(),
                 commonImmutableType.props().mapNotNull { prop ->
                     prop.toUniqueKey(tableName)
-                }.toSet()
+                }.groupBy { it.name to it.tableName }
+                    .map { (k, v) -> UniqueKey(k.first, k.second, v.map { it.columns }.flatten().toSet()) }
+                    .toSet()
             ).let { table ->
                 val psi = commonImmutableType.psi(project)
                 val name = when (psi) {
@@ -203,8 +206,26 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
     fun CommonImmutableType.CommonImmutableProp.toUniqueKey(tableName: String): UniqueKey? {
         return if (isKey()) {
+            val psi = psi(project)
+
+            val group = when (psi) {
+                is PsiMethod -> {
+                    psi.modifierList.findAnnotation(Key::class.qualifiedName!!)?.findAttributeValue("group")
+                        ?.toAny(String::class.java).toString()
+                }
+
+                is KtProperty -> {
+                    psi.annotations().find { it.fqName == Key::class.qualifiedName }
+                        ?.findArgument("group")?.value?.toString()
+                }
+
+                else -> {
+                    null
+                }
+            } ?: "default"
+
             UniqueKey(
-                "uk_${tableName}_${name().camelToSnakeCase()}",
+                "uk_${tableName}_${group}",
                 tableName,
                 setOf(toColumn(tableName))
             )
