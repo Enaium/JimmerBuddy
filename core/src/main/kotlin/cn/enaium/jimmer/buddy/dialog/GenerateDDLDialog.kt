@@ -42,7 +42,7 @@ import javax.swing.JComponent
 /**
  * @author Enaium
  */
-class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutableType) : DialogWrapper(false) {
+class GenerateDDLDialog(val project: Project, val commonImmutables: Set<CommonImmutableType>) : DialogWrapper(false) {
     private val generateDDLModel = GenerateDDLModel()
     private val editor =
         object : EditorTextField(
@@ -90,7 +90,7 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
                 }
             })
             addToCenter(editor)
-            addToBottom(JBLabel("Ok is copy to clipboard, Cancel is close"))
+            addToBottom(JBLabel(I18n.message("dialog.generate.ddl.copy")))
         }
     }
 
@@ -122,7 +122,7 @@ class GenerateDDLDialog(val project: Project, val commonImmutable: CommonImmutab
 
         }
 
-        editor.text = thread { runReadOnly { generateDDL.generate(commonImmutable) } }
+        editor.text = thread { runReadOnly { commonImmutables.joinToString("\n") { generateDDL.generate(it) } } }
     }
 
     override fun doOKAction() {

@@ -21,7 +21,9 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
+import org.babyfish.jimmer.sql.JoinTable
 import org.babyfish.jimmer.sql.Key
+import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.PropOverride
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
@@ -33,7 +35,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
     fun tables(commonImmutableType: CommonImmutableType): List<Table> {
         val tables = mutableListOf<Table>()
 
-        val tableName = commonImmutableType.name().camelToSnakeCase()
+        val tableName = commonImmutableType.tableName()
 
         tables.add(
             Table(
@@ -43,30 +45,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
                     if (!prop.isList() && !prop.isEmbedded()) {
-                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment()).let {
-                            val psi = prop.psi(project)
-                            val name = when (psi) {
-                                is PsiMethod -> {
-                                    psi.modifierList.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
-                                        ?.findAttributeValue("name")?.toAny(String::class.java)?.toString()
-                                }
-
-                                is KtProperty -> {
-                                    psi.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
-                                        ?.findArgument("name")?.value?.toString()
-                                }
-
-                                else -> {
-                                    null
-                                }
-                            }
-
-                            if (name != null) {
-                                it.copy(name = name)
-                            } else {
-                                it
-                            }
-                        }
+                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment())
                     } else {
                         null
                     }
@@ -136,37 +115,95 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 }.groupBy { it.name to it.tableName }
                     .map { (k, v) -> UniqueKey(k.first, k.second, v.map { it.columns }.flatten().toSet()) }
                     .toSet()
-            ).let { table ->
-                val psi = commonImmutableType.psi(project)
-                val name = when (psi) {
-                    is PsiClass -> {
-                        psi.modifierList?.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
-                            ?.findAttributeValue("name")
-                            ?.toAny(String::class.java)?.toString()
-                    }
+            )
+        )
 
-                    is KtClass -> {
-                        psi.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
-                            ?.findArgument("name")?.value?.toString()
-                    }
+        commonImmutableType.props().filter { it.isList() && it.isManyToMany() }.forEach { prop ->
+            val psi = prop.psi(project)
+            val selfName = commonImmutableType.tableName()
+            val inverseName = prop.targetType()?.tableName() ?: return@forEach
 
-                    else -> {
-                        null
+            var joinName: String? = null
+            var joinColumnName: String? = null
+            var inverseJoinColumnName: String? = null
+
+            when (psi) {
+                is PsiMethod -> {
+                    psi.modifierList.findAnnotation(ManyToMany::class.qualifiedName!!)?.findAttributeValue("mappedBy")
+                        ?.toAny(String::class.java)?.toString()?.takeIf { it.isBlank() } != null && return@forEach
+                    psi.modifierList.findAnnotation(JoinTable::class.qualifiedName!!)?.also {
+                        joinName = it.findAttributeValue("name")?.toAny(String::class.java)?.toString()
+                            ?.takeIf { it.isNotBlank() }
+                        joinColumnName = it.findAttributeValue("joinColumnName")?.toAny(String::class.java)?.toString()
+                            ?.takeIf { it.isNotBlank() }
+                        inverseJoinColumnName =
+                            it.findAttributeValue("inverseJoinColumnName")?.toAny(String::class.java)?.toString()
+                                ?.takeIf { it.isNotBlank() }
                     }
                 }
 
-                if (name != null) {
-                    table.copy(name = name)
-                } else {
-                    table
+                is KtProperty -> {
+                    val annotations = psi.annotations()
+                    annotations.find { it.fqName == ManyToMany::class.qualifiedName!! }
+                        ?.findArgument("mappedBy") != null && return@forEach
+                    annotations.find { it.fqName == JoinTable::class.qualifiedName!! }?.also {
+                        joinName = it.findArgument("name")?.value?.toString()
+                        joinColumnName = it.findArgument("joinColumnName")?.value?.toString()
+                        inverseJoinColumnName = it.findArgument("inverseJoinColumnName")?.value?.toString()
+                    }
                 }
             }
-        )
+
+            val tableName = joinName ?: "${selfName}_${inverseName}_mapping"
+            val type = commonImmutableType.props().find { it.isId() }?.typeName()?.replace("?", "") ?: return@forEach
+            val self = Column(
+                joinColumnName ?: "${selfName}_${generateDDLModel.primaryKeyName}",
+                tableName,
+                type,
+                null,
+                null,
+                false
+            )
+            val inverse = Column(
+                inverseJoinColumnName ?: "${inverseName}_${generateDDLModel.primaryKeyName}",
+                tableName,
+                type,
+                null,
+                null,
+                false
+            )
+            tables.add(
+                Table(
+                    "",
+                    "",
+                    tableName,
+                    "",
+                    setOf(self, inverse),
+                    emptySet(),
+                    mutableSetOf(
+                        ForeignKey(
+                            "fk_${tableName}_${selfName}",
+                            tableName,
+                            self,
+                            Column(generateDDLModel.primaryKeyName, selfName, "", null, null, false)
+                        ),
+                        ForeignKey(
+                            "fk_${tableName}_${inverseName}",
+                            tableName,
+                            inverse,
+                            Column(generateDDLModel.primaryKeyName, inverseName, "", null, null, false)
+                        ),
+                    ),
+                    emptySet(),
+                )
+            )
+        }
+
         return tables
     }
 
     fun CommonImmutableType.CommonImmutableProp.toColumn(tableName: String): Column {
-        return Column(name().camelToSnakeCase().let {
+        return Column(columnName().let {
             if (isAssociation(true) && !isList()) {
                 "${it}_${generateDDLModel.primaryKeyName}"
             } else {
@@ -259,8 +296,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             render += table.columns.joinToString(",\n") { column ->
                 "    ${column.render()}"
             }
-            render += "\n);"
-
+            render += "\n);\n"
             if (table.primaryKeys.isNotEmpty()) {
                 render += "\n"
                 render += table.primaryKeys.joinToString("\n") { primaryKey ->
@@ -318,5 +354,44 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         SQLITE("SQLite"),
         H2("H2"),
         ORACLE("Oracle"),
+    }
+
+    private fun CommonImmutableType.tableName(): String {
+        val psi = psi(project)
+        return when (psi) {
+            is PsiClass -> {
+                psi.modifierList?.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                    ?.findAttributeValue("name")
+                    ?.toAny(String::class.java)?.toString()
+            }
+
+            is KtClass -> {
+                psi.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                    ?.findArgument("name")?.value?.toString()
+            }
+
+            else -> {
+                null
+            }
+        } ?: name().camelToSnakeCase()
+    }
+
+    private fun CommonImmutableType.CommonImmutableProp.columnName(): String {
+        val psi = psi(project)
+        return when (psi) {
+            is PsiMethod -> {
+                psi.modifierList.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
+                    ?.findAttributeValue("name")?.toAny(String::class.java)?.toString()
+            }
+
+            is KtProperty -> {
+                psi.findAnnotation(org.babyfish.jimmer.sql.Column::class.qualifiedName!!)
+                    ?.findArgument("name")?.value?.toString()
+            }
+
+            else -> {
+                null
+            }
+        } ?: name().camelToSnakeCase()
     }
 }

@@ -47,7 +47,7 @@ class PostgresDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) 
             LocalTime::class.java.name -> "time"
             UUID::class.java.name -> "uuid"
             InetAddress::class.java.name -> "inet"
-            else -> "any"
+            else -> "text"
         }
     }
 }

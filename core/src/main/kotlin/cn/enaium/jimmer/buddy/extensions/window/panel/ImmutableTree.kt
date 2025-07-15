@@ -69,7 +69,6 @@ class ImmutableTree(val project: Project) : JPanel() {
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 tree.lastSelectedPathComponent?.also { select ->
-
                     fun navigate() {
                         if (select is ImmutableNode) {
                             (select.target as Navigatable).navigate(true)
@@ -91,21 +90,29 @@ class ImmutableTree(val project: Project) : JPanel() {
                                 })
                                 add(JMenuItem(I18n.message("toolwindow.buddy.menu.generateDDL")).apply {
                                     addActionListener {
-                                        val target = select.target
-                                        val commonImmutableType = thread {
+                                        GenerateDDLDialog(project, thread {
                                             runReadOnly {
-                                                if (target is PsiClass) {
-                                                    target.toImmutable().toCommonImmutableType()
-                                                } else if (select.target is KtClass) {
-                                                    target.toImmutable().toCommonImmutableType()
-                                                } else {
-                                                    null
-                                                }
+                                                tree.selectionModel.selectionPaths.mapNotNull { selectionPath ->
+                                                    val target =
+                                                        (selectionPath.lastPathComponent as? ImmutableType)?.target
+                                                    when (target) {
+                                                        is PsiClass -> {
+                                                            target.takeIf { it.isEntity() }?.toImmutable()
+                                                                ?.toCommonImmutableType()
+                                                        }
+
+                                                        is KtClass -> {
+                                                            target.takeIf { it.isEntity() }?.toImmutable()
+                                                                ?.toCommonImmutableType()
+                                                        }
+
+                                                        else -> {
+                                                            null
+                                                        }
+                                                    }
+                                                }.toSet()
                                             }
-                                        }
-                                        commonImmutableType?.also {
-                                            GenerateDDLDialog(project, it).show()
-                                        }
+                                        }).show()
                                     }
                                 })
                             }

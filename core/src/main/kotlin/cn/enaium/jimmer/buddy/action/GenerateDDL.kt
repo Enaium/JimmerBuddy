@@ -68,7 +68,7 @@ class GenerateDDL : AnAction() {
             }
 
             commonImmutable?.also {
-                GenerateDDLDialog(project, it).show()
+                GenerateDDLDialog(project, setOf(it)).show()
             }
         }
     }

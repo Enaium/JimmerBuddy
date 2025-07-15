@@ -31,6 +31,7 @@ import org.babyfish.jimmer.apt.immutable.meta.ImmutableProp
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.sql.IdView
+import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToManyView
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
@@ -62,6 +63,7 @@ fun ImmutableProp.toCommonImmutableProp(): CommonImmutableType.CommonImmutablePr
         isRecursive = { isRecursive },
         isFormula = { isFormula },
         isIdView = { getAnnotation(IdView::class.java) != null },
+        isManyToMany = { getAnnotation(ManyToMany::class.java) != null },
         isManyToManyView = { getAnnotation(ManyToManyView::class.java) != null },
         isLogicalDeleted = { isLogicalDeleted },
         isNullable = { isNullable },
@@ -114,6 +116,7 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableProp.toCommonImmutableProp()
         hasTransientResolver = { hasTransientResolver() },
         isRecursive = { isRecursive },
         isIdView = { annotation(IdView::class) != null },
+        isManyToMany = { annotation(ManyToMany::class) != null },
         isManyToManyView = { annotation(ManyToManyView::class) != null },
         isLogicalDeleted = { isLogicalDeleted },
         isNullable = { isNullable },
@@ -166,6 +169,7 @@ data class CommonImmutableType(
         val hasTransientResolver: () -> Boolean,
         val isRecursive: () -> Boolean,
         val isIdView: () -> Boolean,
+        val isManyToMany: () -> Boolean,
         val isManyToManyView: () -> Boolean,
         val isLogicalDeleted: () -> Boolean,
         val isNullable: () -> Boolean,
