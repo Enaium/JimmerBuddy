@@ -79,6 +79,7 @@ class GenerateDDLDialog(val project: Project, val commonImmutables: Set<CommonIm
                 row {
                     checkBox(I18n.message("dialog.generate.ddl.checkbox.reference")).bindSelected(generateDDLModel.referenceProperty)
                     checkBox(I18n.message("dialog.generate.ddl.checkbox.comment")).bindSelected(generateDDLModel.commentProperty)
+                    checkBox(I18n.message("dialog.generate.ddl.checkbox.ifNotExists")).bindSelected(generateDDLModel.ifNotExistsProperty)
                 }
                 row(I18n.message("dialog.generate.ddl.label.primaryKeyName")) {
                     textField().align(Align.FILL).bindText(generateDDLModel.primaryKeyNameProperty)
@@ -122,7 +123,21 @@ class GenerateDDLDialog(val project: Project, val commonImmutables: Set<CommonIm
 
         }
 
-        editor.text = thread { runReadOnly { commonImmutables.joinToString("\n") { generateDDL.generate(it) } } }
+        editor.text = thread {
+            runReadOnly {
+                var lines = commonImmutables.joinToString("\n\n") { generateDDL.generate(it) }.split("\n")
+                val alterLines = mutableListOf<String>()
+                lines = lines.filter {
+                    val alter = it.startsWith("alter")
+                    if (alter) {
+                        alterLines.add(it)
+                    }
+                    !alter
+                }
+                alterLines.sortBy { !it.contains("primary key") }
+                (lines + alterLines).joinToString("\n")
+            }
+        }
     }
 
     override fun doOKAction() {

@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.GenerateDDLModel
+import cn.enaium.jimmer.buddy.database.model.Table
 import com.intellij.openapi.project.Project
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -28,6 +29,35 @@ import java.util.*
  * @author Enaium
  */
 class SQLiteDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLGenerate(project, generateDDLModel) {
+
+    override fun tableEndBefore(table: Table): String {
+        var render = ""
+        if (table.primaryKeys.isNotEmpty()) {
+            render += table.primaryKeys.joinToString("") { primaryKey ->
+                ",\n    primary key (${primaryKey.columns.joinToString { it.name }})"
+            }
+
+            if (table.uniqueKeys.isNotEmpty()) {
+                render += table.uniqueKeys.joinToString("") { uniqueKey ->
+                    ",\n    unique (${uniqueKey.columns.joinToString { it.name }})"
+                }
+            }
+
+            if (generateDDLModel.reference) {
+                if (table.foreignKeys.isNotEmpty()) {
+                    render += table.foreignKeys.joinToString("") { foreignKey ->
+                        ",\n    foreign key (${foreignKey.column.name}) references ${foreignKey.reference.tableName} (${foreignKey.reference.name})"
+                    }
+                }
+            }
+        }
+        return render
+    }
+
+    override fun tableEndAfter(table: Table): String {
+        return ""
+    }
+
     override fun typeMapping(type: String): String {
         return when (type) {
             String::class.java.name, String::class.java.name, String::class.qualifiedName -> "text"

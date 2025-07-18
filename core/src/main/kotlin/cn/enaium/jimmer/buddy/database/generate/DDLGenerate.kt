@@ -32,8 +32,8 @@ import org.jetbrains.kotlin.psi.KtProperty
  * @author Enaium
  */
 abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateDDLModel) {
-    fun tables(commonImmutableType: CommonImmutableType): List<Table> {
-        val tables = mutableListOf<Table>()
+    fun tables(commonImmutableType: CommonImmutableType): Set<Table> {
+        val tables = mutableSetOf<Table>()
 
         val tableName = commonImmutableType.tableName()
 
@@ -185,13 +185,13 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                             "fk_${tableName}_${selfName}",
                             tableName,
                             self,
-                            Column(generateDDLModel.primaryKeyName, selfName, "", null, null, false)
+                            Column(generateDDLModel.primaryKeyName, selfName, type, null, null, false)
                         ),
                         ForeignKey(
                             "fk_${tableName}_${inverseName}",
                             tableName,
                             inverse,
-                            Column(generateDDLModel.primaryKeyName, inverseName, "", null, null, false)
+                            Column(generateDDLModel.primaryKeyName, inverseName, type, null, null, false)
                         ),
                     ),
                     emptySet(),
@@ -271,7 +271,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         }
     }
 
-    fun generate(commonImmutableType: CommonImmutableType): String {
+    open fun generate(commonImmutableType: CommonImmutableType): String {
         val tables = tables(commonImmutableType)
 
         fun Column.render(): String {
@@ -281,53 +281,72 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 type = it.type
             }
 
-            return "$name ${typeMapping(type)}".let { pk ->
+            return "$name ${typeMapping(type)}".let { t ->
                 if (!nullable) {
-                    " $pk not null"
+                    "$t not null"
                 } else {
-                    pk
+                    t
                 }
             }
         }
 
-        return tables.joinToString("\n\n") { table ->
+        return tables.joinToString("\n") { table ->
             var render = ""
-            render += "create table ${table.name} (\n"
+            render += "create table"
+            if (generateDDLModel.ifNotExists) {
+                render += " if not exists"
+            }
+            render += " ${table.name} (\n"
             render += table.columns.joinToString(",\n") { column ->
                 "    ${column.render()}"
             }
-            render += "\n);\n"
-            if (table.primaryKeys.isNotEmpty()) {
-                render += "\n"
-                render += table.primaryKeys.joinToString("\n") { primaryKey ->
-                    "alter table ${table.name} add constraint ${primaryKey.name} primary key (${primaryKey.columns.joinToString { it.name }});"
-                }
-            }
-
-            if (table.uniqueKeys.isNotEmpty()) {
-                render += "\n"
-                render += table.uniqueKeys.joinToString("\n") { uniqueKey ->
-                    "alter table ${table.name} add constraint ${uniqueKey.name} unique (${uniqueKey.columns.joinToString { it.name }});"
-                }
-            }
-
-            if (generateDDLModel.reference) {
-                render += "\n"
-                render += table.foreignKeys.joinToString("\n") { foreignKey ->
-                    "alter table ${table.name} add constraint ${foreignKey.name} foreign key (${foreignKey.column.name}) references ${foreignKey.reference.tableName} (${foreignKey.reference.name});"
-                }
-            }
-
+            render += tableEnd(table)
             if (generateDDLModel.comment) {
                 render += "\n"
                 render += comment(tables)
             }
-
             render
         }
     }
 
-    open fun comment(tables: List<Table>): String {
+    fun tableEnd(table: Table): String {
+        var render = ""
+        render += tableEndBefore(table)
+        render += "\n);\n"
+        render += tableEndAfter(table)
+        return render
+    }
+
+    open fun tableEndBefore(table: Table): String {
+        return ""
+    }
+
+    open fun tableEndAfter(table: Table): String {
+        var render = ""
+        if (table.primaryKeys.isNotEmpty()) {
+            render += "\n"
+            render += table.primaryKeys.joinToString("\n") { primaryKey ->
+                "alter table ${table.name} add constraint ${primaryKey.name} primary key (${primaryKey.columns.joinToString { it.name }});"
+            }
+        }
+
+        if (table.uniqueKeys.isNotEmpty()) {
+            render += "\n"
+            render += table.uniqueKeys.joinToString("\n") { uniqueKey ->
+                "alter table ${table.name} add constraint ${uniqueKey.name} unique (${uniqueKey.columns.joinToString { it.name }});"
+            }
+        }
+
+        if (generateDDLModel.reference) {
+            render += "\n"
+            render += table.foreignKeys.joinToString("\n") { foreignKey ->
+                "alter table ${table.name} add constraint ${foreignKey.name} foreign key (${foreignKey.column.name}) references ${foreignKey.reference.tableName} (${foreignKey.reference.name});"
+            }
+        }
+        return render
+    }
+
+    open fun comment(tables: Set<Table>): String {
         var render = ""
 
         tables.forEach { table ->

@@ -29,9 +29,11 @@ class GenerateDDLModel : BaseState() {
     val referenceProperty = graph.property(true)
     val commentProperty = graph.property(false)
     val primaryKeyNameProperty = graph.property("id")
+    val ifNotExistsProperty = graph.property(true)
 
     val database: DDLGenerate.Database by databaseProperty
     val reference: Boolean by referenceProperty
     val comment: Boolean by commentProperty
     val primaryKeyName: String by primaryKeyNameProperty
+    val ifNotExists: Boolean by ifNotExistsProperty
 }

@@ -27,7 +27,7 @@ import java.time.LocalDateTime
  */
 open class MySqlDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
     DDLGenerate(project, generateDDLModel) {
-    override fun comment(tables: List<Table>): String {
+    override fun comment(tables: Set<Table>): String {
         var render = ""
         tables.forEach { table ->
             table.remark?.also {
