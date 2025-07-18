@@ -130,7 +130,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             when (psi) {
                 is PsiMethod -> {
                     psi.modifierList.findAnnotation(ManyToMany::class.qualifiedName!!)?.findAttributeValue("mappedBy")
-                        ?.toAny(String::class.java)?.toString()?.takeIf { it.isBlank() } != null && return@forEach
+                        ?.toAny(String::class.java)?.toString()?.takeIf { it.isNotBlank() } != null && return@forEach
                     psi.modifierList.findAnnotation(JoinTable::class.qualifiedName!!)?.also {
                         joinName = it.findAttributeValue("name")?.toAny(String::class.java)?.toString()
                             ?.takeIf { it.isNotBlank() }

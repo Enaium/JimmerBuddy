@@ -46,7 +46,7 @@ class MappedByInspection : AbstractLocalInspectionTool() {
                     ?.takeIf { it.isNotBlank() } ?: return@also
                 methodElement.getTarget()?.also {
                     it.allMethods.find { method -> method.name == mappedBy }?.also {
-                        if (it.getTarget() != methodElement.containingClass) {
+                        if (methodElement.containingClass?.isMappedSuperclass() == false && it.getTarget() != methodElement.containingClass) {
                             holder.registerProblem(
                                 element,
                                 I18n.message("inspection.annotation.mappedBy.propTypeNotMatch")
@@ -68,7 +68,9 @@ class MappedByInspection : AbstractLocalInspectionTool() {
                             ?: return@also
                     propertyElement.getTarget()?.also { ktClass ->
                         ktClass.findPropertyByName(mappedBy, true)?.also { namedDeclaration ->
-                            if ((namedDeclaration as? KtProperty)?.getTarget() != propertyElement.containingClass()) {
+                            if (propertyElement.containingClass()
+                                    ?.isMappedSuperclass() == false && (namedDeclaration as? KtProperty)?.getTarget() != propertyElement.containingClass()
+                            ) {
                                 holder.registerProblem(
                                     element,
                                     "The mappedBy prop type is not match"

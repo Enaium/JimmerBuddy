@@ -76,12 +76,22 @@ fun PsiClass.hasEntityAnnotation(): Boolean {
     } == true
 }
 
+fun PsiClass.hasMappedSuperclassAnnotation(): Boolean {
+    return this.modifierList?.annotations?.any { annotation ->
+        annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
+    } == true
+}
+
 fun PsiClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface
 }
 
 fun PsiClass.isEntity(): Boolean {
-    return hasEntityAnnotation() && isImmutable()
+    return hasEntityAnnotation() && isInterface
+}
+
+fun PsiClass.isMappedSuperclass(): Boolean {
+    return hasMappedSuperclassAnnotation() && isInterface
 }
 
 fun PsiClass.isErrorFamily(): Boolean {
@@ -105,6 +115,13 @@ fun KtClass.hasEntityAnnotation(): Boolean {
     } == true
 }
 
+fun KtClass.hasMappedSuperclassAnnotation(): Boolean {
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
+        val fqName = annotation.qualifiedName
+        fqName == MappedSuperclass::class.qualifiedName!!
+    } == true
+}
+
 fun KtClass.hasImmutableAnnotation(): Boolean {
     return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
         val fqName = annotation.qualifiedName
@@ -120,7 +137,11 @@ fun KtClass.isImmutable(): Boolean {
 }
 
 fun KtClass.isEntity(): Boolean {
-    return hasEntityAnnotation() && isImmutable()
+    return hasEntityAnnotation() && isInterface()
+}
+
+fun KtClass.isMappedSuperclass(): Boolean {
+    return hasMappedSuperclassAnnotation() && isInterface()
 }
 
 fun KtClass.isErrorFamily(): Boolean {
