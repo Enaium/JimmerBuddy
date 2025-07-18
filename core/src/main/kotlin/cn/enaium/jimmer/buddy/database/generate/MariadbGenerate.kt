@@ -41,7 +41,7 @@ class MariadbGenerate(project: Project, generateDDLModel: GenerateDDLModel) :
             java.time.LocalTime::class.java.name -> "time"
             java.util.Date::class.java.name -> "datetime"
             UUID::class.java.name -> "uuid"
-            else -> "varchar(255)"
+            else -> throw UnsupportedOperationException("varchar(255)")
         }
     }
 }

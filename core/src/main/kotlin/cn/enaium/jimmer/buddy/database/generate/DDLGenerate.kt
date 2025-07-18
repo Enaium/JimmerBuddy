@@ -17,16 +17,20 @@
 package cn.enaium.jimmer.buddy.database.generate
 
 import cn.enaium.jimmer.buddy.database.model.*
+import cn.enaium.jimmer.buddy.database.model.Column
+import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiEnumConstant
 import com.intellij.psi.PsiMethod
-import org.babyfish.jimmer.sql.JoinTable
-import org.babyfish.jimmer.sql.Key
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.PropOverride
+import org.babyfish.jimmer.sql.*
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassBody
+import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 /**
  * @author Enaium
@@ -281,7 +285,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 type = it.type
             }
 
-            return "$name ${typeMapping(type)}".let { t ->
+            return "$name ${typeMapping0(name, type)}".let { t ->
                 if (!nullable) {
                     "$t not null"
                 } else {
@@ -292,11 +296,15 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
         return tables.joinToString("\n") { table ->
             var render = ""
+            if (generateDDLModel.existsStyle == ExistsStyle.DROP) {
+                render += "drop table if exists ${table.name} cascade;\n"
+            }
             render += "create table"
-            if (generateDDLModel.ifNotExists) {
+            if (generateDDLModel.existsStyle == ExistsStyle.CREATE) {
                 render += " if not exists"
             }
-            render += " ${table.name} (\n"
+            render += " ${table.name}\n"
+            render += "(\n"
             render += table.columns.joinToString(",\n") { column ->
                 "    ${column.render()}"
             }
@@ -364,6 +372,53 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         return render
     }
 
+    fun typeMapping0(column: String, type: String): String {
+        return try {
+            typeMapping(type)
+        } catch (e: UnsupportedOperationException) {
+            val fallback = e.message!!
+            val textConstraints = mutableSetOf<String>()
+            val numberConstraints = mutableSetOf<Int>()
+            project.findPsiClass(type)?.takeIf { it.isEnum }?.also {
+                it.getChildrenOfType<PsiEnumConstant>().forEach { enumContact ->
+                    val enumItem = enumContact.modifierList?.findAnnotation(EnumItem::class.qualifiedName!!)
+                    val value = enumItem?.findAttributeValue("name")?.toAny(String::class.java)?.toString()
+                        ?.takeIf { value -> value.isNotBlank() }
+                    val ordinal = enumItem?.findAttributeValue("ordinal")?.toAny(Int::class.java)?.toString()?.toInt()
+                    if (value != null) {
+                        textConstraints.add(value)
+                    } else if (ordinal != null && ordinal != -892374651) {
+                        numberConstraints.add(ordinal)
+                    } else {
+                        textConstraints.add(enumContact.name)
+                    }
+                }
+            }
+            project.findKtClass(type)?.takeIf { it.isEnum() }?.also {
+                it.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.forEach { ktEnumEntry ->
+                    val enumItem = ktEnumEntry.findAnnotation(EnumItem::class.qualifiedName!!)
+                    val value = enumItem?.findArgument("name")?.value?.toString()
+                    val ordinal = enumItem?.findArgument("ordinal")?.value?.toString()?.toInt()
+                    if (value != null) {
+                        textConstraints.add(value)
+                    } else if (ordinal != null && ordinal != -892374651) {
+                        numberConstraints.add(ordinal)
+                    } else {
+                        textConstraints.add(ktEnumEntry.name ?: return@forEach)
+                    }
+                }
+            }
+
+            fallback + if (textConstraints.isNotEmpty()) {
+                " check (${column} in (${textConstraints.joinToString { "'${it}'" }}))"
+            } else if (numberConstraints.isNotEmpty()) {
+                " check (${column} in (${textConstraints.joinToString { it }}))"
+            } else {
+                ""
+            }
+        }
+    }
+
     abstract fun typeMapping(type: String): String
 
     enum class Database(val text: String) {
@@ -373,6 +428,11 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         SQLITE("SQLite"),
         H2("H2"),
         ORACLE("Oracle"),
+    }
+
+    enum class ExistsStyle(val text: String) {
+        CREATE(I18n.message("dialog.generate.ddl.existsStyle.create")),
+        DROP(I18n.message("dialog.generate.ddl.existsStyle.drop")),
     }
 
     private fun CommonImmutableType.tableName(): String {

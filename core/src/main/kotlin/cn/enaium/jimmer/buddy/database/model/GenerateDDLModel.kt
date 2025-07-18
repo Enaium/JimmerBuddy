@@ -26,14 +26,14 @@ import com.intellij.openapi.observable.properties.PropertyGraph
 class GenerateDDLModel : BaseState() {
     private val graph: PropertyGraph = PropertyGraph()
     val databaseProperty = graph.property(DDLGenerate.Database.POSTGRES)
+    val existsStyleProperty = graph.property(DDLGenerate.ExistsStyle.CREATE)
     val referenceProperty = graph.property(true)
     val commentProperty = graph.property(false)
     val primaryKeyNameProperty = graph.property("id")
-    val ifNotExistsProperty = graph.property(true)
 
     val database: DDLGenerate.Database by databaseProperty
+    val existsStyle: DDLGenerate.ExistsStyle by existsStyleProperty
     val reference: Boolean by referenceProperty
     val comment: Boolean by commentProperty
     val primaryKeyName: String by primaryKeyNameProperty
-    val ifNotExists: Boolean by ifNotExistsProperty
 }

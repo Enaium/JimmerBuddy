@@ -76,10 +76,14 @@ class GenerateDDLDialog(val project: Project, val commonImmutables: Set<CommonIm
                         it.text
                     }.bind(generateDDLModel.databaseProperty)
                 }
+                row(I18n.message("dialog.generate.ddl.label.existsStyle")) {
+                    JimmerBuddy.Services.UI.segmentedButtonText(this, DDLGenerate.ExistsStyle.entries) {
+                        it.text
+                    }.bind(generateDDLModel.existsStyleProperty)
+                }
                 row {
                     checkBox(I18n.message("dialog.generate.ddl.checkbox.reference")).bindSelected(generateDDLModel.referenceProperty)
                     checkBox(I18n.message("dialog.generate.ddl.checkbox.comment")).bindSelected(generateDDLModel.commentProperty)
-                    checkBox(I18n.message("dialog.generate.ddl.checkbox.ifNotExists")).bindSelected(generateDDLModel.ifNotExistsProperty)
                 }
                 row(I18n.message("dialog.generate.ddl.label.primaryKeyName")) {
                     textField().align(Align.FILL).bindText(generateDDLModel.primaryKeyNameProperty)

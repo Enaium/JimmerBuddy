@@ -59,7 +59,7 @@ open class MySqlDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel
             java.time.LocalTime::class.java.name -> "time"
             java.util.Date::class.java.name -> "datetime"
             java.util.UUID::class.java.name -> "varchar(36)"
-            else -> return "varchar(255)"
+            else -> throw UnsupportedOperationException("varchar(255)")
         }
     }
 }

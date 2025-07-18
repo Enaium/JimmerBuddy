@@ -43,7 +43,7 @@ class OracleDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : 
             LocalDate::class.java.name -> "date"
             LocalTime::class.java.name -> "timestamp"
             UUID::class.java.name -> "varchar2(36)"
-            else -> "varchar2"
+            else -> throw UnsupportedOperationException("varchar2")
         }
     }
 }

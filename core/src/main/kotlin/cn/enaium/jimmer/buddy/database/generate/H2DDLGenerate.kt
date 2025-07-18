@@ -43,7 +43,7 @@ class H2DDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : DDLG
             LocalDate::class.java.name -> "date"
             LocalTime::class.java.name -> "time"
             UUID::class.java.name -> "uuid"
-            else -> "varchar(255)"
+            else -> throw UnsupportedOperationException("varchar(255)")
         }
     }
 }

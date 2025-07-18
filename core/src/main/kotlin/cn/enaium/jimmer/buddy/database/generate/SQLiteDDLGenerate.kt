@@ -73,7 +73,7 @@ class SQLiteDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) : 
             LocalDate::class.java.name -> "date"
             LocalTime::class.java.name -> "time"
             UUID::class.java.name -> "uuid"
-            else -> "text"
+            else -> throw UnsupportedOperationException("text")
         }
     }
 }
