@@ -48,8 +48,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 tableName,
                 commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
-                    if (!prop.isList() && !prop.isEmbedded()) {
-                        prop.toColumn(tableName).copy(remark = prop.psi(project)?.getComment())
+                    if (!prop.isList() && !prop.isEmbedded() && !prop.isFormula() && !prop.isTransient()) {
+                        prop.toColumn(tableName)
                     } else {
                         null
                     }
@@ -207,13 +207,30 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
     }
 
     fun CommonImmutableType.CommonImmutableProp.toColumn(tableName: String): Column {
-        return Column(columnName().let {
-            if (isAssociation(true) && !isList()) {
-                "${it}_${generateDDLModel.primaryKeyName}"
-            } else {
-                it
-            }
-        }, tableName, typeName().replace("?", ""), null, null, isNullable())
+        val psi = psi(project)
+        return Column(
+            columnName().let {
+                if (isAssociation(true) && !isList()) {
+                    "${it}_${generateDDLModel.primaryKeyName}"
+                } else {
+                    it
+                }
+            }, tableName, typeName().replace("?", ""), psi?.getComment(), when (psi) {
+                is PsiMethod -> {
+                    psi.modifierList.findAnnotation(Default::class.qualifiedName!!)?.findAttributeValue("value")
+                        ?.toAny(String::class.java).toString()
+                }
+
+                is KtProperty -> {
+                    psi.annotations().find { it.fqName == Default::class.qualifiedName!! }
+                        ?.findArgument("value")?.value?.toString()
+                }
+
+                else -> {
+                    null
+                }
+            }, isNullable()
+        )
     }
 
     fun CommonImmutableType.CommonImmutableProp.toPrimaryKey(tableName: String): PrimaryKey? {
@@ -285,11 +302,19 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 type = it.type
             }
 
-            return "$name ${typeMapping0(name, type)}".let { t ->
-                if (!nullable) {
-                    "$t not null"
+            val typeMapping = typeMapping0(name, type)
+            return "$name $typeMapping".let {
+                if (defaultValue != null) {
+                    val string = typeMapping.startsWith("text") || typeMapping.startsWith("varchar")
+                    "$it default ${if (string) "'${defaultValue}'" else defaultValue}"
                 } else {
-                    t
+                    it
+                }.let { defaultValue ->
+                    if (!nullable) {
+                        "$defaultValue not null"
+                    } else {
+                        defaultValue
+                    }
                 }
             }
         }

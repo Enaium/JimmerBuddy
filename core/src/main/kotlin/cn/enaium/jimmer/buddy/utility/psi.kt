@@ -23,6 +23,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.javadoc.PsiDocComment
 import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.Draft
+import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
@@ -179,6 +180,16 @@ fun PsiMethod.hasTransientAnnotation(): Boolean {
     }
 }
 
+fun PsiMethod.isComputed(): Boolean {
+    return hasTransientAnnotation() || hasFormulaAnnotation()
+}
+
+fun PsiMethod.hasFormulaAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(Formula::class.qualifiedName!!)
+    }
+}
+
 fun PsiMethod.hasManyToManyViewAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(ManyToManyView::class.qualifiedName!!)
@@ -211,6 +222,17 @@ fun KtProperty.hasTransientAnnotation(): Boolean {
     return this.annotations().any { annotation ->
         val fqName = annotation.fqName
         fqName == Transient::class.qualifiedName!!
+    }
+}
+
+fun KtProperty.isComputed(): Boolean {
+    return hasTransientAnnotation() || hasFormulaAnnotation()
+}
+
+fun KtProperty.hasFormulaAnnotation(): Boolean {
+    return this.annotations().any { annotation ->
+        val fqName = annotation.fqName
+        fqName == Formula::class.qualifiedName!!
     }
 }
 

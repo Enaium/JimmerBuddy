@@ -57,7 +57,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                                 ?.let { returnPsiClass.substitutor.substitute(it) }
                                 ?.let { PsiUtil.resolveGenericsClassInType(it) }
                                 ?.element?.isEntity() == true && !element.hasToManyAnnotation()
-                            && !element.hasTransientAnnotation()
+                            && !element.isComputed()
                         ) {
                             holder.registerProblem(element, noToManyProblem)
                         }
@@ -84,7 +84,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     } else {
                         if (element.hasToManyAnnotation()) {
                             holder.registerProblem(element, toOneProblem)
-                        } else if (typeReference?.ktClass?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation()) {
+                        } else if (typeReference?.ktClass?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
                             holder.registerProblem(element, noToOneProblem)
                         }
                     }

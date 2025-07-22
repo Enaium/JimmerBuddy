@@ -42,23 +42,6 @@ object ExportTypeCompletionProvider : CompletionProvider<CompletionParameters>()
         val project = parameters.position.project
         val parts = parameters.getParts()
 
-        if (parts.isEmpty()) {
-            val classes = FileBasedIndex.getInstance()
-                .getAllKeys(JimmerBuddy.Indexes.INTERFACE_CLASS, project)
-                .mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.allScope()) }
-                .filter { it.isImmutable() }
-            result.addAllElements(classes.map {
-                LookupElementBuilder.create(it.name ?: "Unknown Name")
-                    .withInsertHandler { context, item ->
-                        val start: Int = context.startOffset
-                        val end: Int = context.tailOffset
-                        context.document.replaceString(start, end, it.qualifiedName ?: "Unknown Name")
-                    }
-                    .withTailText(" (from ${it.qualifiedName?.substringBeforeLast(".")})")
-                    .withIcon(it.getIcon(0))
-            })
-        }
-
         val packageName = parts.joinToString(".")
         val subPackages =
             JavaPsiFacade.getInstance(project).findPackage(packageName)?.subPackages ?: emptyArray<PsiPackage>()

@@ -46,6 +46,7 @@ class DtoCompletionContributor : CompletionContributor() {
             DtoPsiPatterns.psiElement()
                 .withParents(
                     DtoPsiPart::class.java,
+                    DtoPsiQualifiedNameParts::class.java,
                     DtoPsiTypeParts::class.java,
                     DtoPsiExportStatement::class.java
                 ),
@@ -56,6 +57,7 @@ class DtoCompletionContributor : CompletionContributor() {
             DtoPsiPatterns.psiElement()
                 .withParents(
                     DtoPsiPart::class.java,
+                    DtoPsiQualifiedNameParts::class.java,
                     DtoPsiPackageParts::class.java,
                     DtoPsiExportStatement::class.java
                 ),
