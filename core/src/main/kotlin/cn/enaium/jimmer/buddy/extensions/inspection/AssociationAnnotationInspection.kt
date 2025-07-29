@@ -57,14 +57,14 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                                 ?.let { returnPsiClass.substitutor.substitute(it) }
                                 ?.let { PsiUtil.resolveGenericsClassInType(it) }
                                 ?.element?.isEntity() == true && !element.hasToManyAnnotation()
-                            && !element.isComputed()
+                            && !element.isComputed() && !element.hasManyToManyViewAnnotation()
                         ) {
                             holder.registerProblem(element, noToManyProblem)
                         }
                     } else {
                         if (element.hasToManyAnnotation()) {
                             holder.registerProblem(element, toOneProblem)
-                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.hasTransientAnnotation() && !element.hasManyToManyViewAnnotation()) {
+                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
                             holder.registerProblem(element, noToOneProblem)
                         }
                     }
@@ -78,7 +78,7 @@ class AssociationAnnotationInspection : LocalInspectionTool() {
                     ) {
                         if (element.hasToOneAnnotation()) {
                             holder.registerProblem(element, toManyProblem)
-                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.hasTransientAnnotation() && !element.hasManyToManyViewAnnotation()) {
+                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.isComputed() && !element.hasManyToManyViewAnnotation()) {
                             holder.registerProblem(element, noToManyProblem)
                         }
                     } else {
