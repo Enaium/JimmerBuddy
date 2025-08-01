@@ -218,7 +218,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             }, tableName, typeName().replace("?", ""), psi?.getComment(), when (psi) {
                 is PsiMethod -> {
                     psi.modifierList.findAnnotation(Default::class.qualifiedName!!)?.findAttributeValue("value")
-                        ?.toAny(String::class.java).toString()
+                        ?.toAny(String::class.java)?.toString()
                 }
 
                 is KtProperty -> {
