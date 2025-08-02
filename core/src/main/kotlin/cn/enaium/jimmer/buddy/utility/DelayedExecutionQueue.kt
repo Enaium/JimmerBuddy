@@ -20,14 +20,13 @@ import kotlinx.coroutines.*
 import java.util.concurrent.ConcurrentHashMap
 
 class DelayedExecutionQueue(
-    private val defaultDelay: Long,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     private val tasks = ConcurrentHashMap<String, Job>()
 
     fun schedule(
         key: String,
-        delayMillis: Long = defaultDelay,
+        delayMillis: Long,
         block: suspend () -> Unit
     ) {
         tasks[key]?.let { existingJob ->
