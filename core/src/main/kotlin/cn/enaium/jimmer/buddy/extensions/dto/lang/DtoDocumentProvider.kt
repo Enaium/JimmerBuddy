@@ -46,7 +46,7 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
                         } else {
                             macro.args.forEach { arg ->
                                 when (arg.qualifiedName()) {
-                                    "this" -> commonImmutableProps.addAll(currentImmutable.declaredProps())
+                                    "this", currentImmutable.name() -> commonImmutableProps.addAll(currentImmutable.declaredProps())
                                     else -> commonImmutableProps.addAll(
                                         currentImmutable.superTypes().find { it.qualifiedName() == it.qualifiedName() }
                                             ?.declaredProps() ?: emptyList()
