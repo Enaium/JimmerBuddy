@@ -40,8 +40,7 @@ class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
     override fun getName(): String = value
 
     override fun reference(): PsiElement? {
-        val parentElement = parent
-        return when (parentElement) {
+        return when (val parentElement = parent) {
             is DtoPsiImportedType -> {
                 JavaPsiFacade.getInstance(project).findClass(
                     "${parentElement.findParentOfType<DtoPsiImportStatement>()?.qualifiedNameParts?.qualifiedName}.$value",
