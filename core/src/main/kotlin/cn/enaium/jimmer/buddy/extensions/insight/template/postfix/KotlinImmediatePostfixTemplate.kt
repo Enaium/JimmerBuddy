@@ -35,7 +35,7 @@ open class KotlinImmediatePostfixTemplate(
     val method: String
 ) : StringBasedPostfixTemplate(
     name,
-    "sql.${method}(\$expr::class)",
+    $$"sql.$${method}($expr::class)",
     allExpressions({ expression ->
         return@allExpressions ((expression.toUElementOfType<USimpleNameReferenceExpression>())?.resolve()
             ?.toUElement()?.sourcePsi as? KtClass)?.isImmutable() == true
@@ -43,7 +43,7 @@ open class KotlinImmediatePostfixTemplate(
     provider
 ) {
     override fun getTemplateString(element: PsiElement): String {
-        return "sql.$method(\$expr$::class, \$END$)"
+        return $$"sql.$$method($expr$::class, $END$)"
     }
 
     override fun getElementToRemove(expr: PsiElement): PsiElement {

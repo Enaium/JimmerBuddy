@@ -41,6 +41,6 @@ class JavaProducePostfixTemplate(provider: PostfixTemplateProvider) :
     ) {
 
     override fun getTemplateString(element: PsiElement): String {
-        return "\$expr\$Draft.$.produce(draft -> {\n\t\$END$\n});"
+        return $$"$expr$Draft.$.produce(draft -> {\n\t$END$\n});"
     }
 }

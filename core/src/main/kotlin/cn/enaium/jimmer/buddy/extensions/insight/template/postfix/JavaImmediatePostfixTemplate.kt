@@ -34,7 +34,7 @@ open class JavaImmediatePostfixTemplate(
     val method: String
 ) : StringBasedPostfixTemplate(
     name,
-    "sql.${method}(\$expr.class)",
+    $$"sql.$${method}($expr.class)",
     selectorAllExpressionsWithCurrentOffset { expression ->
         if (expression is PsiReferenceExpression) {
             return@selectorAllExpressionsWithCurrentOffset (expression.advancedResolve(true).element as? PsiClass)?.isImmutable() == true
@@ -44,6 +44,6 @@ open class JavaImmediatePostfixTemplate(
     provider
 ), DumbAware {
     override fun getTemplateString(element: PsiElement): String? {
-        return "sql.$method(\$expr$.class, \$END$);"
+        return $$"sql.$$method($expr$.class, $END$);"
     }
 }

@@ -22,4 +22,4 @@ import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvid
  * @author Enaium
  */
 class KotlinDeletePostfixTemplate(provider: PostfixTemplateProvider) :
-    KotlinCreateMethodPostfixTemplate(provider, "delete", "Delete")
+    KotlinCreateMethodPostfixTemplate(provider, "cd", "createDelete")

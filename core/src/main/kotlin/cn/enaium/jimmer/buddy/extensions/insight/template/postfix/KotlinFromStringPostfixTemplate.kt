@@ -32,7 +32,7 @@ import org.jetbrains.uast.toUElementOfType
 class KotlinFromStringPostfixTemplate(provider: PostfixTemplateProvider) :
     StringBasedPostfixTemplate(
         "fs",
-        "fromString(\$expr, \"\")",
+        $$"fromString($expr, \"\")",
         allExpressions({ expression ->
             return@allExpressions ((expression.toUElementOfType<USimpleNameReferenceExpression>())?.resolve()
                 ?.toUElement()?.sourcePsi as? KtClass)?.isImmutable() == true
@@ -41,7 +41,7 @@ class KotlinFromStringPostfixTemplate(provider: PostfixTemplateProvider) :
     ) {
 
     override fun getTemplateString(element: PsiElement): String {
-        return "fromString(\$expr$::class, \"\$END$\")"
+        return $$"fromString($expr$::class, \"$END$\")"
     }
 
     override fun getElementToRemove(expr: PsiElement): PsiElement {

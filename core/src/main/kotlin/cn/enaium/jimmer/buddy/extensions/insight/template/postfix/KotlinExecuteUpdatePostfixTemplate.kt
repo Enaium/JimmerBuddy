@@ -21,5 +21,5 @@ import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvid
 /**
  * @author Enaium
  */
-class KotlinUpdatePostfixTemplate(provider: PostfixTemplateProvider) :
-    KotlinCreateMethodPostfixTemplate(provider, "cu", "createUpdate")
+class KotlinExecuteUpdatePostfixTemplate(provider: PostfixTemplateProvider) :
+    KotlinCreateMethodPostfixTemplate(provider, "eu", "executeUpdate")
