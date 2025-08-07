@@ -22,4 +22,4 @@ import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvid
  * @author Enaium
  */
 class KotlinQueryPostfixTemplate(provider: PostfixTemplateProvider) :
-    KotlinCreateMethodPostfixTemplate(provider, "query", "Query")
+    KotlinCreateMethodPostfixTemplate(provider, "cq", "createQuery")

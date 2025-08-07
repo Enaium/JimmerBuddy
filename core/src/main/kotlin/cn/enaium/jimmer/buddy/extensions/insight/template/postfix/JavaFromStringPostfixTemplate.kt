@@ -30,7 +30,7 @@ import com.intellij.psi.PsiReferenceExpression
 class JavaFromStringPostfixTemplate(provider: PostfixTemplateProvider) :
     StringBasedPostfixTemplate(
         "fs",
-        "ImmutableObjects.fromString(\$expr, \"\")",
+        $$"ImmutableObjects.fromString($expr, \"\")",
         selectorAllExpressionsWithCurrentOffset { expression ->
             if (expression is PsiReferenceExpression) {
                 return@selectorAllExpressionsWithCurrentOffset (expression.advancedResolve(true).element as? PsiClass)?.isImmutable() == true
@@ -41,6 +41,6 @@ class JavaFromStringPostfixTemplate(provider: PostfixTemplateProvider) :
     ) {
 
     override fun getTemplateString(element: PsiElement): String {
-        return "ImmutableObjects.fromString(\$expr$.class, \"\$END$\");"
+        return $$"ImmutableObjects.fromString($expr$.class, \"$END$\");"
     }
 }

@@ -156,7 +156,7 @@ class JavaEntityGenerate : EntityGenerate {
                             if (generateEntity.columnAnnotation) {
                                 methodBuilder.addAnnotation(
                                     AnnotationSpec.builder(org.babyfish.jimmer.sql.Column::class.java)
-                                        .addMember("name", "\$S", column.name)
+                                        .addMember("name", $$"$S", column.name)
                                         .build()
                                 )
                             }
@@ -228,7 +228,7 @@ class JavaEntityGenerate : EntityGenerate {
                                 ).addAnnotation(
                                     AnnotationSpec.builder(
                                         if (unique) OneToOne::class.java else OneToMany::class.java
-                                    ).addMember("mappedBy", "\$S", referenceTypeName.firstCharLowercase())
+                                    ).addMember("mappedBy", $$"$S", referenceTypeName.firstCharLowercase())
                                         .build()
                                 ).let {
                                     if (unique) it.addAnnotation(Nullable::class.java) else it
@@ -243,7 +243,7 @@ class JavaEntityGenerate : EntityGenerate {
                 if (generateEntity.tableAnnotation) {
                     type.addAnnotation(
                         AnnotationSpec.builder(Table::class.java)
-                            .addMember("name", "\$S", table.name)
+                            .addMember("name", $$"$S", table.name)
                             .build()
                     )
                 }
@@ -279,15 +279,15 @@ class JavaEntityGenerate : EntityGenerate {
                             if (generateEntity.joinTableAnnotation) {
                                 it.addAnnotation(
                                     AnnotationSpec.builder(JoinTable::class.java)
-                                        .addMember("name", "\$S", table.name)
+                                        .addMember("name", $$"$S", table.name)
                                         .addMember(
-                                            "joinColumns", "\$L", AnnotationSpec.builder(JoinColumn::class.java)
-                                                .addMember("name", "\$S", owningColumn.name)
+                                            "joinColumns", $$"$L", AnnotationSpec.builder(JoinColumn::class.java)
+                                                .addMember("name", $$"$S", owningColumn.name)
                                                 .build()
                                         )
                                         .addMember(
-                                            "inverseJoinColumns", "\$L", AnnotationSpec.builder(JoinColumn::class.java)
-                                                .addMember("name", "\$S", inverseColumn.name)
+                                            "inverseJoinColumns", $$"$L", AnnotationSpec.builder(JoinColumn::class.java)
+                                                .addMember("name", $$"$S", inverseColumn.name)
                                                 .build()
                                         ).build()
                                 )
@@ -306,7 +306,7 @@ class JavaEntityGenerate : EntityGenerate {
                             )
                         ).addAnnotation(
                             AnnotationSpec.builder(ManyToMany::class.java)
-                                .addMember("mappedBy", "\$S", inverseTypeName.firstCharLowercase().toPlural())
+                                .addMember("mappedBy", $$"$S", inverseTypeName.firstCharLowercase().toPlural())
                                 .build()
                         ).build()
                 )

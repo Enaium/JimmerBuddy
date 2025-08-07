@@ -48,6 +48,6 @@ open class JavaDraftPropMethodPostfixTemplate(
     provider
 ), DumbAware {
     override fun getTemplateString(element: PsiElement): String? {
-        return "ImmutableObjects.${method}(\$expr$, \$END$);"
+        return $$"ImmutableObjects.$${method}($expr$, $END$);"
     }
 }

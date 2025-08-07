@@ -1,0 +1,3 @@
+sql.executeUpdate(Author::class) {
+
+}

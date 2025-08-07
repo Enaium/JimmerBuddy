@@ -47,7 +47,7 @@ open class KotlinDraftPropMethodPostfixTemplate(
     provider
 ), DumbAware {
     override fun getTemplateString(element: PsiElement): String? {
-        return "${method}(\$expr$, \$END$)"
+        return $$"$${method}($expr$, $END$)"
     }
 
     override fun getElementToRemove(expr: PsiElement): PsiElement {

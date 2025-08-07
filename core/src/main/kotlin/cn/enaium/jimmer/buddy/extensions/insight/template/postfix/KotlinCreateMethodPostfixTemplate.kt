@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.insight.template.postfix
 
-import cn.enaium.jimmer.buddy.utility.firstCharUppercase
 import cn.enaium.jimmer.buddy.utility.isImmutable
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvider
 import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTemplate
@@ -36,7 +35,7 @@ open class KotlinCreateMethodPostfixTemplate(
     val method: String
 ) : StringBasedPostfixTemplate(
     name,
-    "create${method.firstCharUppercase()}(\$expr::class) {}",
+    $$"sql.$${method}($expr::class) {}",
     allExpressions({ expression ->
         return@allExpressions ((expression.toUElementOfType<USimpleNameReferenceExpression>())?.resolve()
             ?.toUElement()?.sourcePsi as? KtClass)?.isImmutable() == true
@@ -44,7 +43,7 @@ open class KotlinCreateMethodPostfixTemplate(
     provider
 ) {
     override fun getTemplateString(element: PsiElement): String {
-        return "sql.create${method.firstCharUppercase()}(\$expr$::class) {\n\t\$END$\n}"
+        return $$"sql.$${method}($expr$::class) {\n\t$END$\n}"
     }
 
     override fun getElementToRemove(expr: PsiElement): PsiElement {
