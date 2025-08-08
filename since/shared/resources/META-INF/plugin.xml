@@ -211,6 +211,10 @@
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
         <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"
                                  implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
+        <codeInsight.declarativeInlayProvider
+                language="UAST"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleInlayHintsProvider" bundle="messages.BuddyBundles"
+                group="Jimmer" isEnabledByDefault="true" nameKey="editor.dto.label.name" providerId="JimmerBuddy.inlay"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>

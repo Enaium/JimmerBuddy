@@ -113,38 +113,6 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
     }
 
-    private fun PsiMethodCallExpression.findExecuteMethod(): PsiMethodCallExpression? {
-        var returnClass = type?.resolveClass()
-        if (returnClass?.typeParameters?.size == 1) {
-            returnClass = type?.resolveGenericsClass(returnClass.typeParameters[0] ?: return null)
-        }
-
-        val containingClass = resolveMethod()?.containingClass
-        return if (returnClass?.isEntity() == true &&
-            listOf(
-                TypedRootQuery::class.qualifiedName,
-                Executable::class.qualifiedName,
-                JSqlClient::class.qualifiedName
-            ).any { it == containingClass?.qualifiedName }
-        ) {
-            this
-        } else {
-            val child = firstChild?.firstChild
-            if (child is PsiMethodCallExpression) {
-                child.findExecuteMethod()
-            } else if (child is PsiReferenceExpression) {
-                val resolve = child.resolve()
-                if (resolve is PsiLocalVariable) {
-                    resolve.getChildOfType<PsiMethodCallExpression>()?.findExecuteMethod()
-                } else {
-                    null
-                }
-            } else {
-                null
-            }
-        }
-    }
-
     private fun PsiMethodCallExpression.findFetcherExpression(): PsiMethodCallExpression? {
 
         var expression: PsiExpression? = null
@@ -227,31 +195,6 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
         fetchResolver()
         return fetcher
-    }
-
-    private fun KtQualifiedExpression.findExecuteFun(): KtQualifiedExpression? {
-        val callExpression = lastChild as? KtCallExpression
-        return (if (callExpression != null && listOf(
-                KTypedRootQuery::class.qualifiedName,
-                KExecutable::class.qualifiedName,
-                KSqlClient::class.qualifiedName
-            ).any { it == (callExpression.firstChild?.reference?.resolve() as? KtNamedFunction)?.containingClass()?.fqName?.asString() }
-        ) {
-            this
-        } else if (firstChild is KtQualifiedExpression) {
-            (firstChild as KtQualifiedExpression).findExecuteFun()
-        } else if (firstChild is KtArrayAccessExpression) {
-            (firstChild.firstChild as KtQualifiedExpression).findExecuteFun()
-        } else if (firstChild is KtNameReferenceExpression) {
-            val resolve = firstChild.reference?.resolve()
-            if (resolve is KtProperty) {
-                resolve.getChildOfType<KtQualifiedExpression>()?.findExecuteFun()
-            } else {
-                null
-            }
-        } else {
-            null
-        })
     }
 
     private fun KtQualifiedExpression.findFetcherExpression(): KtQualifiedExpression? {
