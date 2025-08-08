@@ -27,8 +27,14 @@ import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.sql.*
+import org.babyfish.jimmer.sql.ast.Executable
+import org.babyfish.jimmer.sql.ast.query.TypedRootQuery
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.KExecutable
+import org.babyfish.jimmer.sql.kt.ast.query.KTypedRootQuery
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
@@ -437,4 +443,56 @@ fun PsiType.resolveClass(): PsiClass? {
 
 fun PsiType.resolveGenericsClass(parameter: PsiTypeParameter): PsiClass? {
     return PsiUtil.resolveGenericsClassInType(this).substitutor.substitute(parameter)?.resolveClass()
+}
+
+fun PsiMethodCallExpression.findExecuteMethod(): PsiMethodCallExpression? {
+    val containingClass = resolveMethod()?.containingClass
+    return if (listOf(
+            TypedRootQuery::class.qualifiedName,
+            Executable::class.qualifiedName,
+            JSqlClient::class.qualifiedName
+        ).any { it == containingClass?.qualifiedName }
+    ) {
+        this
+    } else {
+        val child = firstChild?.firstChild
+        if (child is PsiMethodCallExpression) {
+            child.findExecuteMethod()
+        } else if (child is PsiReferenceExpression) {
+            val resolve = child.resolve()
+            if (resolve is PsiLocalVariable) {
+                resolve.getChildOfType<PsiMethodCallExpression>()?.findExecuteMethod()
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    }
+}
+
+
+fun KtQualifiedExpression.findExecuteFun(): KtQualifiedExpression? {
+    val callExpression = lastChild as? KtCallExpression
+    return (if (callExpression != null && listOf(
+            KTypedRootQuery::class.qualifiedName,
+            KExecutable::class.qualifiedName,
+            KSqlClient::class.qualifiedName
+        ).any { it == (callExpression.firstChild?.reference?.resolve() as? KtNamedFunction)?.containingClass()?.fqName?.asString() }
+    ) {
+        this
+    } else if (firstChild is KtQualifiedExpression) {
+        (firstChild as KtQualifiedExpression).findExecuteFun()
+    } else if (firstChild is KtArrayAccessExpression) {
+        (firstChild.firstChild as KtQualifiedExpression).findExecuteFun()
+    } else if (firstChild is KtNameReferenceExpression) {
+        val resolve = firstChild.reference?.resolve()
+        if (resolve is KtProperty) {
+            resolve.getChildOfType<KtQualifiedExpression>()?.findExecuteFun()
+        } else {
+            null
+        }
+    } else {
+        null
+    })
 }
