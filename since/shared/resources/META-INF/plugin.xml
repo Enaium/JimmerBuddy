@@ -213,8 +213,16 @@
                                  implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
-                implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleInlayHintsProvider" bundle="messages.BuddyBundles"
-                group="Jimmer" isEnabledByDefault="true" nameKey="editor.dto.label.name" providerId="JimmerBuddy.inlay"/>
+                implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleNameInlayHintsProvider"
+                bundle="messages.BuddyBundles"
+                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.tuple.name"
+                providerId="JimmerBuddy.inlay.tuple"/>
+        <codeInsight.declarativeInlayProvider
+                language="UAST"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.insight.SelectSerialInlayHintsProvider"
+                bundle="messages.BuddyBundles"
+                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.select.serial"
+                providerId="JimmerBuddy.inlay.select"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>

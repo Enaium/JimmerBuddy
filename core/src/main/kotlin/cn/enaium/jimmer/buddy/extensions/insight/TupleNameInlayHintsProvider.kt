@@ -36,7 +36,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 /**
  * @author Enaium
  */
-class TupleInlayHintsProvider : InlayHintsProvider {
+class TupleNameInlayHintsProvider : InlayHintsProvider {
     override fun createCollector(
         file: PsiFile,
         editor: Editor
