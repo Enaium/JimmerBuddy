@@ -21,12 +21,7 @@ import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Co
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.*
 import org.babyfish.jimmer.sql.JSqlClient
-import org.babyfish.jimmer.sql.ast.Executable
-import org.babyfish.jimmer.sql.ast.query.TypedRootQuery
 import org.babyfish.jimmer.sql.fetcher.Fetcher
-import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.KExecutable
-import org.babyfish.jimmer.sql.kt.ast.query.KTypedRootQuery
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
@@ -216,13 +211,12 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
 
         if (query is KtCallExpression) {
-            query.lambdaArguments[0].getLambdaExpression()?.functionLiteral?.bodyBlockExpression
+            query.lambdaArguments.lastOrNull()?.getLambdaExpression()?.bodyExpression
                 ?.getChildrenOfType<KtCallExpression>()?.lastOrNull()?.also { select ->
-                    select.valueArguments[0].also { fetch ->
-
+                    select.valueArguments.firstOrNull()?.also { fetch ->
                         val fetchArg = fetch.getChildOfType<KtQualifiedExpression>()
                             ?.getChildOfType<KtCallExpression>()
-                            ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments[0]
+                            ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments?.firstOrNull()
 
                         fetchArg?.getChildOfType<KtQualifiedExpression>()
                             ?.also { fetcherExpression ->
