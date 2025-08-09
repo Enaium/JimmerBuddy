@@ -223,6 +223,12 @@
                 bundle="messages.BuddyBundles"
                 group="Jimmer" isEnabledByDefault="true" nameKey="inlay.select.serial"
                 providerId="JimmerBuddy.inlay.select"/>
+        <codeInsight.declarativeInlayProvider
+                language="UAST"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.insight.BaseTableNameInlayHintsProvider"
+                bundle="messages.BuddyBundles"
+                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.baseTable.name"
+                providerId="JimmerBuddy.inlay.baseTable"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>
