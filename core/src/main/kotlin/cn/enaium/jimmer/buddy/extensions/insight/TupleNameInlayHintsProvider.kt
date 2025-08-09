@@ -55,7 +55,7 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
                             val map = selectExpressions
                                 .mapIndexed { idx, expression -> "get_${idx + 1}" to expression }.toMap()
                             val position =
-                                InlineInlayPosition(element.textRange.endOffset, relatedToPrevious = true)
+                                InlineInlayPosition(methodExpression.textRange.endOffset, relatedToPrevious = true)
                             sink.addPresentation(position, hasBackground = true) {
                                 val expression =
                                     map[methodExpression.referenceNameElement?.text] ?: return@addPresentation
@@ -79,7 +79,7 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
                             val map = selectExpressions
                                 .mapIndexed { idx, expression -> "_${idx + 1}" to expression }.toMap()
                             val position =
-                                InlineInlayPosition(element.textRange.endOffset, relatedToPrevious = true)
+                                InlineInlayPosition(selectorExpression.textRange.endOffset, relatedToPrevious = true)
                             sink.addPresentation(position, hasBackground = true) {
                                 val expression = map[selectorExpression.text] ?: return@addPresentation
                                 text(
@@ -124,7 +124,7 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
         }
 
         if (query is KtCallExpression) {
-            query.lambdaArguments[0].getLambdaExpression()?.functionLiteral?.bodyBlockExpression?.getChildrenOfType<KtCallExpression>()
+            query.lambdaArguments[0].getLambdaExpression()?.bodyExpression?.getChildrenOfType<KtCallExpression>()
                 ?.lastOrNull()?.also { select ->
                     return select.valueArguments.mapNotNull { it.getChildOfType<KtQualifiedExpression>() }
                 }
