@@ -49,3 +49,15 @@ Checks for correct usage of immutable-related annotations such as `@Immutable`, 
 Checks the `@OrderedProp` annotation:
 
 - The `value` property must exist.
+
+## Database Checks
+
+Ensure that the table is cached in the database list first.
+
+Checks the `@Table` annotation:
+- The `name` property must exist in the database.
+- The class name must exist in the database.
+
+Checks the `@Column` annotation:
+- The `name` property must exist in the database.
+- The property name must exist in the database.

@@ -54,7 +54,7 @@ export default defineAdditionalConfig({
               { text: "Project Wizard", link: "project-wizard" },
               { text: "Navigate", link: "navigate" },
               { text: "SQL to Clipboard", link: "sql-to-clipboard" },
-              { text: "Inlay Hit", link: "inlay-hit" },
+              { text: "Inlay Hints", link: "inlay-hints" },
               { text: "Postfix Template", link: "postfix-template" },
             ],
           },
