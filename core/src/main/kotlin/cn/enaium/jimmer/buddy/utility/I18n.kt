@@ -22,7 +22,7 @@ import com.intellij.DynamicBundle
  * @author Enaium
  */
 object I18n : DynamicBundle("messages.BuddyBundles") {
-    fun message(key: String, vararg params: String?): String {
+    fun message(key: String, vararg params: Any?): String {
         return getMessage(key, *params)
     }
 }

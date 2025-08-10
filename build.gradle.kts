@@ -8,8 +8,5 @@ subprojects {
         exclude(module = "icu4j")
         exclude(module = "spring-core")
         exclude(module = "commons-lang3")
-        exclude(module = "jackson-core")
-        exclude(module = "jackson-databind")
-        exclude(module = "jackson-datatype-jsr310")
     }
 }

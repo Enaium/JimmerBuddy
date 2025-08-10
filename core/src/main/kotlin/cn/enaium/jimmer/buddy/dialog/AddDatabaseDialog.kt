@@ -16,12 +16,13 @@
 
 package cn.enaium.jimmer.buddy.dialog
 
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
+import cn.enaium.jimmer.buddy.storage.DatabaseCache
+import cn.enaium.jimmer.buddy.storage.DatabaseCache.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.fileChooserField
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.dsl.builder.Align
@@ -32,7 +33,7 @@ import javax.swing.JComponent
 /**
  * @author Enaium
  */
-class AddDatabaseDialog(val select: DatabaseItem? = null) : DialogWrapper(false) {
+class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) : DialogWrapper(false) {
     private val databaseModel = DatabaseModel()
 
     init {
@@ -77,7 +78,8 @@ class AddDatabaseDialog(val select: DatabaseItem? = null) : DialogWrapper(false)
             return
         }
 
-        JimmerBuddySetting.INSTANCE.state.databases = JimmerBuddySetting.INSTANCE.state.databases + DatabaseItem(
+        val databaseCache = DatabaseCache.getInstance(project)
+        databaseCache.databases += DatabaseItem(
             databaseModel.uri,
             databaseModel.username,
             databaseModel.password,
