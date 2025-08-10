@@ -54,7 +54,7 @@ export default defineAdditionalConfig({
               { text: "项目向导", link: "project-wizard" },
               { text: "导航", link: "navigate" },
               { text: "SQL 到剪贴板", link: "sql-to-clipboard" },
-              { text: "内联提示", link: "inlay-hit" },
+              { text: "嵌入提示", link: "inlay-hints" },
               { text: "后缀模板", link: "postfix-template" },
             ],
           },

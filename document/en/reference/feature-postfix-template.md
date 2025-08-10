@@ -79,7 +79,7 @@ ImmutableObjects.set(draft, )
 ## Query: Create a Query (Kotlin)
 
 ```kotlin
-Author.query
+Author.cq
 ```
 
 Expands to:
@@ -93,7 +93,7 @@ sql.createQuery(Author::class) {
 ## Update: Create an Update (Kotlin)
 
 ```kotlin
-Author.update
+Author.cu
 ```
 
 Expands to:
@@ -107,7 +107,7 @@ sql.createUpdate(Author::class) {
 ## Delete: Create a Delete (Kotlin)
 
 ```kotlin
-Author.delete
+Author.cd
 ```
 
 Expands to:

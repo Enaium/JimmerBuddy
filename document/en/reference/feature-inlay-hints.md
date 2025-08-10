@@ -1,4 +1,4 @@
-# Inlay Hit
+# Inlay Hints
 
 ## DTO Types
 
@@ -15,3 +15,9 @@ Show the `@MappedSuperclass` have inheritors.
 ![20250524215019](https://s2.loli.net/2025/05/24/ixyDUvYCQb6mJMa.png)
 
 And you can click the type to jump to the inheritors.
+
+## Select
+
+Show the real name of multi-column selects.
+
+![20250810174911](https://s2.loli.net/2025/08/10/SDrWXaNQFHwEURJ.png)
