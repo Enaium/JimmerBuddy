@@ -225,25 +225,25 @@
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleNameInlayHintsProvider"
                 bundle="messages.BuddyBundles"
-                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.tuple.name"
+                group="OTHER_GROUP" isEnabledByDefault="true" nameKey="inlay.tuple.name"
                 providerId="JimmerBuddy.inlay.tuple"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.SelectSerialInlayHintsProvider"
                 bundle="messages.BuddyBundles"
-                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.select.serial"
+                group="OTHER_GROUP" isEnabledByDefault="true" nameKey="inlay.select.serial"
                 providerId="JimmerBuddy.inlay.select"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.BaseTableNameInlayHintsProvider"
                 bundle="messages.BuddyBundles"
-                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.baseTable.name"
+                group="OTHER_GROUP" isEnabledByDefault="true" nameKey="inlay.baseTable.name"
                 providerId="JimmerBuddy.inlay.baseTable"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.SelectionSerialInlayHintsProvider"
                 bundle="messages.BuddyBundles"
-                group="Jimmer" isEnabledByDefault="true" nameKey="inlay.selection.serial"
+                group="OTHER_GROUP" isEnabledByDefault="true" nameKey="inlay.selection.serial"
                 providerId="JimmerBuddy.inlay.selection"/>
         <completion.contributor language="UAST"
                                 implementationClass="cn.enaium.jimmer.buddy.extensions.completion.BuddyCompletionContributor"/>

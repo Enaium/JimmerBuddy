@@ -46,7 +46,7 @@ class EntityDatabaseInspection : AbstractLocalInspectionTool() {
             val table = uClass.getTableName()
             if (tables.find { it.name == table } == null) {
                 element.nameIdentifier?.also {
-                    holder.registerProblem(it, "The table '${table}' does not exist in the database")
+                    holder.registerProblem(it, I18n.message("inspection.entityDatabase.tableDoesNotExist", table))
                 }
             }
         }
@@ -82,7 +82,7 @@ class EntityDatabaseInspection : AbstractLocalInspectionTool() {
                 element.nameIdentifier?.also {
                     holder.registerProblem(
                         it,
-                        "The column '${column}' of the table '${table}' does not exist in the database"
+                        I18n.message("inspection.entityDatabase.columnDoesNotExist", column, table)
                     )
                 }
             }
