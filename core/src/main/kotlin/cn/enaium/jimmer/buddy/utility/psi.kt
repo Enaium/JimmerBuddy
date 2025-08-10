@@ -43,6 +43,15 @@ import org.jetbrains.uast.*
 /**
  * @author Enaium
  */
+fun UClass.hasEntityAnnotation(): Boolean {
+    return this.uAnnotations.any { annotation ->
+        annotation.qualifiedName == Entity::class.qualifiedName!!
+    }
+}
+
+fun UClass.isEntity(): Boolean {
+    return hasEntityAnnotation() && isInterface
+}
 
 fun KtClass.annotations(): List<PsiService.Annotation> {
     return JimmerBuddy.Services.PSI.annotations(this)
@@ -471,7 +480,6 @@ fun PsiMethodCallExpression.findExecuteMethod(): PsiMethodCallExpression? {
     }
 }
 
-
 fun KtQualifiedExpression.findExecuteFun(): KtQualifiedExpression? {
     val callExpression = lastChild as? KtCallExpression
     return (if (callExpression != null && listOf(
@@ -495,4 +503,10 @@ fun KtQualifiedExpression.findExecuteFun(): KtQualifiedExpression? {
     } else {
         null
     })
+}
+
+fun UClass.getTableName(): String? {
+    return uAnnotations.find { it.qualifiedName.equals(Table::class.qualifiedName, ignoreCase = true) }
+        ?.findAttributeValue("name")
+        ?.string() ?: qualifiedName?.substringAfterLast(".")?.camelToSnakeCase()
 }

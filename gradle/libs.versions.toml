@@ -11,6 +11,7 @@ antlr = "4.13.2"
 changelog = "2.2.1"
 h2 = "2.3.232"
 gradleToolingExtension = "231.9423.9"
+jackson = "2.19.2"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
@@ -26,6 +27,7 @@ antlr4-intellij-adaptor = { module = "org.antlr:antlr4-intellij-adaptor", versio
 antlr = { module = "org.antlr:antlr4", version.ref = "antlr" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 gradle-tooling-extension = { module = "com.jetbrains.intellij.gradle:gradle-tooling-extension", version.ref = "gradleToolingExtension" }
+jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

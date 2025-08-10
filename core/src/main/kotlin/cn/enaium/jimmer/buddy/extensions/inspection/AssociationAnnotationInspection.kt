@@ -17,10 +17,8 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.*
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiSubstitutor
 import com.intellij.psi.util.PsiUtil
@@ -29,65 +27,64 @@ import org.jetbrains.kotlin.psi.KtProperty
 /**
  * @author Enaium
  */
-class AssociationAnnotationInspection : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
+class AssociationAnnotationInspection : AbstractLocalInspectionTool() {
+    override fun visit(
+        element: PsiElement,
+        holder: ProblemsHolder,
+        isOnTheFly: Boolean
+    ) {
+        if (!element.inImmutable()) {
+            return
+        }
 
-                if (!element.inImmutable()) {
-                    return
+        val toManyProblem = I18n.message("inspection.annotation.association.collectionToOne")
+        val noToOneProblem = I18n.message("inspection.annotation.association.withoutToOne")
+        val toOneProblem = I18n.message("inspection.annotation.association.nonCollectionToMany")
+        val noToManyProblem = I18n.message("inspection.annotation.association.withoutToMany")
+
+        if (element is PsiMethod) {
+            val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
+            if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY && listOf(
+                    List::class.java.name,
+                    Set::class.java.name,
+                    Collection::class.java.name
+                ).any { it == returnPsiClass?.element?.qualifiedName }
+            ) {
+                if (element.hasToOneAnnotation()) {
+                    holder.registerProblem(element, toManyProblem)
+                } else if (returnPsiClass?.element?.typeParameters?.firstOrNull()
+                        ?.let { returnPsiClass.substitutor.substitute(it) }
+                        ?.let { PsiUtil.resolveGenericsClassInType(it) }
+                        ?.element?.isEntity() == true && !element.hasToManyAnnotation()
+                    && !element.isComputed() && !element.hasManyToManyViewAnnotation()
+                ) {
+                    holder.registerProblem(element, noToManyProblem)
                 }
-
-                val toManyProblem = I18n.message("inspection.annotation.association.collectionToOne")
-                val noToOneProblem = I18n.message("inspection.annotation.association.withoutToOne")
-                val toOneProblem = I18n.message("inspection.annotation.association.nonCollectionToMany")
-                val noToManyProblem = I18n.message("inspection.annotation.association.withoutToMany")
-
-                if (element is PsiMethod) {
-                    val returnPsiClass = element.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
-                    if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY && listOf(
-                            List::class.java.name,
-                            Set::class.java.name,
-                            Collection::class.java.name
-                        ).any { it == returnPsiClass?.element?.qualifiedName }
-                    ) {
-                        if (element.hasToOneAnnotation()) {
-                            holder.registerProblem(element, toManyProblem)
-                        } else if (returnPsiClass?.element?.typeParameters?.firstOrNull()
-                                ?.let { returnPsiClass.substitutor.substitute(it) }
-                                ?.let { PsiUtil.resolveGenericsClassInType(it) }
-                                ?.element?.isEntity() == true && !element.hasToManyAnnotation()
-                            && !element.isComputed() && !element.hasManyToManyViewAnnotation()
-                        ) {
-                            holder.registerProblem(element, noToManyProblem)
-                        }
-                    } else {
-                        if (element.hasToManyAnnotation()) {
-                            holder.registerProblem(element, toOneProblem)
-                        } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
-                            holder.registerProblem(element, noToOneProblem)
-                        }
-                    }
-                } else if (element is KtProperty) {
-                    val typeReference = element.typeReference?.type()
-                    if (typeReference?.arguments?.isNotEmpty() == true && listOf(
-                            List::class.qualifiedName,
-                            Set::class.qualifiedName,
-                            Collection::class.qualifiedName
-                        ).any { it == typeReference.ktClass?.fqName?.asString() }
-                    ) {
-                        if (element.hasToOneAnnotation()) {
-                            holder.registerProblem(element, toManyProblem)
-                        } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.isComputed() && !element.hasManyToManyViewAnnotation()) {
-                            holder.registerProblem(element, noToManyProblem)
-                        }
-                    } else {
-                        if (element.hasToManyAnnotation()) {
-                            holder.registerProblem(element, toOneProblem)
-                        } else if (typeReference?.ktClass?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
-                            holder.registerProblem(element, noToOneProblem)
-                        }
-                    }
+            } else {
+                if (element.hasToManyAnnotation()) {
+                    holder.registerProblem(element, toOneProblem)
+                } else if (returnPsiClass?.element?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
+                    holder.registerProblem(element, noToOneProblem)
+                }
+            }
+        } else if (element is KtProperty) {
+            val typeReference = element.typeReference?.type()
+            if (typeReference?.arguments?.isNotEmpty() == true && listOf(
+                    List::class.qualifiedName,
+                    Set::class.qualifiedName,
+                    Collection::class.qualifiedName
+                ).any { it == typeReference.ktClass?.fqName?.asString() }
+            ) {
+                if (element.hasToOneAnnotation()) {
+                    holder.registerProblem(element, toManyProblem)
+                } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.isComputed() && !element.hasManyToManyViewAnnotation()) {
+                    holder.registerProblem(element, noToManyProblem)
+                }
+            } else {
+                if (element.hasToManyAnnotation()) {
+                    holder.registerProblem(element, toOneProblem)
+                } else if (typeReference?.ktClass?.isEntity() == true && !element.hasToOneAnnotation() && !element.isComputed()) {
+                    holder.registerProblem(element, noToOneProblem)
                 }
             }
         }

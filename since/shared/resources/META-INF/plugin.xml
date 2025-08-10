@@ -126,6 +126,16 @@
                 hasStaticDescription="true"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.UnloadInspection"
         />
+        <localInspection
+                displayName="EntityDatabase"
+                shortName="EntityDatabase"
+                groupName="Jimmer"
+                language="UAST"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.inspection.EntityDatabaseInspection"
+        />
         <intentionAction>
             <language>UAST</language>
             <className>cn.enaium.jimmer.buddy.extensions.intention.DraftSetIntentionAction</className>
@@ -235,6 +245,8 @@
                 bundle="messages.BuddyBundles"
                 group="Jimmer" isEnabledByDefault="true" nameKey="inlay.selection.serial"
                 providerId="JimmerBuddy.inlay.selection"/>
+        <completion.contributor language="UAST"
+                                implementationClass="cn.enaium.jimmer.buddy.extensions.completion.BuddyCompletionContributor"/>
     </extensions>
     <extensions defaultExtensionNs="org.jetbrains.plugins.gradle">
         <projectResolve implementation="cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspProjectResolverExtension"/>

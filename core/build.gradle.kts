@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.javapoet)
     implementation(libs.antlr4.intellij.adaptor)
     implementation(libs.h2)
+    implementation(libs.jackson)
     implementation(project(":common"))
     implementation(project(":gradle-tooling-extension"))
 }

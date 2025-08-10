@@ -20,9 +20,10 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.AddDatabaseDialog
 import cn.enaium.jimmer.buddy.dialog.GenerateEntityDialog
 import cn.enaium.jimmer.buddy.dialog.TypeMappingDialog
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting.DatabaseItem
+import cn.enaium.jimmer.buddy.storage.DatabaseCache
+import cn.enaium.jimmer.buddy.storage.DatabaseCache.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.getTables
 import cn.enaium.jimmer.buddy.utility.invokeLater
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -30,6 +31,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
+import com.intellij.openapi.ui.Messages
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
@@ -46,9 +49,16 @@ class DatabaseList(val project: Project) : JPanel() {
     init {
         layout = BorderLayout()
         val databaseList = JBList<DatabaseItem>()
+        val caches = JBLabel(
+            I18n.message(
+                "toolWindow.buddy.label.tables",
+                DatabaseCache.getInstance(project).tables.size
+            )
+        )
+        val databaseCache = DatabaseCache.getInstance(project)
         fun refresh() {
             invokeLater {
-                databaseList.setListData(JimmerBuddySetting.INSTANCE.state.databases.toTypedArray())
+                databaseList.setListData(databaseCache.databases.toTypedArray())
             }
         }
         refresh()
@@ -65,19 +75,36 @@ class DatabaseList(val project: Project) : JPanel() {
                                     GenerateEntityDialog(project, select).show()
                                 }
                             })
+                            add(JMenuItem(I18n.message("toolwindow.buddy.menu.cache")).apply {
+                                addActionListener {
+                                    DatabaseCache.getInstance(project).tables = try {
+                                        select.getTables(project)
+                                    } catch (e: Throwable) {
+                                        Messages.showErrorDialog(
+                                            I18n.message("dialog.generate.entity.message.connectFail", e.message),
+                                            "Error"
+                                        )
+                                        JimmerBuddy.getWorkspace(project).log.error(e)
+                                        emptySet()
+                                    }.also {
+                                        caches.text = I18n.message(
+                                            "toolWindow.buddy.label.tables",
+                                            it.size
+                                        )
+                                    }
+                                }
+                            })
                             add(JMenuItem(I18n.message("toolwindow.buddy.menu.edit")).apply {
                                 addActionListener {
-                                    if (AddDatabaseDialog(select).showAndGet()) {
-                                        JimmerBuddySetting.INSTANCE.state.databases =
-                                            JimmerBuddySetting.INSTANCE.state.databases - select
+                                    if (AddDatabaseDialog(project, select).showAndGet()) {
+                                        databaseCache.databases -= select
                                     }
                                     refresh()
                                 }
                             })
                             add(JMenuItem(I18n.message("toolwindow.buddy.menu.remove")).apply {
                                 addActionListener {
-                                    JimmerBuddySetting.INSTANCE.state.databases =
-                                        JimmerBuddySetting.INSTANCE.state.databases - select
+                                    databaseCache.databases -= select
                                     refresh()
                                 }
                             })
@@ -89,6 +116,18 @@ class DatabaseList(val project: Project) : JPanel() {
         add(
             JPanel(BorderLayout()).apply {
                 add(JPanel().apply {
+                    add(caches)
+                    add(ActionButton(object : AnAction(AllIcons.General.Remove) {
+                        override fun actionPerformed(e: AnActionEvent) {
+                            DatabaseCache.getInstance(project).tables = emptySet()
+                            caches.text = I18n.message(
+                                "toolWindow.buddy.label.tables",
+                                0
+                            )
+                        }
+                    }, null, "Clear", Dimension(24, 24)))
+                }, BorderLayout.WEST)
+                add(JPanel().apply {
                     add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
                         override fun actionPerformed(e: AnActionEvent) {
                             refresh()
@@ -96,7 +135,7 @@ class DatabaseList(val project: Project) : JPanel() {
                     }, null, "Refresh", Dimension(24, 24)))
                     add(ActionButton(object : AnAction(AllIcons.General.Add) {
                         override fun actionPerformed(e: AnActionEvent) {
-                            if (AddDatabaseDialog().showAndGet()) {
+                            if (AddDatabaseDialog(project).showAndGet()) {
                                 refresh()
                             }
                         }
@@ -109,7 +148,7 @@ class DatabaseList(val project: Project) : JPanel() {
                 }, BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
-        add(JBScrollPane(databaseList))
+        add(JBScrollPane(databaseList), BorderLayout.CENTER)
     }
 
     private class DatabaseCell : ListCellRenderer<DatabaseItem> {
