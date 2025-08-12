@@ -2,6 +2,11 @@
 
 A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jimmer](https://github.com/babyfish-ct/jimmer), enhancing Java and Kotlin development with advanced code generation, navigation, and productivity features.
 
+![JetBrains Plugin Downloads](https://img.shields.io/jetbrains/plugin/d/26622?style=flat-square&logo=jetbrains)
+![JetBrains Plugin Rating](https://img.shields.io/jetbrains/plugin/r/stars/26622?style=flat-square&logo=jetbrains)
+![GitHub License](https://img.shields.io/github/license/Enaium/JimmerBuddy?style=flat-square&logo=apache)
+![GitHub top language](https://img.shields.io/github/languages/top/Enaium/JimmerBuddy?style=flat-square&logo=kotlin)
+
 ---
 
 ## Features

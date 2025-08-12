@@ -199,6 +199,12 @@ fun PsiMethod.isComputed(): Boolean {
     return hasTransientAnnotation() || hasFormulaAnnotation()
 }
 
+fun PsiMethod.hasSerializedAnnotation(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.hasQualifiedName(Serialized::class.qualifiedName!!)
+    }
+}
+
 fun PsiMethod.hasFormulaAnnotation(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.hasQualifiedName(Formula::class.qualifiedName!!)
@@ -242,6 +248,13 @@ fun KtProperty.hasTransientAnnotation(): Boolean {
 
 fun KtProperty.isComputed(): Boolean {
     return hasTransientAnnotation() || hasFormulaAnnotation()
+}
+
+fun KtProperty.hasSerializedAnnotation(): Boolean {
+    return this.annotations().any { annotation ->
+        val fqName = annotation.fqName
+        fqName == Serialized::class.qualifiedName!!
+    }
 }
 
 fun KtProperty.hasFormulaAnnotation(): Boolean {

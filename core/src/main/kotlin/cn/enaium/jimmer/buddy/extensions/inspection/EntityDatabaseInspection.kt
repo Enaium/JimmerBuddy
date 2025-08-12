@@ -60,14 +60,14 @@ class EntityDatabaseInspection : AbstractLocalInspectionTool() {
 
             val column = when (element) {
                 is PsiMethod -> {
-                    (element.hasToOneAnnotation() || element.hasToManyAnnotation() || element.isComputed()) && return
+                    (element.hasToOneAnnotation() || element.hasToManyAnnotation() || element.isComputed() || element.hasSerializedAnnotation()) && return
 
                     element.annotations.find { annotation -> annotation.hasQualifiedName(Column::class.qualifiedName!!) }
                         ?.findAttributeValue("name")?.toAny(String::class.java)?.toString()
                 }
 
                 is KtProperty -> {
-                    (element.hasToOneAnnotation() || element.hasToManyAnnotation() || element.isComputed()) && return
+                    (element.hasToOneAnnotation() || element.hasToManyAnnotation() || element.isComputed() || element.hasSerializedAnnotation()) && return
 
                     element.annotations().find { annotation -> annotation.fqName == Column::class.qualifiedName }
                         ?.findArgument("name")?.value?.toString()
