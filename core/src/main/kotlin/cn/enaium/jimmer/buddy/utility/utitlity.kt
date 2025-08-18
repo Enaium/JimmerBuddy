@@ -22,6 +22,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
@@ -45,7 +46,6 @@ import java.nio.file.Path
 import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 
 
@@ -93,24 +93,8 @@ fun isGeneratedFile(path: Path): Boolean {
     return false
 }
 
-fun findProjects(rootProject: Path): Set<Path> {
-    val results = mutableSetOf<Path>()
-    findProjects(rootProject, results)
-    return results
-}
-
-private fun findProjects(rootProject: Path, results: MutableSet<Path>, level: Int = 0) {
-    if (isProject(rootProject)) {
-        results.add(rootProject)
-    }
-    rootProject.toFile().listFiles()?.forEach {
-        val file = it.toPath()
-        if (file.isDirectory() && isProject(file)) {
-            results.add(file)
-            if (level < 4)
-                findProjects(file, results, level + 1)
-        }
-    }
+fun Project.findProjects(): Set<Path> {
+    return modules.mapNotNull { it.guessModuleDir() }.mapNotNull { findProjectDir(it.toNioPath()) }.toSet()
 }
 
 fun <T> copyOnWriteSetOf(vararg elements: T): CopyOnWriteArraySet<T> {

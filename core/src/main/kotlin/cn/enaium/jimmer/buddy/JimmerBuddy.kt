@@ -207,7 +207,7 @@ object JimmerBuddy {
             if (init) return
             init = true
             project.runWhenSmart {
-                val projects = findProjects(project.guessProjectDir()?.toNioPath()!!)
+                val projects = project.findProjects()
                 CoroutineScope(Dispatchers.IO).launch {
                     log.info("Project ${project.name} is initializing")
                     if (project.isJavaProject()) {

@@ -26,7 +26,6 @@ import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import kotlinx.coroutines.CoroutineScope
@@ -66,7 +65,7 @@ class DTOList(project: Project) : JPanel() {
             CoroutineScope(Dispatchers.IO).launch {
                 val names = mutableListOf<DtoItem>()
                 GenerateProject.generate(
-                    findProjects(project.guessProjectDir()!!.toNioPath()),
+                    project.findProjects(),
                     setOf("main", "test"),
                     GenerateProject.SourceRootType.DTO
                 ).forEach { (projectDir, sourceFiles, src) ->
