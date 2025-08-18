@@ -27,7 +27,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
@@ -142,7 +141,7 @@ class ImmutableTree(val project: Project) : JPanel() {
         project.runWhenSmart {
             CoroutineScope(Dispatchers.IO).launch {
                 root.removeAllChildren()
-                val projects = findProjects(project.guessProjectDir()!!.toNioPath())
+                val projects = project.findProjects()
 
                 GenerateProject.generate(
                     projects,

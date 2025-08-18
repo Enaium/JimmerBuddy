@@ -109,7 +109,7 @@ class ErrorFamilyList(val project: Project) : JPanel() {
         project.runWhenSmart {
             CoroutineScope(Dispatchers.IO).launch {
                 root.removeAllChildren()
-                val projects = findProjects(project.guessProjectDir()!!.toNioPath())
+                val projects = project.findProjects()
 
                 GenerateProject.generate(
                     projects,
