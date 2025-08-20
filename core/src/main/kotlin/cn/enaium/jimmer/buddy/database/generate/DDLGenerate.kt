@@ -39,17 +39,17 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
     fun tables(commonImmutableType: CommonImmutableType): Set<Table> {
         val tables = mutableSetOf<Table>()
 
-        val tableName = commonImmutableType.tableName()
+        val (schema, table) = commonImmutableType.tableName()
 
         tables.add(
             Table(
                 "",
-                "",
-                tableName,
+                schema,
+                table,
                 commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
                     if (!prop.isList() && !prop.isEmbedded() && !prop.isFormula() && !prop.isTransient()) {
-                        prop.toColumn(tableName)
+                        prop.toColumn(table)
                     } else {
                         null
                     }
@@ -95,7 +95,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                                     map.clear()
                                 }
                             } else if (prop.declaringType().isEmbedded()) {
-                                columns.add(prop.toColumn(tableName).let { column ->
+                                columns.add(prop.toColumn(table).let { column ->
                                     map[prop.name()]?.let {
                                         column.copy(it)
                                     } ?: column
@@ -109,13 +109,13 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                     columns
                 },
                 commonImmutableType.props().mapNotNull { prop ->
-                    prop.toPrimaryKey(tableName)
+                    prop.toPrimaryKey(table)
                 }.toSet(),
                 commonImmutableType.props().mapNotNull { prop ->
-                    prop.toForeignKey(tableName)
+                    prop.toForeignKey(table)
                 }.toMutableSet(),
                 commonImmutableType.props().mapNotNull { prop ->
-                    prop.toUniqueKey(tableName)
+                    prop.toUniqueKey(table)
                 }.groupBy { it.name to it.tableName }
                     .map { (k, v) -> UniqueKey(k.first, k.second, v.map { it.columns }.flatten().toSet()) }
                     .toSet()
@@ -124,8 +124,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
         commonImmutableType.props().filter { it.isList() && it.isManyToMany() }.forEach { prop ->
             val psi = prop.psi(project)
-            val selfName = commonImmutableType.tableName()
-            val inverseName = prop.targetType()?.tableName() ?: return@forEach
+            val (_, selfName) = commonImmutableType.tableName()
+            val (_, inverseName) = prop.targetType()?.tableName() ?: return@forEach
 
             var joinName: String? = null
             var joinColumnName: String? = null
@@ -246,7 +246,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
     }
 
     fun CommonImmutableType.CommonImmutableProp.toForeignKey(tableName: String): ForeignKey? {
-        return if (isAssociation(true) && !isList()) {
+        return if (isAssociation(true) && !isList() && !isFormula() && !isTransient()) {
             ForeignKey(
                 "fk_${tableName}_${name().camelToSnakeCase()}",
                 tableName,
@@ -328,7 +328,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             if (generateDDLModel.existsStyle == ExistsStyle.CREATE) {
                 render += " if not exists"
             }
-            render += " ${table.name}\n"
+            render += " ${table.schema.takeIf { it.isNotBlank() }?.let { "$it." } ?: ""}${table.name}\n"
             render += "(\n"
             render += table.columns.joinToString(",\n") { column ->
                 "    ${column.render()}"
@@ -460,24 +460,34 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         DROP(I18n.message("dialog.generate.ddl.existsStyle.drop")),
     }
 
-    private fun CommonImmutableType.tableName(): String {
+    private fun CommonImmutableType.tableName(): Pair<String, String> {
         val psi = psi(project)
         return when (psi) {
             is PsiClass -> {
-                psi.modifierList?.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                val findAnnotation =
+                    psi.modifierList?.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                val name = findAnnotation
                     ?.findAttributeValue("name")
                     ?.toAny(String::class.java)?.toString()
+                val schema = findAnnotation
+                    ?.findAttributeValue("schema")
+                    ?.toAny(String::class.java)?.toString()
+                schema to name
             }
 
             is KtClass -> {
-                psi.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
-                    ?.findArgument("name")?.value?.toString()
+                val findAnnotation = psi.findAnnotation(org.babyfish.jimmer.sql.Table::class.qualifiedName!!)
+                val name = findAnnotation?.findArgument("name")?.value?.toString()
+                val schema = findAnnotation?.findArgument("schema")?.value?.toString()
+                schema to name
             }
 
             else -> {
-                null
+                null to null
             }
-        } ?: name().camelToSnakeCase()
+        }.let { (schema, table) ->
+            (schema ?: "") to (table ?: name().camelToSnakeCase())
+        }
     }
 
     private fun CommonImmutableType.CommonImmutableProp.columnName(): String {
