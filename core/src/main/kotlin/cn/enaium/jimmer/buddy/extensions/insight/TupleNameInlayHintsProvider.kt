@@ -83,7 +83,7 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
                             sink.addPresentation(position, hasBackground = true) {
                                 val expression = map[selectorExpression.text] ?: return@addPresentation
                                 text(
-                                    "${expression.selectorExpression?.text}", InlayActionData(
+                                    "${expression.tupleName()}", InlayActionData(
                                         PsiPointerInlayActionPayload(expression.createSmartPointer()),
                                         PsiPointerInlayActionNavigationHandler.HANDLER_ID
                                     )
@@ -93,6 +93,27 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
                     }
                 }
             }
+        }
+    }
+
+    private fun KtQualifiedExpression.tupleName(): String? {
+        return if (selectorExpression is KtCallExpression) {
+            when (receiverExpression) {
+                is KtQualifiedExpression -> {
+                    (receiverExpression as? KtQualifiedExpression)?.selectorExpression?.text
+                }
+
+                is KtCallExpression -> {
+                    (receiverExpression as? KtCallExpression)?.valueArguments?.firstOrNull()
+                        ?.getChildOfType<KtQualifiedExpression>()?.tupleName()
+                }
+
+                else -> {
+                    selectorExpression?.text
+                }
+            }
+        } else {
+            selectorExpression?.text
         }
     }
 
@@ -112,6 +133,14 @@ class TupleNameInlayHintsProvider : InlayHintsProvider {
         firstChild?.lastChild?.also {
             if (it is KtCallExpression) {
                 query = it
+            }
+        }
+
+        if (query == null) {
+            firstChild?.also {
+                if (it is KtCallExpression) {
+                    query = it
+                }
             }
         }
 

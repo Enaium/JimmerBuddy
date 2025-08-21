@@ -28,6 +28,9 @@ dependencies {
     implementation(libs.jimmer.ksp)
     implementation(libs.jimmer.sql)
     implementation(libs.jimmer.dto.compiler)
+    implementation(libs.jimmer.spring.boot.starter) {
+        exclude(module = "*")
+    }
     api(libs.symbol.processing.api)
     implementation(libs.byte.buddy)
     implementation(libs.kotlinpoet)

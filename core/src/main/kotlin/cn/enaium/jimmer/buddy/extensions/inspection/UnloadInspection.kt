@@ -203,6 +203,14 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
 
         if (query == null) {
+            firstChild?.also {
+                if (it is KtCallExpression) {
+                    query = it
+                }
+            }
+        }
+
+        if (query == null) {
             lastChild?.also {
                 if (it is KtCallExpression) {
                     query = it
@@ -213,19 +221,24 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         if (query is KtCallExpression) {
             query.lambdaArguments.lastOrNull()?.getLambdaExpression()?.bodyExpression
                 ?.getChildrenOfType<KtCallExpression>()?.lastOrNull()?.also { select ->
-                    select.valueArguments.firstOrNull()?.also { fetch ->
-                        val fetchArg = fetch.getChildOfType<KtQualifiedExpression>()
-                            ?.getChildOfType<KtCallExpression>()
-                            ?.takeIf { it.firstChild.text == "fetch" }?.valueArguments?.firstOrNull()
-
-                        fetchArg?.getChildOfType<KtQualifiedExpression>()
-                            ?.also { fetcherExpression ->
-                                expression = fetcherExpression
+                    select.valueArguments.firstOrNull()?.also { tableArg ->
+                        val tableFetchQE = tableArg.getChildOfType<KtQualifiedExpression>()
+                        tableFetchQE?.getChildOfType<KtCallExpression>()?.also { fetch ->
+                            fetch.takeIf { it.firstChild.text == "fetch" }?.valueArguments?.firstOrNull()
+                                ?.also { fetchArg ->
+                                    fetchArg.getChildOfType<KtQualifiedExpression>()
+                                        ?.also { fetcherExpression ->
+                                            expression = fetcherExpression
+                                        }
+                                    fetchArg.getChildOfType<KtNameReferenceExpression>()
+                                        ?.also { fetcherExpression ->
+                                            expression = fetcherExpression
+                                        }
+                                }
+                            fetch.takeIf { it.firstChild.text == "fetchBy" }?.also { fetchBy ->
+                                expression = tableFetchQE
                             }
-                        fetchArg?.getChildOfType<KtNameReferenceExpression>()
-                            ?.also { fetcherExpression ->
-                                expression = fetcherExpression
-                            }
+                        }
                     }
                 }
 

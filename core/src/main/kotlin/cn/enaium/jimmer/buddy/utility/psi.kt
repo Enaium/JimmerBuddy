@@ -22,10 +22,12 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.javadoc.PsiDocComment
 import com.intellij.psi.util.PsiUtil
+import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.error.ErrorFamily
+import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.*
 import org.babyfish.jimmer.sql.ast.Executable
 import org.babyfish.jimmer.sql.ast.query.TypedRootQuery
@@ -494,28 +496,46 @@ fun PsiMethodCallExpression.findExecuteMethod(): PsiMethodCallExpression? {
 }
 
 fun KtQualifiedExpression.findExecuteFun(): KtQualifiedExpression? {
-    val callExpression = lastChild as? KtCallExpression
-    return (if (callExpression != null && listOf(
+    val selectorExpression = this@findExecuteFun.selectorExpression as? KtCallExpression
+    val receiverExpression = this@findExecuteFun.receiverExpression as? KtCallExpression
+    return (if (selectorExpression != null && listOf(
             KTypedRootQuery::class.qualifiedName,
             KExecutable::class.qualifiedName,
             KSqlClient::class.qualifiedName
-        ).any { it == (callExpression.firstChild?.reference?.resolve() as? KtNamedFunction)?.containingClass()?.fqName?.asString() }
+        ).any { it == (selectorExpression.firstChild?.reference?.resolve() as? KtNamedFunction)?.containingClass()?.fqName?.asString() }
+    ) {
+        this
+    } else if (receiverExpression != null && listOf(
+            AbstractKotlinRepository::class.qualifiedName
+        ).any { it == (receiverExpression.firstChild?.reference?.resolve() as? KtNamedFunction)?.containingClass()?.fqName?.asString() }
     ) {
         this
     } else if (firstChild is KtQualifiedExpression) {
-        (firstChild as KtQualifiedExpression).findExecuteFun()
+        (firstChild as? KtQualifiedExpression)?.findExecuteFun()
     } else if (firstChild is KtArrayAccessExpression) {
-        (firstChild.firstChild as KtQualifiedExpression).findExecuteFun()
+        (firstChild.firstChild as? KtQualifiedExpression)?.findExecuteFun()
+            ?: (firstChild.firstChild as? KtNameReferenceExpression)?.findExecuteFun()
     } else if (firstChild is KtNameReferenceExpression) {
-        val resolve = firstChild.reference?.resolve()
-        if (resolve is KtProperty) {
-            resolve.getChildOfType<KtQualifiedExpression>()?.findExecuteFun()
-        } else {
-            null
-        }
+        (firstChild as? KtNameReferenceExpression)?.findExecuteFun()
     } else {
         null
     })
+}
+
+fun KtNameReferenceExpression.findExecuteFun(): KtQualifiedExpression? {
+    return when (val resolve = (firstChild.reference ?: reference)?.resolve()) {
+        is KtProperty -> {
+            resolve.getChildOfType<KtQualifiedExpression>()?.findExecuteFun()
+        }
+
+        is KtFunction -> {
+            resolve.findParentOfType<KtQualifiedExpression>()?.findExecuteFun()
+        }
+
+        else -> {
+            null
+        }
+    }
 }
 
 fun UClass.getTableName(): String? {
