@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.AppendDtoProp
 import cn.enaium.jimmer.buddy.dialog.AppendDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NeedRefreshNotifier
@@ -23,11 +24,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.utility.I18n
-import cn.enaium.jimmer.buddy.utility.expandAll
-import cn.enaium.jimmer.buddy.utility.runReadActionSmart
-import cn.enaium.jimmer.buddy.utility.runReadOnly
-import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -168,9 +165,9 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
         ): Component {
 
             if (value is DtoTypeNode) {
-                icon = AllIcons.Nodes.Class
+                icon = JimmerBuddy.Icons.Nodes.DTO_TYPE
             } else if (value is DtoPropNode) {
-                icon = AllIcons.Nodes.Property
+                icon = JimmerBuddy.Icons.Nodes.DTO_PROP
             }
 
             return JPanel(BorderLayout()).apply {

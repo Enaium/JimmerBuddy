@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.insight
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.utility.DTO_TYPE
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
@@ -40,14 +41,15 @@ class DtoLineMarkerProvider : RelatedItemLineMarkerProvider() {
             val dtoPsiRoot = element.findParentOfType<DtoPsiRoot>() ?: return
             val exportType = dtoPsiRoot.qualifiedName() ?: return
             val exportPackage =
-                dtoPsiRoot.exportStatement?.packageParts?.qualifiedName() ?: "${exportType.substringBeforeLast(".")}.dto"
+                dtoPsiRoot.exportStatement?.packageParts?.qualifiedName()
+                    ?: "${exportType.substringBeforeLast(".")}.dto"
 
             val target =
                 JavaPsiFacade.getInstance(element.project).findClass("$exportPackage.$name", element.project.allScope())
                     ?: return
 
             result.add(
-                NavigationGutterIconBuilder.create(JimmerBuddy.Icons.LOGO_NORMAL).setTargets(listOf(target))
+                NavigationGutterIconBuilder.create(JimmerBuddy.Icons.Nodes.DTO_TYPE).setTargets(listOf(target))
                     .createLineMarkerInfo(element)
             )
         }

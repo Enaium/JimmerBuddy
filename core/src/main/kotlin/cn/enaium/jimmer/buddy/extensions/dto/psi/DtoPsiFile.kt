@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.DtoFileType
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
+import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.FileViewProvider
@@ -33,7 +34,7 @@ class DtoPsiFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, Dto
         return JimmerBuddy.DTO_NAME
     }
 
-    override fun getIcon(flags: Int): Icon? {
-        return JimmerBuddy.Icons.DTO
+    override fun getIcon(flags: Int): Icon {
+        return JimmerBuddy.Icons.DTO_FILE
     }
 }

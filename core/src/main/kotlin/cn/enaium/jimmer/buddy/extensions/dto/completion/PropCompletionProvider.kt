@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
+import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider

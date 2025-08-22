@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import cn.enaium.jimmer.buddy.utility.findProjects
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -106,7 +107,7 @@ class DTOList(project: Project) : JPanel() {
             isSelected: Boolean,
             cellHasFocus: Boolean
         ): Component {
-            return JLabel(value!!.name, JimmerBuddy.Icons.DTO, SwingConstants.LEFT)
+            return JLabel(value!!.name, JimmerBuddy.Icons.DTO_FILE, SwingConstants.LEFT)
         }
     }
 }

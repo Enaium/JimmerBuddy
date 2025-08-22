@@ -18,6 +18,9 @@ package cn.enaium.jimmer.buddy.dialog.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.database.model.*
+import cn.enaium.jimmer.buddy.utility.COLUMN_BLUE_KEY
+import cn.enaium.jimmer.buddy.utility.COLUMN_GOLD_KEY
+import cn.enaium.jimmer.buddy.utility.INDEX
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.CheckboxTree
@@ -234,16 +237,16 @@ class TableTreeTable(val tables: Set<Table>) : JPanel() {
                 is TableNode -> AllIcons.Nodes.DataTables
                 is FolderNode -> AllIcons.Modules.SourceRoot
                 is ColumnNode -> if (tables.find { it.name == value.column.tableName }?.primaryKeys?.any { primaryKey -> primaryKey.columns.any { it.name == value.column.name } } == true) {
-                    JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
+                    JimmerBuddy.Icons.Databases.COLUMN_GOLD_KEY
                 } else if (tables.find { it.name == value.column.tableName }?.foreignKeys?.any { it.column.name == value.column.name } == true) {
-                    JimmerBuddy.Icons.Database.COLUMN_BLUE_KEY
+                    JimmerBuddy.Icons.Databases.COLUMN_BLUE_KEY
                 } else {
                     AllIcons.Nodes.DataColumn
                 }
 
-                is KeyNode -> JimmerBuddy.Icons.Database.COLUMN_GOLD_KEY
-                is ForeignKeyNode -> JimmerBuddy.Icons.Database.COLUMN_BLUE_KEY
-                is IndexNode -> JimmerBuddy.Icons.Database.INDEX
+                is KeyNode -> JimmerBuddy.Icons.Databases.COLUMN_GOLD_KEY
+                is ForeignKeyNode -> JimmerBuddy.Icons.Databases.COLUMN_BLUE_KEY
+                is IndexNode -> JimmerBuddy.Icons.Databases.INDEX
                 else -> null
             }
             textRenderer.append(value.toString())

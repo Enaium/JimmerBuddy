@@ -19,6 +19,8 @@ package cn.enaium.jimmer.buddy.dialog.panel
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.IMMUTABLE
+import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.isDumb
 import cn.enaium.jimmer.buddy.utility.runReadOnly
 import cn.enaium.jimmer.buddy.utility.thread

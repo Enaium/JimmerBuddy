@@ -28,9 +28,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.project.modules
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
@@ -86,18 +84,8 @@ object JimmerBuddy {
     }
 
     object Icons {
-        val LOGO = IconLoader.getIcon("/icons/logo.svg", JimmerBuddy::class.java)
-        val LOGO_NORMAL = IconLoader.getIcon("/icons/normal.svg", JimmerBuddy::class.java)
-        val IMMUTABLE = IconLoader.getIcon("/icons/immutable.svg", JimmerBuddy::class.java)
-        val PROP = IconLoader.getIcon("/icons/prop.svg", JimmerBuddy::class.java)
-        val DTO = IconLoader.getIcon("/icons/dto.svg", JimmerBuddy::class.java)
-
-        object Database {
-            val DB = IconLoader.getIcon("/icons/database/dbms.svg", JimmerBuddy::class.java)
-            val COLUMN_GOLD_KEY = IconLoader.getIcon("/icons/database/columnGoldKey.svg", JimmerBuddy::class.java)
-            val COLUMN_BLUE_KEY = IconLoader.getIcon("/icons/database/columnBlueKey.svg", JimmerBuddy::class.java)
-            val INDEX = IconLoader.getIcon("/icons/database/index.svg", JimmerBuddy::class.java)
-        }
+        object Nodes
+        object Databases
     }
 
     const val INFO_GROUP_ID = "JimmerBuddy.NotificationGroup"

@@ -16,9 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.utility.createDtoProp
+import cn.enaium.jimmer.buddy.utility.DTO_PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.findPropertyByName
 import com.intellij.lang.ASTNode
@@ -27,12 +28,17 @@ import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
+import javax.swing.Icon
 
 class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
     override val value: String
         get() = node.text
 
     override fun getName(): String = value
+
+    override fun getIcon(flags: Int): Icon {
+        return JimmerBuddy.Icons.Nodes.DTO_PROP
+    }
 
     override fun reference(): PsiElement? {
         val currentImmutable = findCurrentImmutableType(this) ?: return null

@@ -18,6 +18,8 @@ package cn.enaium.jimmer.buddy.extensions.icon
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
+import cn.enaium.jimmer.buddy.utility.DTO_FOLDER
+import cn.enaium.jimmer.buddy.utility.IMMUTABLE
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.ide.IconProvider
 import com.intellij.psi.PsiClass
@@ -40,7 +42,7 @@ class JimmerIconProvider : IconProvider() {
         when (p0) {
             is PsiDirectory -> {
                 if (p0.name == "dto" && (p0.parent?.name == "main" || p0.parent?.name == "test") && p0.parent?.parent?.name == "src") {
-                    return JimmerBuddy.Icons.LOGO_NORMAL
+                    return JimmerBuddy.Icons.Nodes.DTO_FOLDER
                 }
             }
 

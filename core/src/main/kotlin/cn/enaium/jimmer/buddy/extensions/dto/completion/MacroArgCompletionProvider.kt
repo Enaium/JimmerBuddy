@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.IMMUTABLE
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider

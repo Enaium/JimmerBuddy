@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.status
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.LOGO
 import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DataContext

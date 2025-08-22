@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.annotArgName
 import cn.enaium.jimmer.buddy.utility.annotName
 import cn.enaium.jimmer.buddy.utility.getTarget

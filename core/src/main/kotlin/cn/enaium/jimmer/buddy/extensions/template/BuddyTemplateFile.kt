@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.template
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.LOGO_NORMAL
 import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptor
 import com.intellij.ide.fileTemplates.FileTemplateGroupDescriptorFactory
 

@@ -16,6 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
-interface DtoPsiProp : DtoPsiElement {
+import com.intellij.navigation.NavigationItem
+
+interface DtoPsiProp : DtoPsiElement, NavigationItem {
     val value: String
 }

@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.console
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.ExecuteSqlDialog
+import cn.enaium.jimmer.buddy.utility.LOGO_NORMAL
 import cn.enaium.jimmer.buddy.utility.invokeLater
 import com.intellij.codeInsight.hints.presentation.InputHandler
 import com.intellij.execution.filters.ConsoleFilterProvider

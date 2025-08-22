@@ -22,6 +22,7 @@ import cn.enaium.jimmer.buddy.dialog.GenerateEntityDialog
 import cn.enaium.jimmer.buddy.dialog.TypeMappingDialog
 import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import cn.enaium.jimmer.buddy.storage.DatabaseCache.DatabaseItem
+import cn.enaium.jimmer.buddy.utility.DB
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.getTables
 import cn.enaium.jimmer.buddy.utility.invokeLater
@@ -159,7 +160,7 @@ class DatabaseList(val project: Project) : JPanel() {
             isSelected: Boolean,
             cellHasFocus: Boolean
         ): Component {
-            return JLabel(value.uri, JimmerBuddy.Icons.Database.DB, SwingConstants.LEFT)
+            return JLabel(value.uri, JimmerBuddy.Icons.Databases.DB, SwingConstants.LEFT)
         }
     }
 }

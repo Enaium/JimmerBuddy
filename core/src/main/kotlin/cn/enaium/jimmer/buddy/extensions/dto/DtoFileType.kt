@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import com.intellij.openapi.fileTypes.LanguageFileType
 import javax.swing.Icon
 
@@ -27,5 +28,5 @@ object DtoFileType : LanguageFileType(DtoLanguage) {
 
     override fun getDefaultExtension(): String = "dto"
 
-    override fun getIcon(): Icon = JimmerBuddy.Icons.DTO
+    override fun getIcon(): Icon = JimmerBuddy.Icons.DTO_FILE
 }

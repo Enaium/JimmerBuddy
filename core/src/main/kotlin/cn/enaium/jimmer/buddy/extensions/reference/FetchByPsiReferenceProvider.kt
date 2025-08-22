@@ -54,7 +54,7 @@ object FetchByPsiReferenceProvider : PsiReferenceProvider() {
         }
 
         override fun getVariants(): Array<out Any> {
-            return props.keys.map { LookupElementBuilder.create(it).withIcon(JimmerBuddy.Icons.DTO) }.toTypedArray()
+            return props.keys.map { LookupElementBuilder.create(it).withIcon(JimmerBuddy.Icons.DTO_FILE) }.toTypedArray()
         }
 
         private fun getProps(element: PsiElement): Map<String, PsiElement> {

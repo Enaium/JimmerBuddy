@@ -16,10 +16,11 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import cn.enaium.jimmer.buddy.extensions.dto.psi.*
-import com.intellij.icons.AllIcons
+import cn.enaium.jimmer.buddy.utility.DTO_TYPE
 import com.intellij.lang.ASTNode
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
@@ -35,10 +36,10 @@ class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType
     override val body: DtoPsiDtoBody?
         get() = findChild<DtoPsiDtoBody>("/dtoType/dtoBody")
 
-    override fun getName(): String = name?.value ?: "Uknown Name"
+    override fun getName(): String = name?.value ?: "Unknown Name"
 
     override fun getIcon(flags: Int): Icon {
-        return AllIcons.Nodes.Type
+        return JimmerBuddy.Icons.Nodes.DTO_TYPE
     }
 
     override fun reference(): PsiElement? {
