@@ -221,6 +221,8 @@
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
         <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"
                                  implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
+         <gotoSymbolContributor
+                implementation="cn.enaium.jimmer.buddy.extensions.dto.search.DtoChooseByNameContributor"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleNameInlayHintsProvider"
