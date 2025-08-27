@@ -486,6 +486,9 @@ fun PsiMethodCallExpression.findExecuteMethod(): PsiMethodCallExpression? {
             val resolve = child.resolve()
             if (resolve is PsiLocalVariable) {
                 resolve.getChildOfType<PsiMethodCallExpression>()?.findExecuteMethod()
+            } else if (resolve is PsiParameter && resolve.declarationScope is PsiLambdaExpression) {
+                resolve.findParentOfType<PsiLambdaExpression>()?.findParentOfType<PsiMethodCallExpression>()
+                    ?.findExecuteMethod()
             } else {
                 null
             }
@@ -528,7 +531,7 @@ fun KtNameReferenceExpression.findExecuteFun(): KtQualifiedExpression? {
             resolve.getChildOfType<KtQualifiedExpression>()?.findExecuteFun()
         }
 
-        is KtFunction -> {
+        is KtFunctionLiteral -> {
             resolve.findParentOfType<KtQualifiedExpression>()?.findExecuteFun()
         }
 
@@ -542,4 +545,60 @@ fun UClass.getTableName(): String? {
     return uAnnotations.find { it.qualifiedName.equals(Table::class.qualifiedName, ignoreCase = true) }
         ?.findAttributeValue("name")
         ?.string() ?: qualifiedName?.substringAfterLast(".")?.camelToSnakeCase()
+}
+
+
+fun PsiMethodCallExpression.getImmutableTrace(execute: PsiMethodCallExpression? = null): List<String> {
+    val trace = mutableListOf<String>()
+
+    var child: PsiElement? = this
+
+    while (child != null) {
+        if (child is PsiMethodCallExpression) {
+            val resolveMethod = child.resolveMethod()
+            if (resolveMethod?.containingClass?.isImmutable() == true) {
+                trace.add(resolveMethod.name)
+            } else if (child == execute) {
+                return trace.reversed()
+            }
+        }
+        child = if (child is PsiReferenceExpression && child.reference?.resolve()
+                ?.let { it is PsiParameter && it.declarationScope is PsiLambdaExpression } == true
+        ) {
+            child.findParentOfType<PsiLambdaExpression>()?.findParentOfType<PsiMethodCallExpression>()
+        } else {
+            child.firstChild?.firstChild
+        }
+    }
+
+    return trace.reversed()
+}
+
+fun KtQualifiedExpression.getImmutableTrace(execute: KtQualifiedExpression? = null): List<String> {
+    val trace = mutableListOf<String>()
+
+    var child: PsiElement? = this
+
+    while (child != null) {
+        if (child is KtQualifiedExpression) {
+            val property = child.lastChild.reference?.resolve() as? KtProperty
+            if (property?.containingClass()?.isImmutable() == true) {
+                trace.add(property.name ?: continue)
+            } else if (child == execute) {
+                return trace.reversed()
+            }
+        } else if (child is KtNameReferenceExpression) {
+            val property = child.reference?.resolve() as? KtProperty
+            if (property?.containingClass()?.isImmutable() == true) {
+                trace.add(property.name ?: continue)
+            }
+        }
+        child = if (child is KtNameReferenceExpression && child.reference?.resolve() is KtFunctionLiteral) {
+            child.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
+        } else {
+            child.firstChild
+        }
+    }
+
+    return trace.reversed()
 }

@@ -40,7 +40,7 @@ class UnloadInspection : AbstractLocalInspectionTool() {
             element.findExecuteMethod()?.also { execute ->
                 execute.findFetcherExpression()?.also { fetcherExpression ->
                     val fetcher = fetcherExpression.getFetcher()
-                    val trace = element.getTrace(execute)
+                    val trace = element.getImmutableTrace(execute)
                     if (!fetcher.contains(trace.joinToString("."))) {
                         var allScalarFields = false
                         val resolveMethod = element.resolveMethod() ?: return
@@ -76,7 +76,7 @@ class UnloadInspection : AbstractLocalInspectionTool() {
             element.findExecuteFun()?.also { execute ->
                 execute.findFetcherExpression()?.also { fetcherExpression ->
                     val fetcher = fetcherExpression.getFetcher()
-                    val trace = element.getTrace(execute)
+                    val trace = element.getImmutableTrace(execute)
                     if (!fetcher.contains(trace.joinToString("."))) {
                         var allScalarFields = false
                         val property =
@@ -147,26 +147,6 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
 
         return null
-    }
-
-    private fun PsiMethodCallExpression.getTrace(execute: PsiMethodCallExpression): List<String> {
-        val trace = mutableListOf<String>()
-
-        var child: PsiElement? = this
-
-        while (child != null) {
-            if (child is PsiMethodCallExpression) {
-                val resolveMethod = child.resolveMethod()
-                if (resolveMethod?.containingClass?.isEntity() == true) {
-                    trace.add(resolveMethod.name)
-                } else if (child == execute) {
-                    return trace.reversed()
-                }
-            }
-            child = child.firstChild?.firstChild
-        }
-
-        return trace.reversed()
     }
 
     private fun PsiMethodCallExpression.getFetcher(): Set<String> {
@@ -259,29 +239,6 @@ class UnloadInspection : AbstractLocalInspectionTool() {
         }
 
         return null
-    }
-
-    private fun KtQualifiedExpression.getTrace(execute: KtQualifiedExpression): List<String> {
-        val trace = mutableListOf<String>()
-
-        var child: PsiElement? = this
-
-        while (child != null) {
-            if (child is KtQualifiedExpression) {
-                val property = child.lastChild.reference?.resolve() as? KtProperty
-                if (property?.containingClass()?.isEntity() == true) {
-                    trace.add(property.name ?: continue)
-                } else if (child == execute) {
-                    return trace.reversed()
-                }
-            }
-            child = child.firstChild
-            if (child is KtArrayAccessExpression) {
-                child.firstChild
-            }
-        }
-
-        return trace.reversed()
     }
 
     private fun KtQualifiedExpression.getFetcher(): Set<String> {
