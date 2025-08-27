@@ -42,7 +42,7 @@ class DtoFormattingModelBuilder : FormattingModelBuilder {
             .around(RULE[RULE_modifier]).spaces(1)//[ modifier ]
             .around(RULE[RULE_implements]).spaces(1)//[ implements ]
             .around(TOKEN[LEFT_PARENTHESIS]).spaces(0)//[(]
-            .around(TOKEN[RIGHT_PARENTHESIS]).spaces(0)//[)]
+            .before(TOKEN[RIGHT_PARENTHESIS]).spaces(0)//[)]
             .after(TOKEN[AT]).spaces(0)//[@]
             .after(TOKEN[HASH]).spaces(0)//[#]
             .after(RULE[RULE_exportStatement]).emptyLine(1)//[export \n]
@@ -58,6 +58,7 @@ class DtoFormattingModelBuilder : FormattingModelBuilder {
             .before(RULE[RULE_dtoType]).spaceIf(false)//[dtoType]
             .between(RULE[RULE_prop], RULE[RULE_dtoBody]).spaces(1)//[Abc {]
             .between(RULE[RULE_name], RULE[RULE_dtoBody]).spaces(1)//[abc {]
+            .between(TOKEN[RIGHT_PARENTHESIS], RULE[RULE_dtoBody]).spaces(1)//[) {]
             .between(TOKEN[IMPLEMENTS], RULE[RULE_typeRef]).spaces(1)//[implements a.b.c]
         return FormattingModelProvider.createFormattingModelForPsiFile(
             formattingContext.containingFile,
