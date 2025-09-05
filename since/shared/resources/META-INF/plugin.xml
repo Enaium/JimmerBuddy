@@ -192,6 +192,7 @@
                              implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoFoldingBuilder"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex"/>
+        <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.EnumClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.FullClassIndex"/>
         <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoLineMarkerProvider"/>
@@ -209,6 +210,8 @@
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.ImmutableInheritorCodeVisionProvider"/>
+        <vcs.codeVisionLanguageContext language="JimmerBuddy.DTO"
+                                       implementationClass="cn.enaium.jimmer.buddy.extensions.dto.vcs.DtoVcsCodeVisionLanguageContext"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-core" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql-kotlin" kind="kotlin"/>
@@ -221,7 +224,7 @@
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
         <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"
                                  implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
-         <gotoSymbolContributor
+        <gotoSymbolContributor
                 implementation="cn.enaium.jimmer.buddy.extensions.dto.search.DtoChooseByNameContributor"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"

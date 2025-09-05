@@ -29,9 +29,9 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 /**
  * @author Enaium
  */
-class AnnotationClassIndex : ScalarIndexExtension<String>() {
+class EnumClassIndex : ScalarIndexExtension<String>() {
     override fun getName(): ID<String, Void> {
-        return JimmerBuddy.Indexes.ANNOTATION_CLASS
+        return JimmerBuddy.Indexes.ENUM_CLASS
     }
 
     override fun getInputFilter(): FileBasedIndex.InputFilter {
@@ -44,14 +44,22 @@ class AnnotationClassIndex : ScalarIndexExtension<String>() {
 
     override fun getIndexer(): DataIndexer<String, Void, FileContent> {
         return DataIndexer<String, Void, FileContent> { file ->
-            if (file.fileType == JavaFileType.INSTANCE) {
-                file.psiFile.getChildrenOfType<PsiClass>()
-                    .filter { it.isAnnotationType }
-                    .associate { it.qualifiedName to null }
-            } else {
-                file.psiFile.getChildrenOfType<KtClass>()
-                    .filter { it.isAnnotation() }
-                    .associate { it.fqName!!.asString() to null }
+            when (file.fileType) {
+                JavaFileType.INSTANCE -> {
+                    file.psiFile.getChildrenOfType<PsiClass>()
+                        .filter { it.isEnum }
+                        .associate { it.qualifiedName to null }
+                }
+
+                KotlinFileType.INSTANCE -> {
+                    file.psiFile.getChildrenOfType<KtClass>()
+                        .filter { it.isEnum() }
+                        .associate { it.fqName!!.asString() to null }
+                }
+
+                else -> {
+                    emptyMap()
+                }
             }
         }
     }

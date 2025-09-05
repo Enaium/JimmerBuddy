@@ -16,7 +16,6 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.isImmutable
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
@@ -27,8 +26,6 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiPackage
 import com.intellij.util.ProcessingContext
-import com.intellij.util.indexing.FileBasedIndex
-import org.jetbrains.kotlin.idea.base.util.allScope
 
 /**
  * @author Enaium

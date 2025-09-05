@@ -49,6 +49,7 @@ class PsiService242 : PsiService {
             analyze(ktClass) {
                 return ktClass.symbol.annotations.map {
                     PsiService.Annotation(
+                        ktClass.project,
                         it.classId?.asFqNameString()?.replace("/", "."),
                         it.arguments.map { argument ->
                             PsiService.Annotation.Argument(
@@ -62,6 +63,7 @@ class PsiService242 : PsiService {
         } else {
             return ktClass.annotationEntries.map {
                 PsiService.Annotation(
+                    ktClass.project,
                     it.annotation()?.fqName?.asString(),
                     it.annotation()?.allValueArguments?.map { (name, value) ->
                         PsiService.Annotation.Argument(
@@ -78,6 +80,7 @@ class PsiService242 : PsiService {
             analyze(ktProperty) {
                 return ktProperty.symbol.annotations.map {
                     PsiService.Annotation(
+                        ktProperty.project,
                         it.classId?.asFqNameString()?.replace("/", "."),
                         it.arguments.map { argument ->
                             PsiService.Annotation.Argument(
@@ -91,6 +94,7 @@ class PsiService242 : PsiService {
         } else {
             return ktProperty.annotationEntries.map {
                 PsiService.Annotation(
+                    ktProperty.project,
                     it.annotation()?.fqName?.asString(),
                     it.annotation()?.allValueArguments?.map { (name, value) ->
                         PsiService.Annotation.Argument(

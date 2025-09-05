@@ -24,8 +24,8 @@ package cn.enaium.jimmer.buddy.dto;
 dto
     :
     exportStatement?
-    (importStatements += importStatement)*
-    (dtoTypes+=dtoType)*
+    importStatement*
+    dtoType*
     EOF
     ;
 
@@ -53,7 +53,7 @@ importStatement
     :
     IMPORT qualifiedNameParts
     (
-        DOT LEFT_BRACE importedTypes += importedType (COMMA importedTypes += importedType)* RIGHT_BRACE |
+        DOT LEFT_BRACE importedType (COMMA importedType)* RIGHT_BRACE |
         AS alias
     )?
     ;
@@ -69,12 +69,12 @@ alias
 
 dtoType
     :
-    (doc = DocComment)?
-    (annotations += annotation)*
+    DocComment?
+    annotation*
     (modifier)*
     name
     implements?
-    body=dtoBody
+    dtoBody
     ;
 
 implements
@@ -92,8 +92,8 @@ name
 dtoBody
     :
     LEFT_BRACE
-    (macros += macro)*
-    ((explicitProps += explicitProp) (COMMA | SEMICOLON)?)*
+    macro*
+    ((explicitProp) (COMMA | SEMICOLON)?)*
     RIGHT_BRACE
     ;
 
@@ -105,26 +105,26 @@ explicitProp
 macro
     :
     HASH name
-    (LEFT_PARENTHESIS args+=qualifiedName (COMMA args+=qualifiedName)* RIGHT_PARENTHESIS)?
-    (optional = QUESTION_MARK | required = EXCLAMATION_MARK)?
+    (LEFT_PARENTHESIS qualifiedName (COMMA qualifiedName)* RIGHT_PARENTHESIS)?
+    (QUESTION_MARK | EXCLAMATION_MARK)?
     ;
 
 aliasGroup
     :
-    pattern = aliasPattern aliasGroupBody
+    aliasPattern aliasGroupBody
     ;
 
 aliasGroupBody
-    : LEFT_BRACE (macros += macro)* (props += positiveProp)* RIGHT_BRACE
+    : LEFT_BRACE (macro)* (positiveProp)* RIGHT_BRACE
     ;
 
 aliasPattern
     :
     AS LEFT_PARENTHESIS
-    (prefix = POWER)?
+    (POWER)?
     (original)?
-    (suffix = DOLLAR)?
-    (translator = RIGHT_ARROW)
+    (DOLLAR)?
+    (RIGHT_ARROW)
     (replacement)?
     RIGHT_PARENTHESIS
     ;
@@ -139,22 +139,22 @@ replacement
 
 positiveProp
     :
-    (doc = DocComment)?
-    (configurations += configuration | annotations += annotation)*
+    (DocComment)?
+    (configuration | annotation)*
     PLUS?
     (modifier)?
     (
-        (func = Identifier | func = NULL)
-        (flag = DIVIDE (insensitive = Identifier)? (prefix = POWER)? (suffix = DOLLAR)?)?
-        LEFT_PARENTHESIS props += prop (COMMA props += prop)* COMMA? RIGHT_PARENTHESIS
+        (Identifier | NULL)
+        (DIVIDE (Identifier)? (POWER)? (DOLLAR)?)?
+        LEFT_PARENTHESIS prop (COMMA prop)* COMMA? RIGHT_PARENTHESIS
         |
-        props += prop
+        prop
     )
-    (optional = QUESTION_MARK | required = EXCLAMATION_MARK | recursive = MULTIPLY)?
+    (QUESTION_MARK | EXCLAMATION_MARK | MULTIPLY)?
     (AS alias)?
     (
-        (childDoc = DocComment)?
-        (bodyAnnotations += annotation)*
+        (DocComment)?
+        (annotation)*
         implements?
         dtoBody
         |
@@ -169,13 +169,13 @@ negativeProp
 
 userProp
     :
-    (doc = DocComment)?
-    (annotations += annotation)*
+    (DocComment)?
+    (annotation)*
     prop COLON typeRef
     (
         EQUAL
-        (defaultMinus = MINUS)?
-        defaultValue = (BooleanLiteral | IntegerLiteral | StringLiteral | FloatingPointLiteral | NULL)
+        (MINUS)?
+        (BooleanLiteral | IntegerLiteral | StringLiteral | FloatingPointLiteral | NULL)
     )?
     ;
 
@@ -186,13 +186,13 @@ prop
 typeRef
     :
     qualifiedName
-    (LESS_THAN genericArguments += genericArgument (COMMA genericArguments += genericArgument)? GREATER_THAN)?
-    (optional = QUESTION_MARK)?
+    (LESS_THAN genericArgument (COMMA genericArgument)? GREATER_THAN)?
+    (QUESTION_MARK)?
     ;
 
 genericArgument
     :
-    wildcard = MULTIPLY |
+    MULTIPLY |
     (modifier)? typeRef
     ;
 
@@ -232,12 +232,12 @@ where
 
 predicate
     :
-    subPredicates += andPredicate (OR subPredicates += andPredicate)*
+    andPredicate (OR andPredicate)*
     ;
 
 andPredicate
     :
-    subPredicates += atomPredicate (AND subPredicates += atomPredicate)*
+    atomPredicate (AND atomPredicate)*
     ;
 
 atomPredicate
@@ -251,53 +251,53 @@ atomPredicate
 
 cmpPredicate
     :
-    left = propPath
+    propPath
     (
-        op = EQUAL right = propValue
+        EQUAL propValue
         |
-        op = DIAMOND right = propValue
+        DIAMOND propValue
         |
-        op = NOT_EQUAL right = propValue
+        NOT_EQUAL propValue
         |
-        op = LESS_THAN right = propValue
+        LESS_THAN propValue
         |
-        op = LESS_THAN_EQUAL right = propValue
+        LESS_THAN_EQUAL propValue
         |
-        op = GREATER_THAN right = propValue
+        GREATER_THAN propValue
         |
-        op = GREATER_THAN_EQUAL right = propValue
+        GREATER_THAN_EQUAL propValue
         |
-        op = Identifier right = propValue
+        Identifier propValue
     )
     ;
 
 nullityPredicate
     :
-    propPath IS (not = NOT)? NULL
+    propPath IS (NOT)? NULL
     ;
 
 propPath
     :
-    parts += Identifier (DOT parts += Identifier)*
+    Identifier (DOT Identifier)*
     ;
 
 propValue
     :
-    booleanToken = BooleanLiteral |
-    characterToken = CharacterLiteral |
-    stringToken = SqlStringLiteral |
-    (negative = MINUS)?  integerToken = IntegerLiteral |
-    (negative = MINUS)?  floatingPointToken = FloatingPointLiteral |
+    BooleanLiteral |
+    CharacterLiteral |
+    SqlStringLiteral |
+    (MINUS)?  IntegerLiteral |
+    (MINUS)?  FloatingPointLiteral |
     ;
 
 orderBy
     :
-    CONFIG_ORDER_BY LEFT_PARENTHESIS items += orderByItem (COMMA items += orderByItem)* RIGHT_PARENTHESIS
+    CONFIG_ORDER_BY LEFT_PARENTHESIS orderByItem (COMMA orderByItem)* RIGHT_PARENTHESIS
     ;
 
 orderByItem
     :
-    propPath (orderMode = Identifier)?
+    propPath (Identifier)?
     ;
 
 filter
@@ -312,12 +312,12 @@ recursion
 
 fetchType
     :
-    CONFIG_FETCH_TYPE LEFT_PARENTHESIS fetchMode = Identifier RIGHT_PARENTHESIS
+    CONFIG_FETCH_TYPE LEFT_PARENTHESIS Identifier RIGHT_PARENTHESIS
     ;
 
 limit
     :
-    CONFIG_LIMIT LEFT_PARENTHESIS limitArg = IntegerLiteral (COMMA offsetArg = IntegerLiteral)? RIGHT_PARENTHESIS
+    CONFIG_LIMIT LEFT_PARENTHESIS IntegerLiteral (COMMA IntegerLiteral)? RIGHT_PARENTHESIS
     ;
 
 batch
@@ -332,19 +332,19 @@ recursionDepth
 
 annotation
     :
-    AT typeName = qualifiedName (LEFT_PARENTHESIS annotationArguments? RIGHT_PARENTHESIS)?
+    AT qualifiedName (LEFT_PARENTHESIS annotationArguments? RIGHT_PARENTHESIS)?
     ;
 
 annotationArguments
     :
-    defaultArgument = annotationValue (COMMA namedArguments += annotationNamedArgument)*
+    annotationValue (COMMA annotationNamedArgument)*
     |
-    namedArguments += annotationNamedArgument (COMMA namedArguments += annotationNamedArgument)*
+    annotationNamedArgument (COMMA annotationNamedArgument)*
     ;
 
 annotationNamedArgument
     :
-    name EQUAL value = annotationValue
+    name EQUAL annotationValue
     ;
 
 annotationValue
@@ -356,38 +356,38 @@ annotationValue
 
 annotationSingleValue
     :
-    booleanToken = BooleanLiteral |
-    characterToken = CharacterLiteral |
-    stringTokens += StringLiteral (PLUS stringTokens += StringLiteral)* |
-    (negative = MINUS)? integerToken = IntegerLiteral |
-    (negative = MINUS)? floatingPointToken = FloatingPointLiteral |
-    qualifiedPart = qualifiedName classSuffix? |
-    annotationPart = annotation |
-    nestedAnnotationPart = nestedAnnotation
+    BooleanLiteral |
+    CharacterLiteral |
+    StringLiteral (PLUS StringLiteral)* |
+    (MINUS)? IntegerLiteral |
+    (MINUS)? FloatingPointLiteral |
+    qualifiedName classSuffix? |
+    annotation |
+    nestedAnnotation
     ;
 
 annotationArrayValue
     :
-    LEFT_BRACE elements += annotationSingleValue (COMMA elements += annotationSingleValue)* RIGHT_BRACE
+    LEFT_BRACE annotationSingleValue (COMMA annotationSingleValue)* RIGHT_BRACE
     |
-    LEFT_BRACKET elements += annotationSingleValue (COMMA elements += annotationSingleValue)* RIGHT_BRACKET
+    LEFT_BRACKET annotationSingleValue (COMMA annotationSingleValue)* RIGHT_BRACKET
     ;
 
 nestedAnnotation
     :
-    typeName = qualifiedName LEFT_PARENTHESIS annotationArguments? RIGHT_PARENTHESIS
+    qualifiedName LEFT_PARENTHESIS annotationArguments? RIGHT_PARENTHESIS
     ;
 
 enumBody
     :
-    LEFT_BRACE (mappings += enumMapping (COMMA|SEMICOLON)?)+ RIGHT_BRACE
+    LEFT_BRACE (enumMapping (COMMA|SEMICOLON)?)+ RIGHT_BRACE
     ;
 
 enumMapping
     :
-    constant = name COLON
+    name COLON
     (
-        value = StringLiteral | (negative = MINUS)? value = IntegerLiteral
+        StringLiteral | (MINUS)? IntegerLiteral
     )
     ;
 
@@ -460,6 +460,8 @@ CONFIG_DEPTH : '!depth';
 CLASS : 'class';
 TRUE : 'true';
 FALSE : 'false';
+SINGLE_QUOTE: '\'';
+DOUBLE_QUOTE: '"';
 
 Identifier
     :
@@ -488,14 +490,14 @@ LineComment
 
 SqlStringLiteral
     :
-    '\'' ( ~'\'' | '\'\'' )* '\''
+    SINGLE_QUOTE ( ~'\'' | '\'\'' )* SINGLE_QUOTE
     ;
 
 CharacterLiteral
     :
-    '\'' SingleCharacter '\''
+    SINGLE_QUOTE SingleCharacter SINGLE_QUOTE
     |
-    '\'' EscapeSequence '\''
+    SINGLE_QUOTE EscapeSequence SINGLE_QUOTE
     ;
 
 fragment
@@ -506,7 +508,7 @@ SingleCharacter
 
 StringLiteral
     :
-    '"' StringCharacters? '"'
+    DOUBLE_QUOTE StringCharacters? DOUBLE_QUOTE
     ;
 
 fragment

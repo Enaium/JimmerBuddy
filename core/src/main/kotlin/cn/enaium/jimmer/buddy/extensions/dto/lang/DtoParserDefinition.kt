@@ -40,11 +40,11 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 class DtoParserDefinition : ParserDefinition {
     override fun createLexer(project: Project?): Lexer {
-        return DtoLexerAdaptor
+        return DtoLexerAdaptor()
     }
 
     override fun createParser(project: Project?): PsiParser {
-        return DtoParserAdaptor
+        return DtoParserAdaptor()
     }
 
     val file = IFileElementType(DtoLanguage)

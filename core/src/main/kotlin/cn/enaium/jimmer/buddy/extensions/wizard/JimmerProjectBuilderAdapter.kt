@@ -45,17 +45,17 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
 
     private val versionJimmer = mapOf(
         "name" to "jimmer",
-        "version" to "0.9.61"
+        "version" to "0.9.106"
     )
 
     private val versionKotlin = mapOf(
         "name" to "kotlin",
-        "version" to "2.1.10"
+        "version" to "2.2.10"
     )
 
     private val versionKsp = mapOf(
         "name" to "ksp",
-        "version" to "2.1.10+"
+        "version" to "2.2.10+"
     )
 
     private val versionSpringDependency = mapOf(
@@ -65,7 +65,7 @@ class JimmerProjectBuilderAdapter(val jimmerWizard: JimmerProjectWizard = Jimmer
 
     private val versionSpringBoot = mapOf(
         "name" to "springboot",
-        "version" to "3.4.3"
+        "version" to "3.5.5"
     )
 
     private val libJimmerApt = mapOf(

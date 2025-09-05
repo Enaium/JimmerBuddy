@@ -28,8 +28,6 @@ import com.intellij.psi.tree.IElementType
 import org.antlr.intellij.adaptor.lexer.TokenIElementType
 
 class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
-
-    val empty = arrayOf<TextAttributesKey>()
     val identifier = createTextAttributesKey(
         "${JimmerBuddy.DTO_LANGUAGE_ID}.IDENTIFIER",
         DefaultLanguageHighlighterColors.IDENTIFIER
@@ -60,11 +58,11 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
     )
 
     override fun getHighlightingLexer(): Lexer {
-        return DtoLexerAdaptor
+        return DtoLexerAdaptor()
     }
 
-    override fun getTokenHighlights(tokenType: IElementType?): Array<out TextAttributesKey?> {
-        if (tokenType !is TokenIElementType) return arrayOf<TextAttributesKey>()
+    override fun getTokenHighlights(tokenType: IElementType?): Array<TextAttributesKey> {
+        if (tokenType !is TokenIElementType) return emptyArray()
         return when (tokenType.antlrTokenType) {
             DtoLexer.Identifier -> identifier
             DtoLexer.EXPORT,
@@ -102,6 +100,6 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
             DtoLexer.LineComment -> lineComment
             DtoLexer.BlockComment, DtoLexer.DocComment -> blockComment
             else -> null
-        }?.let { arrayOf(it) } ?: empty
+        }?.let { arrayOf(it) } ?: emptyArray()
     }
 }

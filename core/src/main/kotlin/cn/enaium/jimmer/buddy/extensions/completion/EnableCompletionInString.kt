@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.completion
 
 import cn.enaium.jimmer.buddy.utility.annotName
-import cn.enaium.jimmer.buddy.utility.jimmerAnnotationPrefixe
+import cn.enaium.jimmer.buddy.utility.jimmerAnnotationPrefix
 import com.intellij.codeInsight.completion.CompletionConfidence
 import com.intellij.codeInsight.completion.SkipAutopopupInStrings
 import com.intellij.psi.PsiElement
@@ -30,7 +30,7 @@ import com.intellij.util.ThreeState
 class EnableCompletionInString : CompletionConfidence() {
     override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState {
         val inString = SkipAutopopupInStrings.isInStringLiteral(contextElement)
-        val inJimmerAnnotation = contextElement.annotName()?.startsWith(jimmerAnnotationPrefixe) == true
+        val inJimmerAnnotation = contextElement.annotName()?.startsWith(jimmerAnnotationPrefix) == true
 
         return if (inString && inJimmerAnnotation) {
             ThreeState.NO

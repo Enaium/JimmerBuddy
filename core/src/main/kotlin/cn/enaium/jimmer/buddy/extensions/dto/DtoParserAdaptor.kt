@@ -25,7 +25,7 @@ import org.antlr.v4.runtime.Parser
 import org.antlr.v4.runtime.misc.IntervalSet
 import org.antlr.v4.runtime.tree.ParseTree
 
-object DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
+class DtoParserAdaptor : ANTLRParserAdaptor(DtoLanguage, DtoParser(null)) {
     override fun parse(
         parser: Parser?,
         root: IElementType?

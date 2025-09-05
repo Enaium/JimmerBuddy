@@ -17,21 +17,24 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import cn.enaium.jimmer.buddy.utility.findProjects
+import cn.enaium.jimmer.buddy.utility.isDumb
+import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.ActionButton
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import java.awt.BorderLayout
 import java.awt.Component
@@ -63,22 +66,23 @@ class DTOList(project: Project) : JPanel() {
         }
 
         fun loadDTOs() {
-            CoroutineScope(Dispatchers.IO).launch {
-                val names = mutableListOf<DtoItem>()
-                GenerateProject.generate(
-                    project.findProjects(),
-                    setOf("main", "test"),
-                    GenerateProject.SourceRootType.DTO
-                ).forEach { (projectDir, sourceFiles, src) ->
-                    sourceFiles.forEach { dto ->
-                        names.add(DtoItem(dto.nameWithoutExtension, dto))
+            CoroutineScope(Dispatchers.Default).launch {
+                withBackgroundProgress(project, "Loading DTO Files") {
+                    val names = mutableListOf<DtoItem>()
+                    JimmerBuddy.GenerateProject.generate(
+                        project.findProjects(),
+                        setOf("main", "test"),
+                        JimmerBuddy.GenerateProject.SourceRootType.DTO
+                    ).forEach { (projectDir, sourceFiles, src) ->
+                        sourceFiles.forEach { dto ->
+                            names.add(DtoItem(dto.nameWithoutExtension, dto))
+                        }
+                    }
+                    withContext(Dispatchers.EDT) {
+                        dtoList.setListData(names.toTypedArray())
                     }
                 }
-                dtoList.setListData(names.toTypedArray())
             }
-        }
-        ApplicationManager.getApplication().runReadAction {
-            loadDTOs()
         }
 
         add(JPanel(BorderLayout()).apply {
@@ -86,15 +90,19 @@ class DTOList(project: Project) : JPanel() {
                 JPanel(BorderLayout()).apply {
                     add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
                         override fun actionPerformed(e: AnActionEvent) {
-                            ApplicationManager.getApplication().runReadAction {
-                                loadDTOs()
+                            if (project.isDumb()) {
+                                return
                             }
+                            loadDTOs()
                         }
                     }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
                 }, BorderLayout.NORTH
             )
             add(JBScrollPane(dtoList), BorderLayout.CENTER)
         }, BorderLayout.CENTER)
+        project.runWhenSmart {
+            loadDTOs()
+        }
     }
 
     private data class DtoItem(val name: String, val file: Path)

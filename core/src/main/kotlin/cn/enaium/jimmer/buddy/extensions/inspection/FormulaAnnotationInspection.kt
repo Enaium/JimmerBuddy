@@ -24,8 +24,6 @@ import org.babyfish.jimmer.Formula
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
-import kotlin.text.contains
-import kotlin.text.substringBeforeLast
 
 /**
  * @author Enaium

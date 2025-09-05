@@ -17,11 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.PROP
-import cn.enaium.jimmer.buddy.utility.annotArgName
-import cn.enaium.jimmer.buddy.utility.annotName
-import cn.enaium.jimmer.buddy.utility.getTarget
-import cn.enaium.jimmer.buddy.utility.subMiddle
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.*
 import com.intellij.util.ProcessingContext

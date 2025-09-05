@@ -44,12 +44,20 @@ class FullClassIndex : ScalarIndexExtension<String>() {
 
     override fun getIndexer(): DataIndexer<String, Void, FileContent> {
         return DataIndexer<String, Void, FileContent> { file ->
-            if (file.fileType == JavaFileType.INSTANCE) {
-                file.psiFile.getChildrenOfType<PsiClass>()
-                    .associate { Pair(it.qualifiedName, null) }
-            } else {
-                file.psiFile.getChildrenOfType<KtClass>()
-                    .associate { Pair(it.fqName!!.asString(), null) }
+            when (file.fileType) {
+                JavaFileType.INSTANCE -> {
+                    file.psiFile.getChildrenOfType<PsiClass>()
+                        .associate { it.qualifiedName to null }
+                }
+
+                KotlinFileType.INSTANCE -> {
+                    file.psiFile.getChildrenOfType<KtClass>()
+                        .associate { it.fqName!!.asString() to null }
+                }
+
+                else -> {
+                    emptyMap()
+                }
             }
         }
     }

@@ -43,6 +43,7 @@ class PsiService231 : PsiService {
     override fun annotations(ktClass: KtClass): List<PsiService.Annotation> {
         return ktClass.annotationEntries.map {
             PsiService.Annotation(
+                ktClass.project,
                 it.annotation()?.fqName?.asString(),
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiService.Annotation.Argument(
@@ -57,6 +58,7 @@ class PsiService231 : PsiService {
     override fun annotations(ktProperty: KtProperty): List<PsiService.Annotation> {
         return ktProperty.annotationEntries.map {
             PsiService.Annotation(
+                ktProperty.project,
                 it.annotation()?.fqName?.asString(),
                 it.annotation()?.allValueArguments?.map { (name, value) ->
                     PsiService.Annotation.Argument(

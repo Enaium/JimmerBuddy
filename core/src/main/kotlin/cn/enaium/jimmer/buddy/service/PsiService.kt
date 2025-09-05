@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.service
 
+import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtProperty
@@ -25,7 +26,7 @@ import org.jetbrains.kotlin.psi.KtTypeReference
  * @author Enaium
  */
 interface PsiService {
-    data class Annotation(val fqName: String?, val arguments: List<Argument>) {
+    data class Annotation(val project: Project, val fqName: String?, val arguments: List<Argument>) {
         data class Argument(val name: String, val value: Any?)
 
         fun findArgument(name: String): Argument? {

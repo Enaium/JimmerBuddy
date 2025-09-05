@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import cn.enaium.jimmer.buddy.service.PsiService
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
@@ -39,7 +40,9 @@ import kotlin.reflect.jvm.isAccessible
 /**
  * @author Enaium
  */
-fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> = mutableMapOf()): KSClassDeclaration {
+typealias Cache = MutableMap<String, KSClassDeclaration>
+
+fun PsiClass.asKSClassDeclaration(caches: Cache = mutableMapOf()): KSClassDeclaration {
     return caches[this.qualifiedName()] ?: createKSClassDeclaration(
         qualifiedName = { createKSName(this.qualifiedName()!!) },
         classKind = {
@@ -93,7 +96,7 @@ fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration>
         annotations = {
             this.annotations.mapNotNull { annotation ->
                 val fqName =
-                    annotation.qualifiedName?.takeIf { it.startsWith(jimmerAnnotationPrefixe) }
+                    annotation.qualifiedName?.takeIf { it.startsWith(jimmerAnnotationPrefix) }
                         ?: return@mapNotNull null
                 createKSAnnotation(
                     annotationType =
@@ -133,6 +136,31 @@ fun PsiClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration>
     ).also {
         caches[this.qualifiedName()!!] = it
     }
+}
+
+fun PsiService.Annotation.asKSAnnotation(caches: Cache = mutableMapOf()): KSAnnotation? {
+    val fqName = this.fqName?.takeIf { it.startsWith(jimmerAnnotationPrefix) } ?: return null
+    return createKSAnnotation(
+        annotationType = createKSTypeReference(
+            resolve = {
+                createKSType(
+                    declaration = {
+                        project.findKtClass(fqName)?.asKSClassDeclaration(caches)
+                            ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
+                            ?: createKSClassDeclaration(
+                                classKind = { ClassKind.ANNOTATION_CLASS },
+                                qualifiedName = { createKSName(fqName) },
+                                simpleName = { createKSName(fqName.substringAfterLast(".")) },
+                                packageName = { createKSName(fqName.substringBeforeLast(".")) },
+                                annotations = { emptySequence() })
+                    })
+            }), shortName = {
+            createKSName(fqName.substringAfterLast("."))
+        }, arguments = {
+            this.arguments.map { argument ->
+                createKSValueArgument(name = { createKSName(argument.name) }, value = { argument.value })
+            }
+        })
 }
 
 private fun PsiClass.qualifiedName(): String? {
@@ -177,31 +205,7 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
         packageName = { createKSName(fqName!!.asString().substringBeforeLast(".")) },
         parentDeclaration = { null },
         annotations = {
-            this.annotations().mapNotNull { annotation ->
-                val fqName = annotation.fqName?.takeIf { it.startsWith(jimmerAnnotationPrefixe) }
-                    ?: return@mapNotNull null
-                createKSAnnotation(
-                    annotationType = createKSTypeReference(
-                        resolve = {
-                            createKSType(
-                                declaration = {
-                                    project.findKtClass(fqName)?.asKSClassDeclaration(caches)
-                                        ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
-                                        ?: createKSClassDeclaration(
-                                            classKind = { ClassKind.ANNOTATION_CLASS },
-                                            qualifiedName = { createKSName(fqName) },
-                                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
-                                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                                            annotations = { emptySequence() })
-                                })
-                        }), shortName = {
-                        createKSName(fqName.substringAfterLast("."))
-                    }, arguments = {
-                        annotation.arguments.map { argument ->
-                            createKSValueArgument(name = { createKSName(argument.name) }, value = { argument.value })
-                        }
-                    })
-            }.asSequence()
+            this.annotations().mapNotNull { annotation -> annotation.asKSAnnotation(caches) }.asSequence()
         },
         declarations = {
             if (this.isInterface()) {
@@ -217,34 +221,8 @@ fun KtClass.asKSClassDeclaration(caches: MutableMap<String, KSClassDeclaration> 
                             createKSName(property.name!!)
                         },
                         annotations = {
-                            property.annotations().mapNotNull { annotation ->
-                                val fqName = annotation.fqName?.takeIf {
-                                    it.startsWith(jimmerAnnotationPrefixe)
-                                } ?: return@mapNotNull null
-                                createKSAnnotation(
-                                    annotationType = createKSTypeReference(
-                                        resolve = {
-                                            createKSType(
-                                                declaration = {
-                                                    project.findKtClass(fqName)?.asKSClassDeclaration(caches)
-                                                        ?: project.findPsiClass(fqName)?.asKSClassDeclaration(caches)
-                                                        ?: createKSClassDeclaration(
-                                                            classKind = { ClassKind.ANNOTATION_CLASS },
-                                                            qualifiedName = { createKSName(fqName) },
-                                                            simpleName = { createKSName(fqName.substringAfterLast(".")) },
-                                                            packageName = { createKSName(fqName.substringBeforeLast(".")) },
-                                                            annotations = { emptySequence() })
-                                                })
-                                        }), shortName = {
-                                        createKSName(fqName.substringAfterLast("."))
-                                    }, arguments = {
-                                        annotation.arguments.map { argument ->
-                                            createKSValueArgument(
-                                                name = { createKSName(argument.name) },
-                                                value = { argument.value })
-                                        }
-                                    })
-                            }.asSequence()
+                            property.annotations().mapNotNull { annotation -> annotation.asKSAnnotation(caches) }
+                                .asSequence()
                         },
                         modifiers = {
                             if (property.getter == null && property.setter == null) {

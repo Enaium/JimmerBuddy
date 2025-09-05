@@ -28,8 +28,11 @@ import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiManager
 import com.squareup.javapoet.TypeName
 import org.babyfish.jimmer.Scalar
+import org.babyfish.jimmer.dto.compiler.DtoFile
+import org.babyfish.jimmer.dto.compiler.OsFile
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
@@ -38,15 +41,16 @@ import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.File
+import java.io.Reader
 import java.nio.file.Path
 import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.io.path.exists
-import kotlin.io.path.name
+import kotlin.io.path.*
 
 
 /**
@@ -254,7 +258,7 @@ private fun String.simplifyTypeName(): String {
         return if (genericStart == -1) {
             trimmed.substringAfterLast('.')
         } else {
-            val base = trimmed.substring(0, genericStart).substringAfterLast('.')
+            val base = trimmed.take(genericStart).substringAfterLast('.')
             val genericContent = trimmed.substring(genericStart + 1, trimmed.lastIndexOf('>'))
             val params = splitGenericParams(genericContent).map { stripFullType(it) }
             "$base<${params.joinToString(", ")}>"
@@ -279,4 +283,24 @@ fun Project.findKtClass(name: String): KtClass? {
     return KotlinFullClassNameIndex[name, this, this.allScope()].firstOrNull() as? KtClass
 }
 
-val jimmerAnnotationPrefixe: String = Scalar::class.java.packageName
+fun Project.toDtoFile(projectDir: Path, path: Path): DtoFile {
+    return DtoFile(
+        object : OsFile {
+            override fun getAbsolutePath(): String {
+                return path.absolutePathString()
+            }
+
+            override fun openReader(): Reader {
+                return path.toFile().toVirtualFile()
+                    ?.let { PsiManager.getInstance(this@toDtoFile).findFile(it)?.text?.reader() }
+                    ?: path.readText().reader()
+            }
+        },
+        projectDir.name,
+        path.parent.relativeTo(projectDir).joinToString("/"),
+        emptyList(),
+        path.name
+    )
+}
+
+val jimmerAnnotationPrefix: String = Scalar::class.java.packageName
