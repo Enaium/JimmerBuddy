@@ -220,16 +220,12 @@ object JimmerBuddy {
                             GenerateProject.generate(
                                 projects,
                                 setOf("main", "test"),
-                                listOf(GenerateProject.SourceRootType.KOTLIN) +
-                                        if (project.isAndroidProject()) {
-                                            listOf(
-                                                GenerateProject.SourceRootType.JAVA_KOTLIN,
-                                                GenerateProject.SourceRootType.JVM_MAIN_KOTLIN,
-                                                GenerateProject.SourceRootType.ANDROID_MAIN_KOTLIN
-                                            )
-                                        } else {
-                                            emptyList()
-                                        }
+                                listOf(
+                                    GenerateProject.SourceRootType.KOTLIN,
+                                    GenerateProject.SourceRootType.JAVA_KOTLIN,
+                                    GenerateProject.SourceRootType.JVM_MAIN_KOTLIN,
+                                    GenerateProject.SourceRootType.ANDROID_MAIN_KOTLIN
+                                )
                             )
                         )
                         dtoProcessKotlin(
