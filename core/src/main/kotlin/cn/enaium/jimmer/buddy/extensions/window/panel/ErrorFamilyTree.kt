@@ -17,27 +17,33 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
-import com.intellij.psi.*
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiEnumConstant
+import com.intellij.psi.PsiField
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.util.indexing.FileBasedIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.kotlin.idea.base.util.projectScope
-import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -57,7 +63,7 @@ import javax.swing.tree.DefaultTreeModel
 /**
  * @author Enaium
  */
-class ErrorFamilyList(val project: Project) : JPanel() {
+class ErrorFamilyTree(val project: Project) : JPanel() {
 
     private val root = DefaultMutableTreeNode()
     private val tree = Tree(root)
@@ -85,7 +91,7 @@ class ErrorFamilyList(val project: Project) : JPanel() {
                             })
                         }.show(tree, e.x, e.y)
                     } else if (e.clickCount == 2) {
-                        if (select is ErrorFamilyNode) {
+                        if (select is ErrorFamilyField) {
                             navigate()
                         }
                     }
@@ -101,7 +107,34 @@ class ErrorFamilyList(val project: Project) : JPanel() {
                         }
                         loadErrorFamilies()
                     }
-                }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
+                }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                add(ActionButton(object : AnAction(AllIcons.Actions.More) {
+                    override fun actionPerformed(e: AnActionEvent) {
+                        val sourceComponent = (e.inputEvent?.source as? Component) ?: return
+                        JBPopupFactory.getInstance()
+                            .createActionGroupPopup(
+                                I18n.message("toolwindow.buddy.menu.sortBy"),
+                                DefaultActionGroup(
+                                    listOf(
+                                        object : AnAction(I18n.message("toolwindow.buddy.menu.sortBy.name")) {
+                                            override fun actionPerformed(e: AnActionEvent) {
+                                                tree.sortByName(root)
+                                            }
+                                        },
+                                        object : AnAction(I18n.message("toolwindow.buddy.menu.sortBy.childCount")) {
+                                            override fun actionPerformed(e: AnActionEvent) {
+                                                tree.sortByChildCount(root)
+                                            }
+                                        }
+                                    )
+                                ),
+                                e.dataContext,
+                                JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                                true
+                            )
+                            .showUnderneathOf(sourceComponent)
+                    }
+                }, null, "Menu", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
@@ -114,26 +147,61 @@ class ErrorFamilyList(val project: Project) : JPanel() {
         CoroutineScope(Dispatchers.Default).launch {
             withBackgroundProgress(project, "Loading Error Families") {
                 val results = mutableListOf<ErrorFamilyType>()
-                ReadAction.run<Throwable> {
-                    val allKeys = FileBasedIndex.getInstance().getAllKeys(JimmerBuddy.Indexes.ENUM_CLASS, project)
-                    if (project.isJavaProject()) {
-                        allKeys.mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.projectScope()) }
-                            .filter { it.isErrorFamily() }.mapTo(results) { psiClass ->
-                                ErrorFamilyType(psiClass).apply {
-                                    psiClass.getChildrenOfType<PsiEnumConstant>().forEach {
-                                        add(ErrorFamilyField(it))
+                val projects = project.findProjects()
+                GenerateProject.generate(
+                    projects,
+                    GenerateProject.SourceRootType.JAVA
+                ).forEach { (_, sourceFiles, _) ->
+                    ReadAction.run<Throwable> {
+                        sourceFiles.mapNotNullTo(results) { sourceFile ->
+                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
+                                ?.let { psiClass ->
+                                    if (psiClass.isErrorFamily()) {
+                                        try {
+                                            ErrorFamilyType(psiClass).apply {
+                                                psiClass.getChildrenOfType<PsiEnumConstant>().forEach {
+                                                    add(ErrorFamilyField(it))
+                                                }
+                                            }
+                                        } catch (e: Throwable) {
+                                            JimmerBuddy.getWorkspace(project).log.error(e)
+                                            null
+                                        }
+                                    } else {
+                                        null
                                     }
                                 }
-                            }
-                    } else if (project.isKotlinProject()) {
-                        allKeys.mapNotNull { KotlinFullClassNameIndex[it, project, project.projectScope()].firstOrNull() as? KtClass }
-                            .filter { it.isErrorFamily() }.mapTo(results) { ktClass ->
-                                ErrorFamilyType(ktClass).apply {
-                                    ktClass.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()?.forEach {
-                                        add(ErrorFamilyField(it))
+                        }
+                    }
+                }
+
+                GenerateProject.generate(
+                    projects,
+                    listOf(
+                        GenerateProject.SourceRootType.KOTLIN,
+                        GenerateProject.SourceRootType.JAVA_KOTLIN
+                    )
+                ).forEach { (_, sourceFiles, _) ->
+                    ReadAction.run<Throwable> {
+                        sourceFiles.mapNotNullTo(results) { sourceFile ->
+                            sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.let { ktClass ->
+                                if (ktClass.isErrorFamily()) {
+                                    try {
+                                        ErrorFamilyType(ktClass).apply {
+                                            ktClass.getChildOfType<KtClassBody>()?.getChildrenOfType<KtEnumEntry>()
+                                                ?.forEach {
+                                                    add(ErrorFamilyField(it))
+                                                }
+                                        }
+                                    } catch (e: Throwable) {
+                                        JimmerBuddy.getWorkspace(project).log.error(e)
+                                        null
                                     }
+                                } else {
+                                    null
                                 }
                             }
+                        }
                     }
                 }
 

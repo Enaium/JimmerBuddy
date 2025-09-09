@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.*
@@ -24,28 +25,30 @@ import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Co
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.util.indexing.FileBasedIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.kotlin.idea.base.util.projectScope
-import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -136,7 +139,34 @@ class ImmutableTree(val project: Project) : JPanel() {
                         }
                         loadImmutables(project)
                     }
-                }, null, "Refresh", Dimension(24, 24)), BorderLayout.EAST)
+                }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                add(ActionButton(object : AnAction(AllIcons.Actions.More) {
+                    override fun actionPerformed(e: AnActionEvent) {
+                        val sourceComponent = (e.inputEvent?.source as? Component) ?: return
+                        JBPopupFactory.getInstance()
+                            .createActionGroupPopup(
+                                I18n.message("toolwindow.buddy.menu.sortBy"),
+                                DefaultActionGroup(
+                                    listOf(
+                                        object : AnAction(I18n.message("toolwindow.buddy.menu.sortBy.name")) {
+                                            override fun actionPerformed(e: AnActionEvent) {
+                                                tree.sortByName(root)
+                                            }
+                                        },
+                                        object : AnAction(I18n.message("toolwindow.buddy.menu.sortBy.childCount")) {
+                                            override fun actionPerformed(e: AnActionEvent) {
+                                                tree.sortByChildCount(root)
+                                            }
+                                        }
+                                    )
+                                ),
+                                e.dataContext,
+                                JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                                true
+                            )
+                            .showUnderneathOf(sourceComponent)
+                    }
+                }, null, "Menu", Dimension(24, 24)), BorderLayout.EAST)
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
@@ -150,44 +180,66 @@ class ImmutableTree(val project: Project) : JPanel() {
         CoroutineScope(Dispatchers.Default).launch {
             withBackgroundProgress(project, "Loading Immutables") {
                 val results = mutableListOf<ImmutableType>()
-                ReadAction.run<Throwable> {
-                    val allKeys = FileBasedIndex.getInstance().getAllKeys(JimmerBuddy.Indexes.INTERFACE_CLASS, project)
-                    if (project.isJavaProject()) {
-                        allKeys.mapNotNull {
-                            JavaPsiFacade.getInstance(project).findClass(it, project.projectScope())
-                        }.filter { it.isImmutable() }
-                            .mapNotNullTo(results) { psiClass ->
-                                try {
-                                    ImmutableType(psiClass).apply {
-                                        psiClass.toImmutable().toCommonImmutableType().props().forEach {
-                                            psiClass.methods.find { m -> m.name == it.name() }?.let { method ->
-                                                add(ImmutableProp(method, it))
+                val projects = project.findProjects()
+                GenerateProject.generate(
+                    projects,
+                    GenerateProject.SourceRootType.JAVA
+                ).forEach { (_, sourceFiles, _) ->
+                    ReadAction.run<Throwable> {
+                        sourceFiles.mapNotNullTo(results) { sourceFile ->
+                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
+                                ?.let { psiClass ->
+                                    if (psiClass.isImmutable()) {
+                                        try {
+                                            ImmutableType(psiClass).apply {
+                                                psiClass.toImmutable().toCommonImmutableType().props().forEach {
+                                                    psiClass.methods.find { method -> method.name == it.name() }
+                                                        ?.also { method ->
+                                                            add(ImmutableProp(method, it))
+                                                        }
+                                                }
+                                            }
+                                        } catch (e: Throwable) {
+                                            JimmerBuddy.getWorkspace(project).log.error(e)
+                                            null
+                                        }
+                                    } else {
+                                        null
+                                    }
+                                }
+                        }
+                    }
+                }
+
+                GenerateProject.generate(
+                    projects,
+                    listOf(
+                        GenerateProject.SourceRootType.KOTLIN,
+                        GenerateProject.SourceRootType.JAVA_KOTLIN
+                    )
+                ).forEach { (_, sourceFiles, _) ->
+                    ReadAction.run<Throwable> {
+                        sourceFiles.mapNotNullTo(results) { sourceFile ->
+                            sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.let { ktClass ->
+                                if (ktClass.isImmutable()) {
+                                    try {
+                                        ImmutableType(ktClass).apply {
+                                            ktClass.toImmutable().toCommonImmutableType().props().forEach {
+                                                ktClass.getProperties().find { property -> property.name == it.name() }
+                                                    ?.also { property ->
+                                                        add(ImmutableProp(property, it))
+                                                    }
                                             }
                                         }
+                                    } catch (e: Throwable) {
+                                        JimmerBuddy.getWorkspace(project).log.error(e)
+                                        null
                                     }
-                                } catch (e: Throwable) {
-                                    JimmerBuddy.getWorkspace(project).log.error(e)
+                                } else {
                                     null
                                 }
                             }
-                    } else if (project.isKotlinProject()) {
-                        allKeys.mapNotNull {
-                            KotlinFullClassNameIndex[it, project, project.projectScope()].firstOrNull() as? KtClass
-                        }.filter { it.isImmutable() }
-                            .mapNotNullTo(results) { ktClass ->
-                                try {
-                                    ImmutableType(ktClass).apply {
-                                        ktClass.toImmutable().toCommonImmutableType().props().forEach {
-                                            ktClass.getProperties().find { p -> p.name == it.name() }?.let { property ->
-                                                add(ImmutableProp(property, it))
-                                            }
-                                        }
-                                    }
-                                } catch (e: Throwable) {
-                                    JimmerBuddy.getWorkspace(project).log.error(e)
-                                    null
-                                }
-                            }
+                        }
                     }
                 }
 

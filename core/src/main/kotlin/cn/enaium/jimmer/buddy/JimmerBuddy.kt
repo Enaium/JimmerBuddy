@@ -24,6 +24,7 @@ import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import cn.enaium.jimmer.buddy.service.NavigationService
 import cn.enaium.jimmer.buddy.service.PsiService
 import cn.enaium.jimmer.buddy.service.UiService
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
@@ -115,19 +116,17 @@ object JimmerBuddy {
         companion object {
             suspend fun generate(
                 projects: Set<Path>,
-                srcSets: Set<String>,
                 sourceRootTypes: List<SourceRootType>
             ): Set<GenerateProject> =
-                sourceRootTypes.map { generate(projects, srcSets, it) }.flatten().toSet()
+                sourceRootTypes.map { generate(projects, it) }.flatten().toSet()
 
             suspend fun generate(
                 projects: Set<Path>,
-                srcSets: Set<String>,
                 sourceRootType: SourceRootType
             ): Set<GenerateProject> =
                 withContext(Dispatchers.IO) {
                     projects.map { project ->
-                        srcSets.map { src ->
+                        JimmerBuddySetting.INSTANCE.state.srcSets.split(",").map { src ->
                             GenerateProject(
                                 projectDir = project,
                                 project.resolve("src/${src}/${sourceRootType.dir}").walk()
@@ -156,8 +155,6 @@ object JimmerBuddy {
             JAVA("java", "java"),
             KOTLIN("kotlin", "kt"),
             JAVA_KOTLIN("java", "kt"),
-            JVM_MAIN_KOTLIN("jvmMain", "kt"),
-            ANDROID_MAIN_KOTLIN("androidMain", "kt"),
             DTO("dto", "dto")
         }
 
@@ -201,7 +198,6 @@ object JimmerBuddy {
                 if (project.isJavaProject()) {
                     val generateProject = GenerateProject.generate(
                         projects,
-                        setOf("main", "test"),
                         GenerateProject.SourceRootType.JAVA
                     )
                     if (enable) {
@@ -209,7 +205,6 @@ object JimmerBuddy {
                         dtoProcessJava(
                             GenerateProject.generate(
                                 projects,
-                                setOf("main", "test"),
                                 GenerateProject.SourceRootType.DTO
                             )
                         )
@@ -219,19 +214,15 @@ object JimmerBuddy {
                         sourcesProcessKotlin(
                             GenerateProject.generate(
                                 projects,
-                                setOf("main", "test"),
                                 listOf(
                                     GenerateProject.SourceRootType.KOTLIN,
-                                    GenerateProject.SourceRootType.JAVA_KOTLIN,
-                                    GenerateProject.SourceRootType.JVM_MAIN_KOTLIN,
-                                    GenerateProject.SourceRootType.ANDROID_MAIN_KOTLIN
+                                    GenerateProject.SourceRootType.JAVA_KOTLIN
                                 )
                             )
                         )
                         dtoProcessKotlin(
                             GenerateProject.generate(
                                 projects,
-                                setOf("main", "test"),
                                 GenerateProject.SourceRootType.DTO
                             )
                         )
