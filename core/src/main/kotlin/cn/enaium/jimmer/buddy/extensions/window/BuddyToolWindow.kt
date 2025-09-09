@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.window
 
 import cn.enaium.jimmer.buddy.extensions.window.panel.DTOList
 import cn.enaium.jimmer.buddy.extensions.window.panel.DatabaseList
-import cn.enaium.jimmer.buddy.extensions.window.panel.ErrorFamilyList
+import cn.enaium.jimmer.buddy.extensions.window.panel.ErrorFamilyTree
 import cn.enaium.jimmer.buddy.extensions.window.panel.ImmutableTree
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.isJimmerProject
@@ -50,7 +50,7 @@ class BuddyToolWindow : ToolWindowFactory {
         )
         toolWindow.contentManager.addContent(
             toolWindow.contentManager.factory.createContent(
-                ErrorFamilyList(project),
+                ErrorFamilyTree(project),
                 I18n.message("toolWindow.buddy.tab.errorFamilies"),
                 false
             )
