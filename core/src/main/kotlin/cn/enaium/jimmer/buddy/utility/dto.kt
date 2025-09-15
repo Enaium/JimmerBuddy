@@ -18,10 +18,14 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.util.findParentOfType
 
 /**
  * @author Enaium
@@ -32,4 +36,15 @@ fun Project.createDtoFile(content: String): DtoPsiFile {
 
 fun Project.createDtoProp(name: String): DtoPsiProp? {
     return createDtoFile("Dummy { $name }").findChild("/dto/dtoType/dtoBody/explicitProp/*/prop")
+}
+
+fun DtoPsiDtoType.generatedName(): String? {
+    val name = name?.value ?: return null
+    val dtoPsiRoot = findParentOfType<DtoPsiRoot>() ?: return null
+    val exportType = dtoPsiRoot.qualifiedName() ?: return null
+    val exportPackage =
+        dtoPsiRoot.exportStatement?.packageParts?.qualifiedName()
+            ?: "${exportType.substringBeforeLast(".")}.dto"
+
+    return "$exportPackage.$name"
 }

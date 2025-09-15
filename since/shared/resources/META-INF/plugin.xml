@@ -212,6 +212,8 @@
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.ImmutableInheritorCodeVisionProvider"/>
         <vcs.codeVisionLanguageContext language="JimmerBuddy.DTO"
                                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.vcs.DtoVcsCodeVisionLanguageContext"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoReferencesCodeVisionProvider"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-core" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql-kotlin" kind="kotlin"/>
