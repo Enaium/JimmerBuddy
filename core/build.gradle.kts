@@ -1,28 +1,11 @@
 plugins {
     java
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.intellij)
+    id("intellij-platform")
 }
 group = "cn.enaium"
 version = "${property("version")}"
 
-repositories {
-    mavenCentral()
-    intellijPlatform {
-        releases()
-        marketplace()
-        defaultRepositories()
-    }
-}
-
 dependencies {
-    intellijPlatform {
-        intellijIdeaCommunity("2023.1")
-        bundledPlugin("com.intellij.java")
-        bundledPlugin("org.jetbrains.kotlin")
-        bundledPlugin("com.intellij.gradle")
-    }
-
     implementation(libs.jimmer.core)
     implementation(libs.jimmer.apt)
     implementation(libs.jimmer.ksp)
@@ -40,8 +23,4 @@ dependencies {
     implementation(libs.jackson)
     implementation(project(":common"))
     implementation(project(":gradle-tooling-extension"))
-}
-
-kotlin {
-    jvmToolchain(17)
 }

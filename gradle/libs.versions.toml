@@ -1,8 +1,8 @@
 [versions]
-kotlin = "2.2.10"
-ksp = "2.2.10+"
-intellij = "2.7.2"
-jimmer = "0.9.106"
+kotlin = "2.2.20"
+ksp = "2.2.20+"
+intellij = "2.9.0"
+jimmer = "0.9.110"
 byteBuddy = "1.17.1"
 kotlinpoet = "2.0.0"
 javapoet = "1.13.0"
@@ -29,6 +29,9 @@ antlr = { module = "org.antlr:antlr4", version.ref = "antlr" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 gradle-tooling-extension = { module = "com.jetbrains.intellij.gradle:gradle-tooling-extension", version.ref = "gradleToolingExtension" }
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+kotlin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
+intellij-platform = { module = "org.jetbrains.intellij.platform:org.jetbrains.intellij.platform.gradle.plugin", version.ref = "intellij" }
+changelog = { module = "org.jetbrains.changelog:org.jetbrains.changelog.gradle.plugin", version.ref = "changelog" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

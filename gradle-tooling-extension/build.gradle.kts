@@ -1,6 +1,6 @@
 plugins {
     java
-    alias(libs.plugins.kotlin.jvm)
+    id("org.jetbrains.kotlin.jvm")
 }
 group = "cn.enaium"
 version = "${property("version")}"
