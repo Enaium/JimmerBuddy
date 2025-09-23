@@ -17,10 +17,7 @@
 package cn.enaium.jimmer.buddy.service
 
 import com.intellij.openapi.project.Project
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtLambdaExpression
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.*
 
 /**
  * @author Enaium
@@ -43,6 +40,8 @@ interface PsiService {
 
     fun annotations(ktClass: KtClass): List<Annotation>
     fun annotations(ktProperty: KtProperty): List<Annotation>
+    fun annotations(ktFunction: KtFunction): List<Annotation>
+    fun annotations(ktParameter: KtParameter): List<Annotation>
     fun type(ktTypeReference: KtTypeReference): Type
     fun receiver(ktLambdaExpression: KtLambdaExpression): KtClass?
 }

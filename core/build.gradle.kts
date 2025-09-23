@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.jimmer.apt)
     implementation(libs.jimmer.ksp)
     implementation(libs.jimmer.sql)
+    implementation(libs.jimmer.client)
     implementation(libs.jimmer.dto.compiler)
     implementation(libs.jimmer.spring.boot.starter) {
         exclude(module = "*")

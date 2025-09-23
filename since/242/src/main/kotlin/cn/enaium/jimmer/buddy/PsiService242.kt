@@ -106,6 +106,68 @@ class PsiService242 : PsiService {
         }
     }
 
+    override fun annotations(ktFunction: KtFunction): List<PsiService.Annotation> {
+        if (isK2Enable()) {
+            analyze(ktFunction) {
+                return ktFunction.symbol.annotations.map {
+                    PsiService.Annotation(
+                        ktFunction.project,
+                        it.classId?.asFqNameString()?.replace("/", "."),
+                        it.arguments.map { argument ->
+                            PsiService.Annotation.Argument(
+                                argument.name.asString(),
+                                argument.expression.toAny(ktFunction.project)
+                            )
+                        }
+                    )
+                }
+            }
+        } else {
+            return ktFunction.annotationEntries.map {
+                PsiService.Annotation(
+                    ktFunction.project,
+                    it.annotation()?.fqName?.asString(),
+                    it.annotation()?.allValueArguments?.map { (name, value) ->
+                        PsiService.Annotation.Argument(
+                            name.asString(),
+                            value.toAny(ktFunction.project)
+                        )
+                    } ?: emptyList())
+            }
+        }
+    }
+
+    override fun annotations(ktParameter: KtParameter): List<PsiService.Annotation> {
+        if (isK2Enable()) {
+            analyze(ktParameter) {
+                return ktParameter.symbol.annotations.map {
+                    PsiService.Annotation(
+                        ktParameter.project,
+                        it.classId?.asFqNameString()?.replace("/", "."),
+                        it.arguments.map { argument ->
+                            PsiService.Annotation.Argument(
+                                argument.name.asString(),
+                                argument.expression.toAny(ktParameter.project)
+                            )
+                        }
+                    )
+                }
+            }
+        } else {
+            return ktParameter.annotationEntries.map {
+                PsiService.Annotation(
+                    ktParameter.project,
+                    it.annotation()?.fqName?.asString(),
+                    it.annotation()?.allValueArguments?.map { (name, value) ->
+                        PsiService.Annotation.Argument(
+                            name.asString(),
+                            value.toAny(ktParameter.project)
+                        )
+                    } ?: emptyList())
+            }
+        }
+    }
+
     @OptIn(KaExperimentalApi::class)
     override fun type(ktTypeReference: KtTypeReference): PsiService.Type {
         if (isK2Enable()) {

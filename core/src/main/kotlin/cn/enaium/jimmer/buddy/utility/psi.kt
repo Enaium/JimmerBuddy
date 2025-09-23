@@ -26,6 +26,8 @@ import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.Draft
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
+import org.babyfish.jimmer.client.EnableImplicitApi
+import org.babyfish.jimmer.client.meta.Api
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.*
@@ -41,6 +43,7 @@ import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.*
+import kotlin.reflect.KClass
 
 /**
  * @author Enaium
@@ -64,6 +67,14 @@ fun KtClass.findAnnotation(name: String): PsiService.Annotation? {
 }
 
 fun KtProperty.annotations(): List<PsiService.Annotation> {
+    return JimmerBuddy.Services.PSI.annotations(this)
+}
+
+fun KtFunction.annotations(): List<PsiService.Annotation> {
+    return JimmerBuddy.Services.PSI.annotations(this)
+}
+
+fun KtParameter.annotations(): List<PsiService.Annotation> {
     return JimmerBuddy.Services.PSI.annotations(this)
 }
 
@@ -126,28 +137,23 @@ fun PsiClass.hasJimmerAnnotation(): Boolean {
     return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
 }
 
-fun KtClass.hasEntityAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == Entity::class.qualifiedName!!
+
+fun KtClass.hasAnnotation(annotation: KClass<*>): Boolean {
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { uAnnotation ->
+        uAnnotation.qualifiedName == annotation.qualifiedName
     } == true
+}
+
+fun KtClass.hasEntityAnnotation(): Boolean {
+    return this.hasAnnotation(Entity::class)
 }
 
 fun KtClass.hasMappedSuperclassAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == MappedSuperclass::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(MappedSuperclass::class)
 }
 
 fun KtClass.hasImmutableAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == Immutable::class.qualifiedName!!
-                || fqName == Entity::class.qualifiedName!!
-                || fqName == MappedSuperclass::class.qualifiedName!!
-                || fqName == Embeddable::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(Immutable::class)
 }
 
 fun KtClass.isImmutable(): Boolean {
@@ -167,10 +173,15 @@ fun KtClass.isErrorFamily(): Boolean {
 }
 
 fun KtClass.hasErrorFamilyAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == ErrorFamily::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(ErrorFamily::class)
+}
+
+fun KtClass.hasApiAnnotation(): Boolean {
+    return this.hasAnnotation(Api::class)
+}
+
+fun KtClass.hasEnableImplicitApiAnnotation(): Boolean {
+    return this.hasAnnotation(EnableImplicitApi::class)
 }
 
 fun KtClass.hasJimmerAnnotation(): Boolean {

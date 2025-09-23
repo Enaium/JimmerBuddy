@@ -69,6 +69,34 @@ class PsiService231 : PsiService {
         }
     }
 
+    override fun annotations(ktFunction: KtFunction): List<PsiService.Annotation> {
+        return ktFunction.annotationEntries.map {
+            PsiService.Annotation(
+                ktFunction.project,
+                it.annotation()?.fqName?.asString(),
+                it.annotation()?.allValueArguments?.map { (name, value) ->
+                    PsiService.Annotation.Argument(
+                        name.asString(),
+                        value.toAny(ktFunction.project)
+                    )
+                } ?: emptyList())
+        }
+    }
+
+    override fun annotations(ktParameter: KtParameter): List<PsiService.Annotation> {
+        return ktParameter.annotationEntries.map {
+            PsiService.Annotation(
+                ktParameter.project,
+                it.annotation()?.fqName?.asString(),
+                it.annotation()?.allValueArguments?.map { (name, value) ->
+                    PsiService.Annotation.Argument(
+                        name.asString(),
+                        value.toAny(ktParameter.project)
+                    )
+                } ?: emptyList())
+        }
+    }
+
     override fun type(ktTypeReference: KtTypeReference): PsiService.Type {
         return ktTypeReference.analyze()[BindingContext.TYPE, ktTypeReference]!!.let {
             PsiService.Type(
@@ -78,7 +106,9 @@ class PsiService231 : PsiService {
                     DescriptorToSourceUtils.getSourceFromDescriptor(
                         it
                     ) as? KtClass
-                        ?: (ktTypeReference.typeElement as? KtUserType)?.referenceExpression?.mainReference?.resolve() as? KtClass
+                        ?: ((ktTypeReference.typeElement as? KtUserType)
+                            ?: ((ktTypeReference.typeElement as? KtNullableType)?.innerType as? KtUserType)
+                                )?.referenceExpression?.mainReference?.resolve() as? KtClass
                 },
                 it.arguments.map { arg ->
                     PsiService.Type(

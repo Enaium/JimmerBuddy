@@ -27,6 +27,7 @@ import cn.enaium.jimmer.buddy.service.UiService
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.observable.properties.GraphProperty
@@ -38,6 +39,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.ID
+import com.intellij.util.io.write
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,12 +52,29 @@ import org.babyfish.jimmer.apt.entry.EntryProcessor
 import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
+import org.babyfish.jimmer.client.generator.ts.TypeScriptContext
+import org.babyfish.jimmer.client.meta.impl.SchemaBuilder
+import org.babyfish.jimmer.client.meta.impl.Schemas
+import org.babyfish.jimmer.client.runtime.Metadata
+import org.babyfish.jimmer.client.runtime.Operation
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
+import org.babyfish.jimmer.ksp.client.ClientProcessor
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.StringWriter
+import java.lang.reflect.AnnotatedElement
+import java.lang.reflect.Method
+import java.lang.reflect.Parameter
+import java.net.URL
+import java.net.URLClassLoader
+import java.net.URLConnection
+import java.net.URLStreamHandler
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -224,6 +243,15 @@ object JimmerBuddy {
                             GenerateProject.generate(
                                 projects,
                                 GenerateProject.SourceRootType.DTO
+                            )
+                        )
+                        clientProcessKotlin(
+                            GenerateProject.generate(
+                                projects,
+                                listOf(
+                                    GenerateProject.SourceRootType.KOTLIN,
+                                    GenerateProject.SourceRootType.JAVA_KOTLIN
+                                )
                             )
                         )
                     }
@@ -459,8 +487,8 @@ object JimmerBuddy {
                 val needRefresh = mutableListOf<Pair<Source, Path>>()
                 projects.forEach { (projectDir, sourceFiles, src) ->
                     sourceFiles.isEmpty() && return@forEach
-                    project.runReadActionSmart {
-                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
+                    ReadAction.run<Throwable> {
+                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@run
                         val (resolver, environment, sources) = project.ktClassesToKsp(
                             sourceFiles.mapNotNull { sourceFile ->
                                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
@@ -500,7 +528,7 @@ object JimmerBuddy {
         suspend fun dtoProcessKotlin(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Kotlin DTO") {
                 val needRefresh = mutableListOf<Pair<Source, Path>>()
-                project.runReadActionSmart {
+                ReadAction.run<Throwable> {
                     val (resolver, environment, sources) = project.ktClassesToKsp(emptySet())
                     projects.forEach { (projectDir, sourceFiles, src) ->
                         sourceFiles.isEmpty() && return@forEach
@@ -547,6 +575,177 @@ object JimmerBuddy {
                     }
                 }
                 asyncRefreshSources(needRefresh)
+            }
+        }
+
+        suspend fun clientProcessKotlin(projects: Set<GenerateProject>) {
+            withBackgroundProgress(project, "Processing Kotlin Client") {
+                ReadAction.run<Throwable> {
+                    projects.forEach { (projectDir, sourceFiles, src) ->
+                        sourceFiles.isEmpty() && return@forEach
+                        val (resolver, environment, sources) = project.ktClassesToKsp(sourceFiles.mapNotNull { sourceFile ->
+                            sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                        }.let { ktClasses ->
+                            if (ktClasses.any { it.hasEnableImplicitApiAnnotation() }) {
+                                ktClasses
+                            } else {
+                                ktClasses.filter { it.hasApiAnnotation() }
+                            }
+                        }.toSet())
+                        val kspOptions = getKspOptions(project)
+
+                        log.info("ClientProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
+
+                        val option = createKspOption(
+                            kspOptions,
+                            Context(resolver, environment),
+                            environment.codeGenerator
+                        )
+                        try {
+                            val clientProcessor = ClientProcessor(option.context, true, null)
+                            val builder = try {
+                                ClientProcessor::class.java.declaredFields.find { it.name == "builder" }
+                            } catch (e: Throwable) {
+                                null
+                            }?.let {
+                                it.isAccessible = true
+                                @Suppress("UNCHECKED_CAST")
+                                it.get(clientProcessor) as SchemaBuilder<KSDeclaration>
+                            } ?: return@forEach
+
+                            val handleService = try {
+                                ClientProcessor::class.java.getDeclaredMethod(
+                                    "handleService",
+                                    SchemaBuilder::class.java,
+                                    KSDeclaration::class.java
+                                )
+                            } catch (e: Throwable) {
+                                null
+                            }
+
+                            for (file in option.context.resolver.getAllFiles()) {
+                                for (declaration in file.declarations) {
+                                    handleService?.also {
+                                        it.isAccessible = true
+                                        it.invoke(clientProcessor, builder, declaration)
+                                    }
+                                }
+                            }
+                            val schema = builder.build()
+                            val out = StringWriter()
+                            Schemas.writeTo(schema, out)
+
+//                            Thread {
+//                                Thread.currentThread().contextClassLoader =
+//                                    object : URLClassLoader(emptyArray(), this.javaClass.classLoader) {
+//                                        override fun getResources(name: String): Enumeration<URL> {
+//                                            if (name == "META-INF/jimmer/client") {
+//                                                return object : Enumeration<URL> {
+//
+//                                                    var first = true
+//
+//                                                    override fun hasMoreElements(): Boolean {
+//                                                        return first
+//                                                    }
+//
+//                                                    override fun nextElement(): URL {
+//                                                        first = false
+//                                                        return URL(
+//                                                            "dummy",
+//                                                            "dummy",
+//                                                            8888,
+//                                                            "dummy",
+//                                                            object : URLStreamHandler() {
+//                                                                override fun openConnection(url: URL?): URLConnection {
+//                                                                    return object : URLConnection(url) {
+//                                                                        override fun connect() {
+//                                                                        }
+//
+//                                                                        override fun getInputStream(): InputStream {
+//                                                                            return ByteArrayInputStream(
+//                                                                                out.toString().toByteArray()
+//                                                                            )
+//                                                                        }
+//                                                                    }
+//                                                                }
+//                                                            }
+//                                                        )
+//                                                    }
+//                                                }
+//                                            }
+//                                            return super.getResources(name)
+//                                        }
+//                                    }
+//
+//                                val metadata =
+//                                    Metadata.newBuilder()
+//                                        .setGenericSupported(true)
+//                                        .setOperationParser(object : Metadata.OperationParser {
+//                                            override fun uri(element: AnnotatedElement?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun http(method: Method?): Array<out Operation.HttpMethod?>? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun isStream(method: Method?): Boolean {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                        })
+//                                        .setParameterParser(object : Metadata.ParameterParser {
+//                                            override fun requestHeader(javaParameter: Parameter?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun requestParam(javaParameter: Parameter?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun pathVariable(javaParameter: Parameter?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun requestPart(javaParameter: Parameter?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun defaultValue(javaParameter: Parameter?): String? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun isOptional(javaParameter: Parameter?): Boolean? {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun isRequestBody(javaParameter: Parameter?): Boolean {
+//                                                TODO("Not yet implemented")
+//                                            }
+//
+//                                            override fun isRequestPartRequired(javaParameter: Parameter?): Boolean {
+//                                                TODO("Not yet implemented")
+//                                            }
+//                                        })
+//                                        .build()
+//
+//                                val ctx = TypeScriptContext(
+//                                    metadata,
+//                                    4,
+//                                    false,
+//                                    "Api",
+//                                    null,
+//                                    false
+//                                )
+//                                val bos = ByteArrayOutputStream()
+//                                ctx.renderAll(bos)
+//                            }.start()
+
+                        } catch (e: Throwable) {
+                            log.error(e)
+                        }
+                    }
+                }
             }
         }
     }
