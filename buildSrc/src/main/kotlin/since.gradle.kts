@@ -41,6 +41,7 @@ tasks.processResources {
     filesMatching("plugin.xml") {
         expand(
             mapOf(
+                "supportsK1" to project.property("supportsK1"),
                 "supportsK2" to project.property("supportsK2")
             )
         )
@@ -49,6 +50,7 @@ tasks.processResources {
 
 configure<IntelliJPlatformExtension> {
     configure<IntelliJPlatformExtension.PluginConfiguration> {
-        description = markdownToHTML(rootProject.file("README.md").readText())
+        description = markdownToHTML(rootProject.file("description.md").readText())
+        changeNotes = markdownToHTML(rootProject.file("changelog.md").readText())
     }
 }
