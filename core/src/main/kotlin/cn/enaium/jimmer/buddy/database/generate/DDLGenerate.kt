@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.database.model.*
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isComputed
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiEnumConstant
@@ -48,7 +49,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 table,
                 commonImmutableType.psi(project)?.getComment(),
                 commonImmutableType.props().mapNotNull { prop ->
-                    if (!prop.isList() && !prop.isEmbedded() && !prop.isFormula() && !prop.isTransient()) {
+                    if (!prop.isList() && !prop.isEmbedded() && !prop.isComputed()) {
                         prop.toColumn(table)
                     } else {
                         null
@@ -97,7 +98,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                             } else if (prop.declaringType().isEmbedded()) {
                                 columns.add(prop.toColumn(table).let { column ->
                                     map[prop.name()]?.let {
-                                        column.copy(it)
+                                        column.copy(name = it)
                                     } ?: column
                                 })
                             }
@@ -230,7 +231,23 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                     null
                 }
             }, isNullable()
-        )
+        ).let { column ->
+            when (psi) {
+                is PsiMethod -> {
+                    psi.modifierList.findAnnotation(JoinColumn::class.qualifiedName!!)?.findAttributeValue("name")
+                        ?.toAny(String::class.java)?.toString()
+                }
+
+                is KtProperty -> {
+                    psi.annotations().find { it.fqName == JoinColumn::class.qualifiedName!! }
+                        ?.findArgument("name")?.value?.toString()
+                }
+
+                else -> {
+                    null
+                }
+            }?.let { column.copy(name = it) } ?: column
+        }
     }
 
     fun CommonImmutableType.CommonImmutableProp.toPrimaryKey(tableName: String): PrimaryKey? {
@@ -246,7 +263,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
     }
 
     fun CommonImmutableType.CommonImmutableProp.toForeignKey(tableName: String): ForeignKey? {
-        return if (isAssociation(true) && !isList() && !isFormula() && !isTransient()) {
+        return if (isAssociation(true) && !isList() && !isComputed()) {
+            val psi = psi(project)
             ForeignKey(
                 "fk_${tableName}_${name().camelToSnakeCase()}",
                 tableName,
@@ -256,7 +274,24 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                     val targetTypeId = targetType.props().find { it.isId() } ?: return null
                     targetTypeId.toColumn(targetType.name().camelToSnakeCase())
                 }
-            )
+            ).let { column ->
+                when (psi) {
+                    is PsiMethod -> {
+                        psi.modifierList.findAnnotation(JoinColumn::class.qualifiedName!!)
+                            ?.findAttributeValue("referencedColumnName")
+                            ?.toAny(String::class.java)?.toString()
+                    }
+
+                    is KtProperty -> {
+                        psi.annotations().find { it.fqName == JoinColumn::class.qualifiedName!! }
+                            ?.findArgument("referencedColumnName")?.value?.toString()
+                    }
+
+                    else -> {
+                        null
+                    }
+                }?.let { column.copy(reference = column.reference.copy(name = it)) } ?: column
+            }
         } else {
             null
         }

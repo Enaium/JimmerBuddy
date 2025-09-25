@@ -212,6 +212,10 @@ data class CommonImmutableType(
                         !isLogicalDeleted() &&
                         !isExcludedFromAllScalars()
             }
+
+            fun CommonImmutableProp.isComputed(): Boolean {
+                return isFormula() || isTransient()
+            }
         }
 
         override fun toString(): String {
