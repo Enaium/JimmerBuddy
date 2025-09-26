@@ -30,7 +30,7 @@ class JimmerProjectModel : BaseState() {
     val typeProperty = graph.property<Type>(Type.SPRING_BOOT)
     val languageProperty = graph.property<Language>(Language.KOTLIN)
     val builderProperty = graph.property<Builder>(Builder.GRADLE)
-    val wrapperVersionProperty = graph.property("9.0.0")
+    val wrapperVersionProperty = graph.property("9.1.0")
 
     val artifact: String by artifactProperty
     val group: String by groupProperty

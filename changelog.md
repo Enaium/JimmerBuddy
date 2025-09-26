@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## 1.11.x
 
+- Support to generate `TypedTuple`
 - Support `@JoinColumn` (#131)
 - Support dto type usages
 - Add src sets setting

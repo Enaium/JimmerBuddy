@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.*
+import kotlin.reflect.KClass
 
 /**
  * @author Enaium
@@ -79,25 +80,22 @@ fun KtLambdaExpression.receiver(): KtClass? {
     return JimmerBuddy.Services.PSI.receiver(this)
 }
 
-fun PsiClass.hasImmutableAnnotation(): Boolean {
+fun PsiClass.hasAnnotation(vararg annotations: KClass<*>): Boolean {
     return this.modifierList?.annotations?.any { annotation ->
-        annotation.hasQualifiedName(Immutable::class.qualifiedName!!)
-                || annotation.hasQualifiedName(Entity::class.qualifiedName!!)
-                || annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
-                || annotation.hasQualifiedName(Embeddable::class.qualifiedName!!)
+        annotations.map { it.qualifiedName }.any { it == annotation.qualifiedName }
     } == true
+}
+
+fun PsiClass.hasImmutableAnnotation(): Boolean {
+    return this.hasAnnotation(Immutable::class, Entity::class, MappedSuperclass::class, Embeddable::class)
 }
 
 fun PsiClass.hasEntityAnnotation(): Boolean {
-    return this.modifierList?.annotations?.any { annotation ->
-        annotation.hasQualifiedName(Entity::class.qualifiedName!!)
-    } == true
+    return this.hasAnnotation(Entity::class)
 }
 
 fun PsiClass.hasMappedSuperclassAnnotation(): Boolean {
-    return this.modifierList?.annotations?.any { annotation ->
-        annotation.hasQualifiedName(MappedSuperclass::class.qualifiedName!!)
-    } == true
+    return this.hasAnnotation(MappedSuperclass::class)
 }
 
 fun PsiClass.isImmutable(): Boolean {
@@ -117,37 +115,29 @@ fun PsiClass.isErrorFamily(): Boolean {
 }
 
 fun PsiClass.hasErrorFamilyAnnotation(): Boolean {
-    return this.modifierList?.annotations?.any { annotation ->
-        annotation.hasQualifiedName(ErrorFamily::class.qualifiedName!!)
-    } == true
+    return this.hasAnnotation(ErrorFamily::class)
 }
 
-fun PsiClass.hasJimmerAnnotation(): Boolean {
-    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
+fun PsiClass.hasTypedTupleAnnotation(): Boolean {
+    return this.hasAnnotation(TypedTuple::class)
+}
+
+fun KtClass.hasAnnotation(vararg annotations: KClass<*>): Boolean {
+    return this.toUElementOfType<UClass>()?.uAnnotations?.any { uAnnotation ->
+        annotations.map { it.qualifiedName }.any { it == uAnnotation.qualifiedName }
+    } == true
 }
 
 fun KtClass.hasEntityAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == Entity::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(Entity::class)
 }
 
 fun KtClass.hasMappedSuperclassAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == MappedSuperclass::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(MappedSuperclass::class)
 }
 
 fun KtClass.hasImmutableAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == Immutable::class.qualifiedName!!
-                || fqName == Entity::class.qualifiedName!!
-                || fqName == MappedSuperclass::class.qualifiedName!!
-                || fqName == Embeddable::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(Immutable::class, Entity::class, MappedSuperclass::class, Embeddable::class)
 }
 
 fun KtClass.isImmutable(): Boolean {
@@ -167,14 +157,19 @@ fun KtClass.isErrorFamily(): Boolean {
 }
 
 fun KtClass.hasErrorFamilyAnnotation(): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { annotation ->
-        val fqName = annotation.qualifiedName
-        fqName == ErrorFamily::class.qualifiedName!!
-    } == true
+    return this.hasAnnotation(ErrorFamily::class)
+}
+
+fun KtClass.hasTypedTupleAnnotation(): Boolean {
+    return this.hasAnnotation(TypedTuple::class)
 }
 
 fun KtClass.hasJimmerAnnotation(): Boolean {
-    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation()
+    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation() || this.hasTypedTupleAnnotation()
+}
+
+fun PsiClass.hasJimmerAnnotation(): Boolean {
+    return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation() || this.hasTypedTupleAnnotation()
 }
 
 fun PsiMethod.hasToManyAnnotation(): Boolean {

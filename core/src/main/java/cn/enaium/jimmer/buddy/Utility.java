@@ -526,4 +526,13 @@ public class Utility {
             }
         };
     }
+
+    public static TypedTuple typedTuple() {
+        return new TypedTuple() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return TypedTuple.class;
+            }
+        };
+    }
 }

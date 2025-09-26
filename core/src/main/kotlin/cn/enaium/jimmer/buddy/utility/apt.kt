@@ -57,95 +57,7 @@ import kotlin.io.path.Path
 fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapOf()): TypeElement {
     return caches[this.qualifiedName!!] ?: createTypeElement(
         getEnclosedElements = {
-            if (this.isInterface) {
-                this.methods.map { method ->
-                    createExecutableElement(
-                        getKind = { ElementKind.METHOD },
-                        getSimpleName = { createName(method.name) },
-                        getModifiers = { setOf(Modifier.PUBLIC) },
-                        getEnclosingElement = { this.asTypeElement(caches) },
-                        getParameters = { emptyList() },
-                        getReturnType = {
-                            val returnType = method.returnType ?: throw IllegalStateException("Return type is null")
-                            val generic = PsiUtil.resolveGenericsClassInType(returnType)
-
-                            when (returnType.canonicalText.substringBefore("[")) {
-                                "long" -> createPrimitiveType(getKind = { TypeKind.LONG })
-                                "int" -> createPrimitiveType(getKind = { TypeKind.INT })
-                                "short" -> createPrimitiveType(getKind = { TypeKind.SHORT })
-                                "byte" -> createPrimitiveType(getKind = { TypeKind.BYTE })
-                                "char" -> createPrimitiveType(getKind = { TypeKind.CHAR })
-                                "double" -> createPrimitiveType(getKind = { TypeKind.DOUBLE })
-                                "float" -> createPrimitiveType(getKind = { TypeKind.FLOAT })
-                                "boolean" -> createPrimitiveType(getKind = { TypeKind.BOOLEAN })
-                                "void" -> createPrimitiveType(getKind = { TypeKind.VOID })
-                                else -> null
-                            }?.also {
-                                return@createExecutableElement if (returnType.canonicalText.endsWith("]")) {
-                                    createArrayType(
-                                        getComponentType = {
-                                            it
-                                        }
-                                    )
-                                } else {
-                                    it
-                                }
-                            }
-
-                            val genericElement =
-                                generic.element
-                                    ?: throw IllegalStateException("The generic '${returnType.canonicalText}' element is null")
-
-                            createDeclaredType(
-                                getQualifiedName = { genericElement.qualifiedName!! },
-                                asElement = {
-                                    genericElement.asTypeElement(caches)
-                                },
-                                getTypeArguments = {
-                                    if (generic.substitutor != PsiSubstitutor.EMPTY) {
-                                        generic.element?.typeParameters?.mapNotNull {
-                                            val parameter =
-                                                generic.substitutor.substitute(it) ?: return@mapNotNull null
-                                            createDeclaredType(
-                                                getQualifiedName = { parameter.canonicalText },
-                                                asElement = {
-                                                    caches[parameter.canonicalText]
-                                                        ?: PsiUtil.resolveGenericsClassInType(parameter).element?.asTypeElement(
-                                                            caches
-                                                        )
-                                                        ?: throw IllegalStateException("Generic element is null")
-                                                },
-                                                getTypeArguments = { emptyList() },
-                                            )
-                                        } ?: emptyList()
-                                    } else {
-                                        emptyList()
-                                    }
-                                }
-                            )
-                        },
-                        getAnnotation = { anno ->
-                            method.modifierList.annotations.find { it.hasQualifiedName(anno.name) }
-                                ?.findAnnotation()
-                        },
-                        getAnnotationMirrors = {
-                            method.modifierList.annotations.mapNotNull {
-                                it.findAnnotation()?.let {
-                                    createAnnotationMirror(
-                                        it,
-                                        caches
-                                    )
-                                }
-                            }
-                        },
-                        getAnnotationsByType = { anno ->
-                            method.modifierList.annotations.find { it.hasQualifiedName(anno.name) }
-                                ?.findAnnotation()?.let { arrayOf(it) }
-                        },
-                        isDefault = { method.body != null }
-                    )
-                }
-            } else if (this.isEnum) {
+            if (this.isEnum) {
                 this.getChildrenOfType<PsiEnumConstant>()
                     .map {
                         val enumConstant = createTypeElement(
@@ -162,7 +74,11 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                         )
                     }
             } else {
-                emptyList()
+                this.methods.mapNotNull { method ->
+                    method.asExecutableElement(caches)
+                } + this.fields.mapNotNull {
+                    it.asVariableElement(caches)
+                }
             }
         },
         getQualifiedName = { createName(this.qualifiedName!!) },
@@ -236,10 +152,142 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                     },
                 )
             }
+        },
+        getSuperclass = {
+            val superClass = this.superClass ?: return@createTypeElement null
+            val fqName = superClass.qualifiedName ?: return@createTypeElement null
+            createDeclaredType(
+                getQualifiedName = { fqName },
+                asElement = {
+                    superClass.asTypeElement(caches)
+                },
+                getTypeArguments = { emptyList() }
+            )
         }
     ).also {
         caches[this.qualifiedName!!] = it
     }
+}
+
+fun PsiMethod.asExecutableElement(caches: MutableMap<String, TypeElement>): ExecutableElement? {
+    val containingClass = containingClass ?: return null
+    return createExecutableElement(
+        getKind = {
+            if (isConstructor) {
+                ElementKind.CONSTRUCTOR
+            } else {
+                ElementKind.METHOD
+            }
+        },
+        getSimpleName = { createName(name) },
+        getModifiers = { setOf(Modifier.PUBLIC) },
+        getEnclosingElement = { containingClass.asTypeElement(caches) },
+        getParameters = {
+            parameterList.parameters.map { parameter ->
+                createVariableElement(
+                    getSimpleName = { createName(parameter.name) },
+                    asType = { parameter.type.asTypeMirror(caches) }
+                )
+            }
+        },
+        getReturnType = {
+            val returnType = returnType ?: throw IllegalStateException("Return type is null")
+            returnType.asTypeMirror(caches)
+        },
+        getAnnotation = { anno ->
+            modifierList.annotations.find { it.hasQualifiedName(anno.name) }
+                ?.findAnnotation()
+        },
+        getAnnotationMirrors = {
+            modifierList.annotations.mapNotNull {
+                it.findAnnotation()?.let {
+                    containingClass.createAnnotationMirror(
+                        it,
+                        caches
+                    )
+                }
+            }
+        },
+        getAnnotationsByType = { anno ->
+            modifierList.annotations.find { it.hasQualifiedName(anno.name) }
+                ?.findAnnotation()?.let { arrayOf(it) }
+        },
+        isDefault = { body != null }
+    )
+}
+
+fun PsiField.asVariableElement(caches: MutableMap<String, TypeElement>): VariableElement? {
+    val containingClass = containingClass ?: return null
+    return createVariableElement(
+        getSimpleName = { createName(name) },
+        getKind = { ElementKind.FIELD },
+        getEnclosingElement = {
+            containingClass.asTypeElement(caches)
+        },
+        asType = {
+            type.asTypeMirror(caches)
+        },
+        getModifiers = { setOf(Modifier.PUBLIC) }
+    )
+}
+
+fun PsiType.asTypeMirror(caches: MutableMap<String, TypeElement>): TypeMirror {
+    val generic = PsiUtil.resolveGenericsClassInType(this)
+
+    when (canonicalText.substringBefore("[")) {
+        "long" -> createPrimitiveType(getKind = { TypeKind.LONG })
+        "int" -> createPrimitiveType(getKind = { TypeKind.INT })
+        "short" -> createPrimitiveType(getKind = { TypeKind.SHORT })
+        "byte" -> createPrimitiveType(getKind = { TypeKind.BYTE })
+        "char" -> createPrimitiveType(getKind = { TypeKind.CHAR })
+        "double" -> createPrimitiveType(getKind = { TypeKind.DOUBLE })
+        "float" -> createPrimitiveType(getKind = { TypeKind.FLOAT })
+        "boolean" -> createPrimitiveType(getKind = { TypeKind.BOOLEAN })
+        "void" -> createPrimitiveType(getKind = { TypeKind.VOID })
+        else -> null
+    }?.also {
+        return if (canonicalText.endsWith("]")) {
+            createArrayType(
+                getComponentType = {
+                    it
+                }
+            )
+        } else {
+            it
+        }
+    }
+
+    val genericElement =
+        generic.element
+            ?: throw IllegalStateException("The generic '${canonicalText}' element is null")
+
+    return createDeclaredType(
+        getQualifiedName = { genericElement.qualifiedName!! },
+        asElement = {
+            genericElement.asTypeElement(caches)
+        },
+        getTypeArguments = {
+            if (generic.substitutor != PsiSubstitutor.EMPTY) {
+                generic.element?.typeParameters?.mapNotNull {
+                    val parameter =
+                        generic.substitutor.substitute(it) ?: return@mapNotNull null
+                    createDeclaredType(
+                        getQualifiedName = { parameter.canonicalText },
+                        asElement = {
+                            caches[parameter.canonicalText]
+                                ?: PsiUtil.resolveGenericsClassInType(parameter).element?.asTypeElement(
+                                    caches
+                                )
+                                ?: throw IllegalStateException("Generic element is null")
+                        },
+                        getTypeArguments = { emptyList() },
+                    )
+                } ?: emptyList()
+            } else {
+                emptyList()
+            }
+        }
+    )
 }
 
 data class Apt(
@@ -676,6 +724,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     LogicalDeleted::class.qualifiedName -> Utility.logicalDeleted()
     Scalar::class.qualifiedName -> Utility.scalar()
     Nullable::class.qualifiedName -> Utility.nullable()
+    TypedTuple::class.qualifiedName -> Utility.typedTuple()
     else -> null
 }?.let {
     ByteBuddy()
@@ -1014,6 +1063,13 @@ private fun createPrimitiveType(
         ): R? {
             return v?.visitPrimitive(this, p)
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (other is PrimitiveType) {
+                return getKind() == other.kind
+            }
+            return super.equals(other)
+        }
     }
 }
 
@@ -1090,6 +1146,75 @@ private fun createDeclaredType(
 
         override fun toString(): String {
             return getQualifiedName()
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (other is DeclaredType) {
+                return this.toString() == other.toString()
+            }
+            return super.equals(other)
+        }
+    }
+}
+
+private fun createVariableElement(
+    getSimpleName: () -> Name = { TODO("Not yet implemented") },
+    asType: () -> TypeMirror = { TODO("${getSimpleName()} Not yet implemented") },
+    getConstantValue: () -> Any? = { TODO("${getSimpleName()} Not yet implemented") },
+    getEnclosingElement: () -> Element = { TODO("${getSimpleName()} Not yet implemented") },
+    getKind: () -> ElementKind = { TODO("${getSimpleName()} Not yet implemented") },
+    getModifiers: () -> Set<Modifier> = { TODO("${getSimpleName()} Not yet implemented") },
+    getEnclosedElements: () -> List<Element> = { TODO("${getSimpleName()} Not yet implemented") },
+    getAnnotationMirrors: () -> List<AnnotationMirror> = { TODO("${getSimpleName()} Not yet implemented") },
+    getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getSimpleName()} Not yet implemented") },
+    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { TODO("${getSimpleName()} Not yet implemented") },
+): VariableElement {
+    return object : VariableElement {
+        override fun asType(): TypeMirror? {
+            return asType()
+        }
+
+        override fun getConstantValue(): Any? {
+            return getConstantValue()
+        }
+
+        override fun getSimpleName(): Name? {
+            return getSimpleName()
+        }
+
+        override fun getEnclosingElement(): Element? {
+            return getEnclosingElement()
+        }
+
+        override fun getKind(): ElementKind? {
+            return getKind()
+        }
+
+        override fun getModifiers(): Set<Modifier?>? {
+            return getModifiers()
+        }
+
+        override fun getEnclosedElements(): List<Element?>? {
+            return getEnclosedElements()
+        }
+
+        override fun getAnnotationMirrors(): List<AnnotationMirror?>? {
+            return getAnnotationMirrors()
+        }
+
+        override fun <A : Annotation?> getAnnotation(annotationType: Class<A?>?): A? {
+            return getAnnotation.invoke(annotationType as Class<Annotation>) as A?
+        }
+
+        override fun <A : Annotation?> getAnnotationsByType(annotationType: Class<A?>?): Array<out A?>? {
+            return getAnnotationsByType.invoke(annotationType as Class<Annotation>) as Array<A?>?
+        }
+
+        override fun <R : Any?, P : Any?> accept(
+            v: ElementVisitor<R?, P?>?,
+            p: P?
+        ): R? {
+            return v?.visitVariable(this, p)
         }
     }
 }

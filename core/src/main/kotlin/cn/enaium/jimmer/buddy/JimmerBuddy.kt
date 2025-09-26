@@ -50,6 +50,7 @@ import org.babyfish.jimmer.apt.entry.EntryProcessor
 import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
+import org.babyfish.jimmer.apt.tuple.TypedTupleProcessor
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
@@ -298,7 +299,7 @@ object JimmerBuddy {
         }
 
         private fun createRoundEnvironment(
-            rootElements: Set<Element?>,
+            rootElements: Set<Element>,
         ): RoundEnvironment {
             return object : RoundEnvironment {
                 override fun processingOver(): Boolean {
@@ -309,7 +310,7 @@ object JimmerBuddy {
                     TODO("Not yet implemented")
                 }
 
-                override fun getRootElements(): Set<Element?> {
+                override fun getRootElements(): Set<Element> {
                     return rootElements
                 }
 
@@ -317,8 +318,9 @@ object JimmerBuddy {
                     TODO("Not yet implemented")
                 }
 
-                override fun getElementsAnnotatedWith(a: Class<out Annotation?>?): Set<Element> {
-                    TODO("Not yet implemented")
+                override fun getElementsAnnotatedWith(a: Class<out Annotation>): Set<Element> {
+                    return rootElements.filter { it.getAnnotation(a as Class<Annotation>) != null }
+                        .toSet()
                 }
             }
         }
@@ -397,6 +399,10 @@ object JimmerBuddy {
 
                             EntryProcessor(option.context, immutableTypeElements.keys).process()
                             ErrorProcessor(option.context, option.checkedException).process(roundEnv)
+                            TypedTupleProcessor(
+                                option.context,
+                                psiCaches.filter { it.hasTypedTupleAnnotation() }.map { it.qualifiedName }.toSet()
+                            ).process(roundEnv)
                             sources.forEach {
                                 needRefresh.add(it to generatedDir)
                             }
@@ -485,6 +491,7 @@ object JimmerBuddy {
                                 .process()
                             org.babyfish.jimmer.ksp.error.ErrorProcessor(option.context, option.checkedException)
                                 .process()
+                            org.babyfish.jimmer.ksp.tuple.TypedTupleProcessor(option.context, emptyList()).process()
                             sources.forEach {
                                 needRefresh.add(it to generatedDir)
                             }
