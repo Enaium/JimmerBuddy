@@ -286,7 +286,8 @@ fun PsiType.asTypeMirror(caches: MutableMap<String, TypeElement>): TypeMirror {
             } else {
                 emptyList()
             }
-        }
+        },
+        getAnnotationMirrors = { emptyList() }
     )
 }
 

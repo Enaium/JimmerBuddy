@@ -1,0 +1,27 @@
+name: "Bug Report"
+description: "Create a report to help us improve"
+title: "[BUG] - <title>"
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+    validations:
+      required: true
+  - type: input
+    id: intellij_version
+    attributes:
+      label: "Intellij Version"
+      description: Please enter your Intellij version
+      placeholder: ex. 25.3
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Self-contained Reproducer Project
+      description: |
+        Provide a minimal, self-contained example project demonstrating the problem as a GitHub repository or an attached archive.
+    validations:
+      required: true
