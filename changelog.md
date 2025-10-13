@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Optimize some code about DTO
 - Database table and column name completion, then check
 - Update document
+- Fix current dir is not a project
 
 ## 1.10.x
 
@@ -133,7 +134,7 @@ All notable changes to this project will be documented in this file.
 - Fix Unknown super type
 - Fix Cannot find the annotation declaration
 - Fix prop is not recursive
-- Fix Cannot write "/dummy.txt" in MacOS
+- Fix Cannot write "/dummy.txt" in macOS
 - Fix segmentedButton Compatible
 - Disable resource generate
 

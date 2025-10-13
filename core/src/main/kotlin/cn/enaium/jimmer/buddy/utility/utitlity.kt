@@ -64,7 +64,7 @@ data class Source(
 )
 
 fun findProjectDir(file: Path): Path? {
-    var current: Path? = file.parent
+    var current: Path? = file
     while (current != null) {
         if (isProject(current)) {
             return current
