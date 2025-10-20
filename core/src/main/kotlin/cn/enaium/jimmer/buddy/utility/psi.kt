@@ -577,14 +577,14 @@ fun KtQualifiedExpression.getImmutableTrace(execute: KtQualifiedExpression? = nu
     while (child != null) {
         if (child is KtQualifiedExpression) {
             val property = child.lastChild.reference?.resolve() as? KtProperty
-            if (property?.containingClass()?.isImmutable() == true) {
+            if (property?.isMember == true && property.containingClass()?.isImmutable() == true) {
                 trace.add(property.name ?: continue)
             } else if (child == execute) {
                 return trace.reversed()
             }
         } else if (child is KtNameReferenceExpression) {
             val property = child.reference?.resolve() as? KtProperty
-            if (property?.containingClass()?.isImmutable() == true) {
+            if (property?.isMember == true && property.containingClass()?.isImmutable() == true) {
                 trace.add(property.name ?: continue)
             }
         }

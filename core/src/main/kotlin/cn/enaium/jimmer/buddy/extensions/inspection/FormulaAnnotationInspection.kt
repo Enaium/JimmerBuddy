@@ -77,7 +77,8 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                             dependencies
                         }?.flatten()?.toSet()
 
-                if (dependencies?.contains(element.getImmutableTrace().joinToString(".")) != true) {
+                 val trace = element.getImmutableTrace().takeIf { it.isNotEmpty() } ?: return
+                if (dependencies?.contains(trace.joinToString(".")) != true) {
                     holder.registerProblem(element, I18n.message("inspection.annotation.formula.dependencyNotFound"))
                 }
             }
@@ -102,7 +103,8 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
 
                 val parent = element.parent
                 if (parent is KtQualifiedExpression) {
-                    if (dependencies?.contains(parent.getImmutableTrace().joinToString(".")) != true) {
+                    val trace = parent.getImmutableTrace().takeIf { it.isNotEmpty() } ?: return
+                    if (dependencies?.contains(trace.joinToString(".")) != true) {
                         holder.registerProblem(parent, I18n.message("inspection.annotation.formula.dependencyNotFound"))
                     }
                 } else if (element.findParentOfType<KtQualifiedExpression>() == null) {
