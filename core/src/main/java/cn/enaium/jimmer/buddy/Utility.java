@@ -527,6 +527,15 @@ public class Utility {
         };
     }
 
+    public static org.jspecify.annotations.Nullable jspecifyNullable() {
+        return new org.jspecify.annotations.Nullable() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return org.jspecify.annotations.Nullable.class;
+            }
+        };
+    }
+
     public static TypedTuple typedTuple() {
         return new TypedTuple() {
             @Override

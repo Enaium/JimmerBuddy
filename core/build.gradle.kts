@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.antlr4.intellij.adaptor)
     implementation(libs.h2)
     implementation(libs.jackson)
+    implementation(libs.jspecify)
     implementation(project(":common"))
     implementation(project(":gradle-tooling-extension"))
 }

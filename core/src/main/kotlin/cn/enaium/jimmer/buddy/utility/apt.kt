@@ -725,6 +725,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     LogicalDeleted::class.qualifiedName -> Utility.logicalDeleted()
     Scalar::class.qualifiedName -> Utility.scalar()
     Nullable::class.qualifiedName -> Utility.nullable()
+    org.jspecify.annotations.Nullable::class.qualifiedName -> Utility.jspecifyNullable()
     TypedTuple::class.qualifiedName -> Utility.typedTuple()
     else -> null
 }?.let {
