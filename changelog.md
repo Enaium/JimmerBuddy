@@ -3,7 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## 1.11.x
-
+- Formula dependencies skip non-member
+- Support jspecify
+- Fix cannot get fetch by QExpression
 - Support to generate `TypedTuple`
 - Support `@JoinColumn` (#131)
 - Support dto type usages

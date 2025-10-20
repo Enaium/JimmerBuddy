@@ -208,7 +208,7 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                                 ?.also { fetchArg ->
                                     fetchArg.getChildOfType<KtQualifiedExpression>()
                                         ?.also { fetcherExpression ->
-                                            expression = fetcherExpression
+                                            expression = fetcherExpression.selectorExpression
                                         }
                                     fetchArg.getChildOfType<KtNameReferenceExpression>()
                                         ?.also { fetcherExpression ->
