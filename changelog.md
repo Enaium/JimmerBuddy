@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## 1.11.x
+- Support change the new dto file dir
 - Formula dependencies skip non-member
 - Support jspecify
 - Fix cannot get fetch by QExpression
