@@ -30,6 +30,7 @@ import com.intellij.notification.Notifications
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
@@ -62,6 +63,11 @@ class NewDtoFileDialog(
 
     init {
         model.immutableName = immutableName
+        project.guessProjectDir()?.toNioPath()?.also { projectDir ->
+            findProjectDir(sourceFile)?.resolve("src/main/dto")?.relativeTo(projectDir)?.toString()?.also {
+                model.relativePath = it
+            }
+        }
         model.packageName = "${immutableName.substringBeforeLast(".")}.dto"
         model.dtoFileName = immutableName.substringAfterLast(".")
         title = I18n.message("dialog.newDtoFile.title")
@@ -73,6 +79,9 @@ class NewDtoFileDialog(
             addToTop(panel {
                 row(I18n.message("dialog.newDtoFile.label.immutableName")) {
                     textField().align(Align.FILL).bindText(model.immutableNameProperty)
+                }
+                row(I18n.message("dialog.newDtoFile.label.relativePath")) {
+                    relativeLocationField(project, model.relativePathProperty).align(Align.FILL)
                 }
                 row(I18n.message("dialog.newDtoFile.label.packageName")) {
                     packageChooserField(project, model.packageNameProperty).align(Align.FILL)
@@ -115,75 +124,80 @@ class NewDtoFileDialog(
     }
 
     override fun doOKAction() {
-        findProjectDir(sourceFile)?.also { projectDir ->
-            val dtoFile = projectDir.resolve("src/main/dto/${model.dtoFileName}.dto")
-            val fileTemplateManager = FileTemplateManager.getInstance(project)
-            val dtoHeadTemplate = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_HEAD)
-            val dtoHeadContent = dtoHeadTemplate.getText(
-                mapOf(
-                    "IMMUTABLE_NAME" to model.immutableName,
-                    "PACKAGE_NAME" to model.packageName
-                )
-            )
-            val dtoContentTemplate =
-                fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_CONTENT)
-            val dtoContent = dtoContentTemplate.getText(
-                mapOf(
-                    "DTO_TYPES" to listOf(
-                        mapOf(
-                            "modifier" to model.modifier.keyword,
-                            "name" to (model.typeName.takeIf { it.isNotBlank() } ?: model.dtoFileName),
-                            "properties" to properties
+        val dtoFile =
+            project.guessProjectDir()?.toNioPath()?.resolve(model.relativePath)?.resolve("${model.dtoFileName}.dto")
+                ?: run {
+                    Notifications.Bus.notify(
+                        Notification(
+                            JimmerBuddy.INFO_GROUP_ID,
+                            "Can't find project directory",
+                            NotificationType.WARNING
                         )
-                    ),
-                )
-            )
-            dtoFile.createParentDirectories()
-            if (dtoFile.exists()) {
-                val oldDtoContent = dtoFile.readText()
-                val oldContent = DiffContentFactory.getInstance().create(oldDtoContent)
-
-                val newContent = DiffContentFactory.getInstance().create("$oldDtoContent\n$dtoContent")
-                val diffRequest = SimpleDiffRequest("New DTO", oldContent, newContent, "Old DTO", "New DTO")
-                object : DialogWrapper(false) {
-
-                    init {
-                        title = "New DTO"
-                        init()
-                    }
-
-                    override fun createCenterPanel(): JComponent {
-                        return DiffManager.getInstance().createRequestPanel(project, {}, null).apply {
-                            setRequest(diffRequest)
-                        }.component
-                    }
-                }.showAndGet().ifTrue {
-                    dtoFile.writeText("$oldDtoContent\n$dtoContent")
+                    )
+                    return
                 }
-            } else {
-                dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
-            }
-            JimmerBuddy.getWorkspace(project).asyncRefresh(listOf(dtoFile))
-        } ?: Notifications.Bus.notify(
-            Notification(
-                JimmerBuddy.INFO_GROUP_ID,
-                "Can't find project directory",
-                NotificationType.WARNING
+        val fileTemplateManager = FileTemplateManager.getInstance(project)
+        val dtoHeadTemplate = fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_HEAD)
+        val dtoHeadContent = dtoHeadTemplate.getText(
+            mapOf(
+                "IMMUTABLE_NAME" to model.immutableName,
+                "PACKAGE_NAME" to model.packageName
             )
         )
+        val dtoContentTemplate =
+            fileTemplateManager.getInternalTemplate(BuddyTemplateFile.JIMMER_DTO_CONTENT)
+        val dtoContent = dtoContentTemplate.getText(
+            mapOf(
+                "DTO_TYPES" to listOf(
+                    mapOf(
+                        "modifier" to model.modifier.keyword,
+                        "name" to (model.typeName.takeIf { it.isNotBlank() } ?: model.dtoFileName),
+                        "properties" to properties
+                    )
+                ),
+            )
+        )
+        dtoFile.createParentDirectories()
+        if (dtoFile.exists()) {
+            val oldDtoContent = dtoFile.readText()
+            val oldContent = DiffContentFactory.getInstance().create(oldDtoContent)
+
+            val newContent = DiffContentFactory.getInstance().create("$oldDtoContent\n$dtoContent")
+            val diffRequest = SimpleDiffRequest("New DTO", oldContent, newContent, "Old DTO", "New DTO")
+            object : DialogWrapper(false) {
+
+                init {
+                    title = "New DTO"
+                    init()
+                }
+
+                override fun createCenterPanel(): JComponent {
+                    return DiffManager.getInstance().createRequestPanel(project, {}, null).apply {
+                        setRequest(diffRequest)
+                    }.component
+                }
+            }.showAndGet().ifTrue {
+                dtoFile.writeText("$oldDtoContent\n$dtoContent")
+            }
+        } else {
+            dtoFile.writeText("$dtoHeadContent\n\n$dtoContent")
+        }
+        JimmerBuddy.getWorkspace(project).asyncRefresh(listOf(dtoFile))
         super.doOKAction()
     }
 
     private class NewDtoFileModel : BaseState() {
         private val graph: PropertyGraph = PropertyGraph()
 
-        val immutableNameProperty = graph.property<String>("")
-        val packageNameProperty = graph.property<String>("")
-        val dtoFileNameProperty = graph.property<String>("")
-        val typeNameProperty = graph.property<String>("")
+        val immutableNameProperty = graph.property("")
+        val relativePathProperty = graph.property("")
+        val packageNameProperty = graph.property("")
+        val dtoFileNameProperty = graph.property("")
+        val typeNameProperty = graph.property("")
         val modifierProperty = graph.property<Modifier>(Modifier.OUTPUT)
 
         var immutableName by immutableNameProperty
+        var relativePath: String by relativePathProperty
 
         var packageName by packageNameProperty
 
