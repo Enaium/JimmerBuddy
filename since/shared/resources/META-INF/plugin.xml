@@ -140,6 +140,7 @@
             <descriptionDirectoryName>draftSet</descriptionDirectoryName>
         </intentionAction>
         <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconProvider" order="first"/>
+        <iconLayerProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconLayerProvider" order="first"/>
         <completion.confidence language="UAST"
                                implementationClass="cn.enaium.jimmer.buddy.extensions.completion.EnableCompletionInString"
                                order="first"/>

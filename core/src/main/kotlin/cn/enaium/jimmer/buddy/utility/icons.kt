@@ -34,8 +34,8 @@ val JimmerBuddy.Icons.PROP: Icon
 val JimmerBuddy.Icons.DTO_FILE: Icon
     get() = IconLoader.getIcon("/icons/dto_file.svg", JimmerBuddy::class.java)
 
-val JimmerBuddy.Icons.Nodes.DTO_FOLDER: Icon
-    get() = IconLoader.getIcon("/icons/dto_folder.svg", JimmerBuddy::class.java)
+val JimmerBuddy.Icons.Nodes.DTO_MARK: Icon
+    get() = IconLoader.getIcon("/icons/dto_mark.svg", JimmerBuddy::class.java)
 val JimmerBuddy.Icons.Nodes.DTO_TYPE: Icon
     get() = IconLoader.getIcon("/icons/dto_type.svg", JimmerBuddy::class.java)
 val JimmerBuddy.Icons.Nodes.DTO_PROP: Icon
