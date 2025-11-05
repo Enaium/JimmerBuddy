@@ -140,10 +140,11 @@
             <descriptionDirectoryName>draftSet</descriptionDirectoryName>
         </intentionAction>
         <iconProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconProvider" order="first"/>
-        <iconLayerProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconLayerProvider" order="first"/>
+        <iconLayerProvider implementation="cn.enaium.jimmer.buddy.extensions.icon.JimmerIconLayerProvider"
+                           order="first"/>
         <completion.confidence language="UAST"
                                implementationClass="cn.enaium.jimmer.buddy.extensions.completion.EnableCompletionInString"
-                               order="first"/>
+                               order="before javaSkipAutopopupInStrings, before kotlinSkipAutopopupInStrings"/>
         <psi.referenceContributor language="UAST"
                                   implementation="cn.enaium.jimmer.buddy.extensions.reference.JimmerReferenceContributor"/>
         <applicationConfigurable parentId="tools"
