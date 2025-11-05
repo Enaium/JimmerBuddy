@@ -2,7 +2,7 @@
 kotlin = "2.2.20"
 ksp = "2.2.20+"
 intellij = "2.9.0"
-jimmer = "0.9.112"
+jimmer = "0.9.114"
 byteBuddy = "1.17.1"
 kotlinpoet = "2.0.0"
 javapoet = "1.13.0"
@@ -34,8 +34,3 @@ kotlin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.pl
 intellij-platform = { module = "org.jetbrains.intellij.platform:org.jetbrains.intellij.platform.gradle.plugin", version.ref = "intellij" }
 changelog = { module = "org.jetbrains.changelog:org.jetbrains.changelog.gradle.plugin", version.ref = "changelog" }
 jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
-
-[plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-intellij = { id = "org.jetbrains.intellij.platform", version.ref = "intellij" }
-changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }

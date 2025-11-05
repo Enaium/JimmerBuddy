@@ -38,15 +38,15 @@ class DtoCommenter : CodeDocumentationAwareCommenter {
         return DtoLanguage.TOKEN[DtoParser.DocComment]
     }
 
-    override fun getDocumentationCommentPrefix(): String? {
+    override fun getDocumentationCommentPrefix(): String {
         return "/**"
     }
 
-    override fun getDocumentationCommentLinePrefix(): String? {
+    override fun getDocumentationCommentLinePrefix(): String {
         return "*"
     }
 
-    override fun getDocumentationCommentSuffix(): String? {
+    override fun getDocumentationCommentSuffix(): String {
         return "*/"
     }
 
