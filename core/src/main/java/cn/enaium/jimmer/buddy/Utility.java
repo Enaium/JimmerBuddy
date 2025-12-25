@@ -21,6 +21,9 @@ import org.babyfish.jimmer.Immutable;
 import org.babyfish.jimmer.Scalar;
 import org.babyfish.jimmer.error.ErrorFamily;
 import org.babyfish.jimmer.error.ErrorField;
+import org.babyfish.jimmer.jackson.Converter;
+import org.babyfish.jimmer.jackson.JsonConverter;
+import org.babyfish.jimmer.jackson.LongToStringConverter;
 import org.babyfish.jimmer.sql.*;
 import org.babyfish.jimmer.sql.meta.LogicalDeletedValueGenerator;
 import org.babyfish.jimmer.sql.meta.UserIdGenerator;
@@ -541,6 +544,20 @@ public class Utility {
             @Override
             public Class<? extends Annotation> annotationType() {
                 return TypedTuple.class;
+            }
+        };
+    }
+
+    public static JsonConverter jsonConverter() {
+        return new JsonConverter() {
+            @Override
+            public Class<? extends Converter<?, ?>> value() {
+                return null;
+            }
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JsonConverter.class;
             }
         };
     }
