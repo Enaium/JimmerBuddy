@@ -31,6 +31,7 @@ import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.Scalar
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
+import org.babyfish.jimmer.jackson.JsonConverter
 import org.babyfish.jimmer.sql.*
 import org.jetbrains.annotations.Nullable
 import org.jetbrains.kotlin.idea.base.util.allScope
@@ -49,6 +50,7 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.*
 import javax.tools.JavaFileObject.Kind
+import kotlin.collections.mapNotNull
 import kotlin.io.path.Path
 
 /**
@@ -119,19 +121,17 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
                 asElement = {
                     this.asTypeElement(caches)
                 },
-                getTypeArguments = { emptyList() }
+                getTypeArguments = {
+                    this.typeParameters.mapNotNull {
+                        it.asTypeMirror(caches)
+                    }
+                }
             )
         },
         getInterfaces = {
-            this.interfaces.mapNotNull { element ->
-                if (element is PsiClass) {
-                    createDeclaredType(
-                        getQualifiedName = { element.qualifiedName!! },
-                        asElement = {
-                            element.asTypeElement(caches)
-                        },
-                        getTypeArguments = { emptyList() }
-                    )
+            this.interfaceTypes.mapNotNull { type ->
+                if (type is PsiType) {
+                    type.asTypeMirror(caches)
                 } else {
                     null
                 }
@@ -154,15 +154,12 @@ fun PsiClass.asTypeElement(caches: MutableMap<String, TypeElement> = mutableMapO
             }
         },
         getSuperclass = {
-            val superClass = this.superClass ?: return@createTypeElement null
-            val fqName = superClass.qualifiedName ?: return@createTypeElement null
-            createDeclaredType(
-                getQualifiedName = { fqName },
-                asElement = {
-                    superClass.asTypeElement(caches)
-                },
-                getTypeArguments = { emptyList() }
-            )
+            val superClass = this.superClassType ?: return@createTypeElement null
+            if (superClass is PsiType) {
+                superClass.asTypeMirror(caches)
+            } else {
+                null
+            }
         }
     ).also {
         caches[this.qualifiedName!!] = it
@@ -228,6 +225,14 @@ fun PsiField.asVariableElement(caches: MutableMap<String, TypeElement>): Variabl
             type.asTypeMirror(caches)
         },
         getModifiers = { setOf(Modifier.PUBLIC) }
+    )
+}
+
+fun PsiTypeParameter.asTypeMirror(caches: MutableMap<String, TypeElement>): TypeMirror {
+    return createTypeVariable(
+        asElement = {
+            this.asTypeElement(caches)
+        }
     )
 }
 
@@ -727,6 +732,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     Nullable::class.qualifiedName -> Utility.nullable()
     org.jspecify.annotations.Nullable::class.qualifiedName -> Utility.jspecifyNullable()
     TypedTuple::class.qualifiedName -> Utility.typedTuple()
+    JsonConverter::class.qualifiedName -> Utility.jsonConverter()
     else -> null
 }?.let {
     ByteBuddy()
@@ -797,6 +803,12 @@ fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
             }
         }
 
+        is PsiClassObjectAccessExpression -> try {
+            Class.forName(this.type.canonicalText.subMiddle("<", ">"))
+        } catch (_: Throwable) {
+            null
+        }
+
         else -> {
             null
         }
@@ -840,11 +852,17 @@ fun Any.arrayWrapper(returnType: Class<*>): Any {
 }
 
 private fun createAnnotationValue(
-    value: Any? = null,
+    value: () -> Any? = { TODO("Not yet implemented") },
 ): AnnotationValue {
     return object : AnnotationValue {
         override fun getValue(): Any? {
-            TODO("Not yet implemented")
+            return value()?.let {
+                if (it is Class<*>) {
+                    it.name
+                } else {
+                    it
+                }
+            }
         }
 
         override fun <R : Any?, P : Any?> accept(
@@ -885,16 +903,20 @@ private fun PsiClass.createAnnotationMirror(
         }
 
         override fun getElementValues(): Map<out ExecutableElement, AnnotationValue> {
-            return if (listOf(Transient::class.qualifiedName).any { it == anno.annotationClass.qualifiedName }) {
+            return if (listOf(
+                    Transient::class.qualifiedName,
+                    JsonConverter::class.qualifiedName
+                ).any { it == anno.annotationClass.qualifiedName }
+            ) {
                 anno.javaClass.methods.filter { f ->
                     Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
                 }.mapNotNull { method ->
                     try {
-                        createAnnotationValue(
+                        createAnnotationValue {
                             anno.javaClass.getMethod(method.name).also {
                                 it.isAccessible = true
-                            }.invoke(anno),
-                        )
+                            }.invoke(anno)
+                        }
                     } catch (_: Throwable) {
                         null
                     }?.let {
@@ -1071,6 +1093,50 @@ private fun createPrimitiveType(
                 return getKind() == other.kind
             }
             return super.equals(other)
+        }
+    }
+}
+
+private fun createTypeVariable(
+    asElement: () -> Element? = { TODO("Not yet implemented") },
+    getUpperBound: () -> TypeMirror? = { TODO("Not yet implemented") },
+    getLowerBound: () -> TypeMirror? = { TODO("Not yet implemented") },
+    getKind: () -> TypeKind? = { TODO("Not yet implemented") },
+): TypeVariable {
+    return object : TypeVariable {
+        override fun asElement(): Element? {
+            return asElement()
+        }
+
+        override fun getUpperBound(): TypeMirror? {
+            return getUpperBound()
+        }
+
+        override fun getLowerBound(): TypeMirror? {
+            return getLowerBound()
+        }
+
+        override fun getKind(): TypeKind? {
+            return getKind()
+        }
+
+        override fun getAnnotationMirrors(): List<AnnotationMirror?> {
+            TODO("Not yet implemented")
+        }
+
+        override fun <A : Annotation?> getAnnotation(annotationType: Class<A?>?): A? {
+            TODO("Not yet implemented")
+        }
+
+        override fun <A : Annotation?> getAnnotationsByType(annotationType: Class<A?>?): Array<out A?>? {
+            TODO("Not yet implemented")
+        }
+
+        override fun <R : Any?, P : Any?> accept(
+            v: TypeVisitor<R?, P?>?,
+            p: P?
+        ): R? {
+            return v?.visitTypeVariable(this, p)
         }
     }
 }
