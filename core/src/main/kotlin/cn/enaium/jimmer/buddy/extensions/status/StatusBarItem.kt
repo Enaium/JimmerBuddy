@@ -28,6 +28,7 @@ import com.intellij.openapi.ui.popup.ListPopup
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.EditorBasedStatusBarPopup
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Enaium
@@ -59,6 +60,8 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
     }
 
     override fun isEnabledForFile(file: VirtualFile?): Boolean {
-        return file != null && project.isJimmerProject()
+        return runBlocking {
+            file != null && project.isJimmerProject()
+        }
     }
 }

@@ -16,9 +16,11 @@
 
 package cn.enaium.jimmer.buddy.utility
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspData
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -30,6 +32,8 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiManager
 import com.squareup.javapoet.TypeName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.babyfish.jimmer.Scalar
 import org.babyfish.jimmer.dto.compiler.DtoFile
 import org.babyfish.jimmer.dto.compiler.OsFile
@@ -41,6 +45,7 @@ import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.base.util.containsKotlinFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
@@ -139,45 +144,45 @@ fun Project.isDumb(): Boolean {
     return isDisposed || DumbService.isDumb(this)
 }
 
-fun Project.isJimmerProject(): Boolean {
+fun Project.workspace(): JimmerBuddy.Workspace {
+    return JimmerBuddy.getWorkspace(this)
+}
+
+suspend fun Project.isJimmerProject(): Boolean {
     return isJavaProject() || isKotlinProject()
 }
 
-fun Project.isJavaProject(): Boolean {
+suspend fun Project.isJavaProject(): Boolean = withContext(Dispatchers.IO) {
     if (isDisposed) {
-        return false
+        return@withContext false
     }
 
-    return if (isAndroidProject()) {
-        !isKotlinProject() && thread {
-            OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
-        }.any { it.name.startsWith("jimmer-core") }
-    } else {
-        modules.any { module ->
-            CompilerConfiguration.getInstance(this).getAnnotationProcessingConfiguration(module).processorPath.split(
-                File.pathSeparator
-            ).any { it.contains("jimmer-apt") }
+    return@withContext !isKotlinProject() && OrderEnumerator.orderEntries(this@isJavaProject)
+        .runtimeOnly().classesRoots.any {
+            it.name.startsWith(
+                "jimmer-core"
+            )
         }
+}
+
+suspend fun Project.isKotlinProject(): Boolean = withContext(Dispatchers.IO) {
+    if (isDisposed) {
+        return@withContext false
+    }
+
+    return@withContext ReadAction.compute<Boolean, Throwable> {
+        OrderEnumerator.orderEntries(this@isKotlinProject)
+            .runtimeOnly().classesRoots.any { it.name.startsWith("jimmer-core-kotlin") } && this@isKotlinProject.containsKotlinFile()
     }
 }
 
-fun Project.isKotlinProject(): Boolean {
+suspend fun Project.isAndroidProject(): Boolean = withContext(Dispatchers.IO) {
     if (isDisposed) {
-        return false
-    }
-    return thread {
-        OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
-    }.any { it.name.startsWith("jimmer-core-kotlin") }
-}
-
-fun Project.isAndroidProject(): Boolean {
-    if (isDisposed) {
-        return false
+        return@withContext false
     }
 
-    return thread {
-        OrderEnumerator.orderEntries(this).runtimeOnly().classesRoots
-    }.any { it.name.startsWith("android-device-provider") }
+    return@withContext OrderEnumerator.orderEntries(this@isAndroidProject)
+        .runtimeOnly().classesRoots.any { it.name.startsWith("android-device-provider") }
 }
 
 fun Project.runWhenSmart(block: () -> Unit) {

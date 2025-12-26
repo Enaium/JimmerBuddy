@@ -249,10 +249,10 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val typeName =
         element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
     try {
-        val commonImmutable = if (project.isJavaProject()) {
+        val commonImmutable = if (project.workspace().isJavaProject) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()
                 ?.toCommonImmutableType() ?: return null
-        } else if (project.isKotlinProject()) {
+        } else if (project.workspace().isKotlinProject) {
             (KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass)?.toImmutable()
                 ?.toCommonImmutableType() ?: return null
         } else {
@@ -282,9 +282,9 @@ fun CommonImmutableType.psi(project: Project): PsiElement? {
     val ktClass =
         KotlinFullClassNameIndex[qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
 
-    return if (project.isJavaProject()) {
+    return if (project.workspace().isJavaProject) {
         psiClass
-    } else if (project.isKotlinProject()) {
+    } else if (project.workspace().isKotlinProject) {
         ktClass
     } else {
         null
@@ -297,9 +297,9 @@ fun CommonImmutableType.CommonImmutableProp.psi(project: Project): PsiElement? {
     val ktClass =
         KotlinFullClassNameIndex[declaringType().qualifiedName(), project, project.allScope()].firstOrNull() as? KtClass
 
-    return if (project.isJavaProject()) {
+    return if (project.workspace().isJavaProject) {
         psiClass?.methods?.find { it.name == name() }
-    } else if (project.isKotlinProject()) {
+    } else if (project.workspace().isKotlinProject) {
         ktClass?.getProperties()?.find { it.name == name() }
     } else {
         null

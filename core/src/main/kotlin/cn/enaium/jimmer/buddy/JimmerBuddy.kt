@@ -188,6 +188,9 @@ object JimmerBuddy {
 
         var init = false
         var initialized = false
+        var isJavaProject = false
+        var isKotlinProject = false
+        var isAndroidProject = false
 
         fun init(enable: Boolean = true) {
             if (init) return
@@ -196,7 +199,11 @@ object JimmerBuddy {
             CoroutineScope(Dispatchers.Default).launch {
                 val projects = project.findProjects()
                 log.info("Project ${project.name} is initializing")
-                if (project.isJavaProject()) {
+                isJavaProject = project.isJavaProject()
+                isKotlinProject = project.isKotlinProject()
+                isAndroidProject = project.isAndroidProject()
+
+                if (isJavaProject) {
                     val generateProject = GenerateProject.generate(
                         projects,
                         GenerateProject.SourceRootType.JAVA
@@ -210,7 +217,7 @@ object JimmerBuddy {
                             )
                         )
                     }
-                } else if (project.isKotlinProject()) {
+                } else if (isKotlinProject) {
                     if (enable) {
                         sourcesProcessKotlin(
                             GenerateProject.generate(
@@ -245,11 +252,11 @@ object JimmerBuddy {
         }
 
         private fun getGeneratedDir(project: Project, projectDir: Path, src: String): Path? {
-            if (project.isJavaProject()) {
+            if (isJavaProject) {
                 return if (isMavenProject(projectDir)) {
                     projectDir.resolve("target/generated-sources/annotations")
                 } else if (isGradleProject(projectDir)) {
-                    if (project.isAndroidProject()) {
+                    if (isAndroidProject) {
                         projectDir.resolve("build/generated/ap_generated_sources/debug/out")
                     } else {
                         projectDir.resolve("build/generated/sources/annotationProcessor/java/${src}")
@@ -257,9 +264,9 @@ object JimmerBuddy {
                 } else {
                     null
                 }
-            } else if (project.isKotlinProject()) {
+            } else if (isKotlinProject) {
                 return if (isGradleProject(projectDir)) {
-                    if (project.isAndroidProject()) {
+                    if (isAndroidProject) {
                         projectDir.resolve("build/generated/ksp/debug/kotlin")
                     } else {
                         projectDir.resolve("build/generated/ksp/${src}/kotlin")

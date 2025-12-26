@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.isJavaProject
 import cn.enaium.jimmer.buddy.utility.isKotlinProject
+import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -51,11 +52,11 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
         val enumName =
             findCurrentImmutableType(prop)?.props()?.find { it.name() == prop.prop?.value }?.typeName() ?: return
 
-        val entries = if (project.isJavaProject()) {
+        val entries = if (project.workspace().isJavaProject) {
             JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())
                 ?.getChildrenOfType<PsiEnumConstant>()
                 ?.map { it.name } ?: emptyList()
-        } else if (project.isKotlinProject()) {
+        } else if (project.workspace().isKotlinProject) {
             (KotlinFullClassNameIndex[enumName, project, project.allScope()].firstOrNull() as? KtClass)?.getChildOfType<KtClassBody>()
                 ?.getChildrenOfType<KtEnumEntry>()?.map { it.name ?: "Unknown Name" } ?: emptyList()
         } else {

@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.isJavaProject
 import cn.enaium.jimmer.buddy.utility.isKotlinProject
+import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.lang.ASTNode
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
@@ -63,11 +64,11 @@ class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
                     findCurrentImmutableType(prop)?.props()?.find { it.name() == prop.prop?.value }?.typeName()
                         ?: return null
 
-                return if (project.isJavaProject()) {
+                if (project.workspace().isJavaProject) {
                     JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())
                         ?.getChildrenOfType<PsiEnumConstant>()
                         ?.find { it.name == name }
-                } else if (project.isKotlinProject()) {
+                } else if (project.workspace().isKotlinProject) {
                     (KotlinFullClassNameIndex[enumName, project, project.allScope()].firstOrNull() as? KtClass)?.getChildOfType<KtClassBody>()
                         ?.getChildrenOfType<KtEnumEntry>()?.find { it.name == name }
                 } else {

@@ -25,6 +25,7 @@ import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Enaium
@@ -65,6 +66,6 @@ class BuddyToolWindow : ToolWindowFactory {
     }
 
     override fun shouldBeAvailable(project: Project): Boolean {
-        return project.isJimmerProject()
+        return runBlocking { project.isJimmerProject() }
     }
 }

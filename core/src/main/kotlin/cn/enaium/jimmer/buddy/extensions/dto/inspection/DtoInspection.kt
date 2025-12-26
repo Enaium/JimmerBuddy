@@ -49,7 +49,7 @@ class DtoInspection : LocalInspectionTool() {
                 val path = file.virtualFile.toNioPath()
                 val typeName =
                     file.getChildOfType<DtoPsiRoot>()?.qualifiedName() ?: return
-                if (project.isJavaProject()) {
+                if (project.workspace().isJavaProject) {
                     val typeClass =
                         JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope()) ?: return
                     val (pe, rootElements, sources) =
@@ -86,7 +86,7 @@ class DtoInspection : LocalInspectionTool() {
                     } catch (_: Throwable) {
 
                     }
-                } else if (project.isKotlinProject()) {
+                } else if (project.workspace().isKotlinProject) {
                     val typeClass =
                         KotlinFullClassNameIndex[typeName, project, project.allScope()].firstOrNull() as? KtClass
                             ?: return
