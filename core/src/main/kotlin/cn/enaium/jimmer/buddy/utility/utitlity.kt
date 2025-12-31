@@ -48,6 +48,7 @@ import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.base.util.containsKotlinFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
+import org.jetbrains.kotlin.idea.util.sourceRoots
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.File
@@ -103,7 +104,7 @@ fun isGeneratedFile(path: Path): Boolean {
 }
 
 fun Project.findProjects(): Set<Path> {
-    return modules.mapNotNull { it.guessModuleDir() }.mapNotNull { findProjectDir(it.toNioPath()) }.toSet()
+    return modules.flatMap { it.sourceRoots.mapNotNull { findProjectDir(it.toNioPath()) } }.toSet()
 }
 
 fun <T> copyOnWriteSetOf(vararg elements: T): CopyOnWriteArraySet<T> {
@@ -172,7 +173,10 @@ suspend fun Project.isKotlinProject(): Boolean = withContext(Dispatchers.IO) {
 
     return@withContext ReadAction.compute<Boolean, Throwable> {
         OrderEnumerator.orderEntries(this@isKotlinProject)
-            .runtimeOnly().classesRoots.any { it.name.startsWith("jimmer-core-kotlin") } && this@isKotlinProject.containsKotlinFile()
+            .runtimeOnly().classesRoots.any { it.name.startsWith("jimmer-core-kotlin") } &&
+                ModuleManager.getInstance(
+                    this@isKotlinProject
+                ).modules.any { it.sourceRoots.find { it.name == "kotlin" } != null }
     }
 }
 

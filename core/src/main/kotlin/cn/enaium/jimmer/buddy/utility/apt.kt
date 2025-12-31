@@ -804,7 +804,11 @@ fun PsiAnnotationMemberValue.toAny(returnType: Class<*>): Any? {
         }
 
         is PsiClassObjectAccessExpression -> try {
-            Class.forName(this.type.canonicalText.subMiddle("<", ">"))
+            try {
+                Class.forName(this.type.canonicalText.subMiddle("<", ">"))
+            } catch (_: Throwable) {
+                null
+            }
         } catch (_: Throwable) {
             null
         }
@@ -858,7 +862,11 @@ private fun createAnnotationValue(
         override fun getValue(): Any? {
             return value()?.let {
                 if (it is Class<*>) {
-                    it.name
+                    if (it == Void::class.java) {
+                        "void"
+                    } else {
+                        it.name
+                    }
                 } else {
                     it
                 }
@@ -870,6 +878,10 @@ private fun createAnnotationValue(
             p: P?
         ): R? {
             return v?.visit(this, p)
+        }
+
+        override fun toString(): String {
+            return getValue().toString()
         }
     }
 }
