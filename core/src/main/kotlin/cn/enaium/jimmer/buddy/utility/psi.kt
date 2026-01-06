@@ -460,6 +460,10 @@ fun PsiType.resolveClass(): PsiClass? {
     return PsiUtil.resolveClassInClassTypeOnly(this)
 }
 
+fun PsiType.resolveGenericsClassInType(): PsiClassType.ClassResolveResult {
+    return PsiUtil.resolveGenericsClassInType(this)
+}
+
 fun PsiType.resolveGenericsClass(parameter: PsiTypeParameter): PsiClass? {
     return PsiUtil.resolveGenericsClassInType(this).substitutor.substitute(parameter)?.resolveClass()
 }
