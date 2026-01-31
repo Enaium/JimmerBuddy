@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.action
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
@@ -26,7 +27,9 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 class Initialize : AnAction() {
     override fun actionPerformed(p0: AnActionEvent) {
         p0.project?.also {
-            JimmerBuddy.getWorkspace(it).initialize()
+            it.runWhenSmart {
+                JimmerBuddy.getWorkspace(it).initialize()
+            }
         }
     }
 }

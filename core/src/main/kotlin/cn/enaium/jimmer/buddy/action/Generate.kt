@@ -86,14 +86,14 @@ class Generate : AnAction() {
 
                     "dto" -> {
                         JimmerBuddy.getWorkspace(project).also {
-                            if (project.isJavaProject()) {
+                            if (it.isJavaProject) {
                                 it.dtoProcessJava(
                                     GenerateProject.generate(
                                         path,
                                         GenerateProject.SourceRootType.DTO
                                     )
                                 )
-                            } else if (project.isKotlinProject()) {
+                            } else if (it.isKotlinProject) {
                                 it.dtoProcessKotlin(
                                     GenerateProject.generate(
                                         path,

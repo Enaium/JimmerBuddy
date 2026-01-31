@@ -24,7 +24,6 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
@@ -45,7 +44,6 @@ import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.idea.base.util.containsKotlinFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.idea.util.sourceRoots
@@ -158,16 +156,20 @@ suspend fun Project.isJavaProject(): Boolean = withContext(Dispatchers.IO) {
         return@withContext false
     }
 
-    return@withContext !isKotlinProject() && OrderEnumerator.orderEntries(this@isJavaProject)
-        .runtimeOnly().classesRoots.any {
-            it.name.startsWith(
-                "jimmer-core"
-            )
-        }
+    return@withContext modules.any { module ->
+        CompilerConfiguration.getInstance(this@isJavaProject)
+            .getAnnotationProcessingConfiguration(module).processorPath.split(
+                File.pathSeparator
+            ).any { it.contains("jimmer-apt") }
+    }
 }
 
 suspend fun Project.isKotlinProject(): Boolean = withContext(Dispatchers.IO) {
     if (isDisposed) {
+        return@withContext false
+    }
+
+    if (isJavaProject()) {
         return@withContext false
     }
 

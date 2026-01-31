@@ -60,8 +60,6 @@ class StatusBarItem(project: Project) : EditorBasedStatusBarPopup(project, false
     }
 
     override fun isEnabledForFile(file: VirtualFile?): Boolean {
-        return runBlocking {
-            file != null && project.isJimmerProject()
-        }
+        return runBlocking { project.isJimmerProject() }
     }
 }

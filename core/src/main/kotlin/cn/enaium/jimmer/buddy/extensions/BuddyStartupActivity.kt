@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Enaium
+ * Copyright 2026 Enaium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
+import cn.enaium.jimmer.buddy.utility.runWhenSmart
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 
@@ -26,6 +27,8 @@ import com.intellij.openapi.startup.ProjectActivity
  */
 class BuddyStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
-        JimmerBuddy.getWorkspace(project).init(JimmerBuddySetting.INSTANCE.state.generateWhenStartup)
+        project.runWhenSmart {
+            JimmerBuddy.getWorkspace(project).init(JimmerBuddySetting.INSTANCE.state.generateWhenStartup)
+        }
     }
 }

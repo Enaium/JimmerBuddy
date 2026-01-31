@@ -8,7 +8,7 @@
     <depends>com.intellij.gradle</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
+        <backgroundPostStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
         <projectCloseHandler implementation="cn.enaium.jimmer.buddy.extensions.BuddyProjectCloseHandler"/>
         <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.extensions.BuddyPsiTreeChange"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
