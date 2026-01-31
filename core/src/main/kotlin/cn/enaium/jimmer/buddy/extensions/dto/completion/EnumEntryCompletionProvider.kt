@@ -18,8 +18,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
-import cn.enaium.jimmer.buddy.utility.isJavaProject
-import cn.enaium.jimmer.buddy.utility.isKotlinProject
 import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider

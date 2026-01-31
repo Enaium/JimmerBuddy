@@ -28,13 +28,12 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.util.Key
-import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.ID
@@ -281,27 +280,21 @@ object JimmerBuddy {
             }
         }
 
-        suspend fun asyncRefreshSources(sources: List<Pair<Source, Path>>) {
+        fun asyncRefreshSources(sources: List<Pair<Source, Path>>) {
             asyncRefresh(files = sources.map { source ->
-                withContext(Dispatchers.IO) {
-                    val path = source.second.resolve(source.first.packageName.replace(".", "/"))
-                        .resolve("${source.first.fileName}.${source.first.extensionName}")
-                    path.createParentDirectories()
-                    path.writeText(source.first.content)
-                    path
-                }
+                val path = source.second.resolve(source.first.packageName.replace(".", "/"))
+                    .resolve("${source.first.fileName}.${source.first.extensionName}")
+                path.createParentDirectories()
+                path.writeText(source.first.content)
+                path
             })
         }
 
         fun asyncRefresh(files: List<Path>) {
             files.isEmpty() && return
             project.runWhenSmart {
-                CoroutineScope(Dispatchers.IO).launch {
-                    LocalFileSystem.getInstance().refreshNioFiles(files)
-                }
-                invokeLater {
-                    log.info("Refreshed ${files.joinToString(", ") { it.name }}")
-                }
+                VfsUtil.markDirtyAndRefresh(true, true, true, *files.map { it.toFile() }.toTypedArray())
+                log.info("Refreshed ${files.joinToString(", ") { it.name }}")
             }
         }
 
@@ -336,22 +329,20 @@ object JimmerBuddy {
             withBackgroundProgress(project, "Processing Java Source") {
                 val needRefresh = mutableListOf<Pair<Source, Path>>()
 
-                projects.forEach {
-                    it.sourceFiles.forEach { sourceFile ->
-                        ReadAction.run<Throwable> {
+                project.runReadActionSmart {
+                    projects.forEach {
+                        it.sourceFiles.forEach { sourceFile ->
                             val psiFile =
-                                sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@run
+                                sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
                             psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
                                 javaImmutablePsiClassCache.add(it)
                             }
                         }
                     }
-                }
 
-                projects.forEach { (projectDir, sourceFiles, src) ->
-                    sourceFiles.isEmpty() && return@forEach
-                    val psiCaches = CopyOnWriteArraySet<PsiClass>()
-                    ReadAction.run<Throwable> {
+                    projects.forEach { (projectDir, sourceFiles, src) ->
+                        sourceFiles.isEmpty() && return@forEach
+                        val psiCaches = CopyOnWriteArraySet<PsiClass>()
                         sourceFiles.forEach { sourceFile ->
                             val psiFile = sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
                             psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
@@ -359,7 +350,7 @@ object JimmerBuddy {
                             }
                         }
 
-                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@run
+                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
 
                         val (pe, rootElements, sources) = project.psiClassesToApt(javaImmutablePsiClassCache)
                         val currentModule = project.modules.find { it.name.endsWith(".$src") }
@@ -426,7 +417,7 @@ object JimmerBuddy {
             withBackgroundProgress(project, "Processing Java DTO") {
                 val needRefresh = mutableListOf<Pair<Source, Path>>()
                 val (pe, rootElements, sources) = project.psiClassesToApt(emptySet())
-                ReadAction.run<Throwable> {
+                project.runReadActionSmart {
                     projects.forEach { (projectDir, sourceFiles, src) ->
                         sourceFiles.forEach { sourceFile ->
                             val currentModule = project.modules.find { it.name.endsWith(".$src") }
@@ -470,10 +461,10 @@ object JimmerBuddy {
         suspend fun sourcesProcessKotlin(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Kotlin Source") {
                 val needRefresh = mutableListOf<Pair<Source, Path>>()
-                projects.forEach { (projectDir, sourceFiles, src) ->
-                    sourceFiles.isEmpty() && return@forEach
-                    project.runReadActionSmart {
-                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@runReadActionSmart
+                project.runReadActionSmart {
+                    projects.forEach { (projectDir, sourceFiles, src) ->
+                        sourceFiles.isEmpty() && return@forEach
+                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
                         val (resolver, environment, sources) = project.ktClassesToKsp(
                             sourceFiles.mapNotNull { sourceFile ->
                                 sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()

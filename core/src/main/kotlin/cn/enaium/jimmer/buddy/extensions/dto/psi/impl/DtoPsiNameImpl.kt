@@ -18,8 +18,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
-import cn.enaium.jimmer.buddy.utility.isJavaProject
-import cn.enaium.jimmer.buddy.utility.isKotlinProject
 import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.lang.ASTNode
 import com.intellij.psi.JavaPsiFacade
