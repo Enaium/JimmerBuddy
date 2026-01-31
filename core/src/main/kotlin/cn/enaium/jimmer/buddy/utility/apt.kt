@@ -22,6 +22,7 @@ import com.intellij.psi.*
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.util.PsiUtil
 import net.bytebuddy.ByteBuddy
+import net.bytebuddy.description.modifier.Visibility
 import net.bytebuddy.implementation.FixedValue
 import net.bytebuddy.implementation.InvocationHandlerAdapter
 import net.bytebuddy.matcher.ElementMatchers
@@ -50,7 +51,6 @@ import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.*
 import javax.tools.JavaFileObject.Kind
-import kotlin.collections.mapNotNull
 import kotlin.io.path.Path
 
 /**
@@ -737,6 +737,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
 }?.let {
     ByteBuddy()
         .redefine(it.javaClass)
+        .modifiers(Visibility.PUBLIC)
         .name("${it.javaClass.name}_Proxy")
         .method(ElementMatchers.namedOneOf(*it.javaClass.methods.filter { f ->
             Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
@@ -764,12 +765,15 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     val classLoader = MyClassLoader()
     val annotationUnloaded = ByteBuddy()
         .makeAnnotation()
+        .modifiers(Visibility.PUBLIC)
         .name(qualifiedName)
         .make()
     map[qualifiedName] = annotationUnloaded.bytes
 
     val proxyName = qualifiedName + "_Proxy"
-    val proxyAnnotationUnloaded = ByteBuddy().subclass(Object::class.java)
+    val proxyAnnotationUnloaded = ByteBuddy()
+        .subclass(Object::class.java)
+        .modifiers(Visibility.PUBLIC)
         .name(proxyName)
         .implement(java.lang.annotation.Annotation::class.java)
         .method(named("annotationType"))
@@ -860,16 +864,20 @@ private fun createAnnotationValue(
 ): AnnotationValue {
     return object : AnnotationValue {
         override fun getValue(): Any? {
-            return value()?.let {
-                if (it is Class<*>) {
-                    if (it == Void::class.java) {
-                        "void"
+            return try {
+                value()?.let {
+                    if (it is Class<*>) {
+                        if (it == Void::class.java) {
+                            "void"
+                        } else {
+                            it.name
+                        }
                     } else {
-                        it.name
+                        it
                     }
-                } else {
-                    it
                 }
+            } catch (_: Throwable) {
+                null
             }
         }
 
@@ -923,18 +931,12 @@ private fun PsiClass.createAnnotationMirror(
                 anno.javaClass.methods.filter { f ->
                     Any::class.java.methods.any { it.name == f.name }.not() && f.name != "annotationType"
                 }.mapNotNull { method ->
-                    try {
-                        createAnnotationValue {
-                            anno.javaClass.getMethod(method.name).also {
-                                it.isAccessible = true
-                            }.invoke(anno)
-                        }
-                    } catch (_: Throwable) {
-                        null
-                    }?.let {
-                        createExecutableElement(
-                            getSimpleName = { createName(method.name) },
-                        ) to it
+                    createExecutableElement(
+                        getSimpleName = { createName(method.name) },
+                    ) to createAnnotationValue {
+                        anno.javaClass.getMethod(method.name).also {
+                            it.isAccessible = true
+                        }.invoke(anno)
                     }
                 }.toMap()
             } else {
