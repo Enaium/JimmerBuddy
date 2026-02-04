@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Database table and column name completion, then check
 - Update document
 - Fix current dir is not a project
+- Show dto prop type
 
 ## 1.10.x
 
