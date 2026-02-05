@@ -561,10 +561,21 @@ fun PsiMethodCallExpression.getImmutableTrace(execute: PsiMethodCallExpression? 
                 return trace.reversed()
             }
         }
-        child = if (child is PsiReferenceExpression && child.reference?.resolve()
-                ?.let { it is PsiParameter && it.declarationScope is PsiLambdaExpression } == true
-        ) {
-            child.findParentOfType<PsiLambdaExpression>()?.findParentOfType<PsiMethodCallExpression>()
+
+        child = if (child is PsiReferenceExpression) {
+            when (val resolve = child.reference?.resolve()) {
+                is PsiParameter if resolve.declarationScope is PsiLambdaExpression -> {
+                    child.findParentOfType<PsiLambdaExpression>()?.findParentOfType<PsiMethodCallExpression>()
+                }
+
+                is PsiLocalVariable if resolve.initializer is PsiMethodCallExpression -> {
+                    resolve.initializer
+                }
+
+                else -> {
+                    child.firstChild?.firstChild
+                }
+            }
         } else {
             child.firstChild?.firstChild
         }
