@@ -21,8 +21,12 @@ import cn.enaium.jimmer.buddy.utility.asKSClassDeclaration
 import cn.enaium.jimmer.buddy.utility.createKSClassDeclaration
 import cn.enaium.jimmer.buddy.utility.createKSName
 import cn.enaium.jimmer.buddy.utility.createKSType
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
+import com.intellij.util.concurrency.AppExecutorUtil
+import org.jetbrains.concurrency.await
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.idea.base.util.allScope
@@ -35,6 +39,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.constants.*
 import org.jetbrains.kotlin.resolve.constants.KClassValue.Value.NormalClass
+import java.util.concurrent.Executor
 
 /**
  * @author Enaium
@@ -143,5 +148,30 @@ class PsiService231 : PsiService {
                 null
             }
         }
+    }
+
+    override suspend fun <T> readActionNonblockingCoroutine(
+        project: Project,
+        executor: Executor?,
+        block: () -> T
+    ): T {
+        return ReadAction.nonBlocking<T> { block() }
+            .withDocumentsCommitted(project)
+            .expireWith(project as Disposable)
+            .submit(executor ?: AppExecutorUtil.getAppExecutorService())
+            .await()
+    }
+
+    override suspend fun <T> readActionSmartNonblockingCoroutine(
+        project: Project,
+        executor: Executor?,
+        block: () -> T
+    ): T {
+        return ReadAction.nonBlocking<T> { block() }
+            .inSmartMode(project)
+            .withDocumentsCommitted(project)
+            .expireWith(project as Disposable)
+            .submit(executor ?: AppExecutorUtil.getAppExecutorService())
+            .await()
     }
 }

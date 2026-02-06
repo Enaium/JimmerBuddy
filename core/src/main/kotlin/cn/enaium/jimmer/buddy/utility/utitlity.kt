@@ -315,3 +315,9 @@ fun Project.toDtoFile(projectDir: Path, path: Path): DtoFile {
 }
 
 val jimmerAnnotationPrefix: String = Scalar::class.java.packageName
+
+internal suspend inline fun <T> Project.readActionSmartCoroutine(
+    crossinline block: () -> T
+): T {
+    return JimmerBuddy.Services.PSI.readActionSmartNonblockingCoroutine(this) { block() }
+}

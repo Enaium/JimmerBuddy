@@ -28,6 +28,7 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
@@ -37,10 +38,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.indexing.ID
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.babyfish.jimmer.apt.client.DocMetadata
 import org.babyfish.jimmer.apt.createAptOption
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
@@ -56,9 +54,12 @@ import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
@@ -280,7 +281,7 @@ object JimmerBuddy {
             }
         }
 
-        fun asyncRefreshSources(sources: List<Pair<Source, Path>>) {
+        fun asyncRefreshSources(sources: Iterable<Pair<Source, Path>>) {
             asyncRefresh(files = sources.map { source ->
                 val path = source.second.resolve(source.first.packageName.replace(".", "/"))
                     .resolve("${source.first.fileName}.${source.first.extensionName}")
@@ -327,129 +328,166 @@ object JimmerBuddy {
 
         suspend fun sourcesProcessJava(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Java Source") {
-                val needRefresh = mutableListOf<Pair<Source, Path>>()
+                val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
 
-                project.runReadActionSmart {
-                    projects.forEach {
-                        it.sourceFiles.forEach { sourceFile ->
-                            val psiFile =
-                                sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
-                            psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
-                                javaImmutablePsiClassCache.add(it)
-                            }
-                        }
-                    }
-
+                supervisorScope {
                     projects.forEach { (projectDir, sourceFiles, src) ->
                         sourceFiles.isEmpty() && return@forEach
-                        val psiCaches = CopyOnWriteArraySet<PsiClass>()
-                        sourceFiles.forEach { sourceFile ->
-                            val psiFile = sourceFile.toFile().toVirtualFile()?.findPsiFile(project) ?: return@forEach
-                            psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }?.also {
-                                psiCaches.add(it)
-                            }
-                        }
 
-                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
-
-                        val (pe, rootElements, sources) = project.psiClassesToApt(javaImmutablePsiClassCache)
-                        val currentModule = project.modules.find { it.name.endsWith(".$src") }
-                        val aptOptions = currentModule?.let { module ->
-                            CompilerConfiguration.getInstance(project)
-                                .getAnnotationProcessingConfiguration(module).processorOptions
-                        } ?: emptyMap()
-
-                        log.info("SourcesProcessJava Project:${projectDir.name}:${src} APTOptions:${aptOptions}")
-
-                        val option = createAptOption(
-                            aptOptions,
-                            pe.elementUtils,
-                            pe.typeUtils,
-                            pe.filer
-                        )
-                        val roundEnv = createRoundEnvironment(rootElements)
-
-                        try {
-                            val immutableProcessor = ImmutableProcessor(option.context, pe.messager)
-                            val immutableTypeElements = try {
-                                ImmutableProcessor::class.java.getDeclaredMethod(
-                                    "parseImmutableTypes",
-                                    RoundEnvironment::class.java
-                                )
-                            } catch (_: Throwable) {
-                                null
-                            }?.let {
-                                it.isAccessible = true
-                                @Suppress("UNCHECKED_CAST")
-                                it.invoke(immutableProcessor, roundEnv) as Map<TypeElement, ImmutableType>
-                            } ?: emptyMap()
-
-                            ImmutableProcessor::class.java.declaredMethods.find { it.name == "generateJimmerTypes" }
-                                ?.also {
-                                    it.isAccessible = true
-                                    it.invoke(
-                                        immutableProcessor,
-                                        immutableTypeElements.filter { ite ->
-                                            psiCaches.mapNotNull { it.qualifiedName }
-                                                .any { it == ite.value.qualifiedName }
-                                        })
+                        val job = launch {
+                            val refreshItems = project.readActionSmartCoroutine {
+                                val psiCaches = mutableSetOf<PsiClass>()
+                                sourceFiles.forEach { sourceFile ->
+                                    val psiFile =
+                                        sourceFile.toFile().toVirtualFile()?.findPsiFile(project)
+                                            ?: return@forEach
+                                    psiFile.getChildOfType<PsiClass>()?.takeIf { it.hasJimmerAnnotation() }
+                                        ?.also { psiCaches.add(it) }
                                 }
 
-                            EntryProcessor(option.context, immutableTypeElements.keys).process()
-                            ErrorProcessor(option.context, option.checkedException).process(roundEnv)
-                            TypedTupleProcessor(
-                                option.context,
-                                psiCaches.filter { it.hasTypedTupleAnnotation() }.map { it.qualifiedName }.toSet()
-                            ).process(roundEnv)
-                            sources.forEach {
-                                needRefresh.add(it to generatedDir)
+                                if (psiCaches.isEmpty()) {
+                                    return@readActionSmartCoroutine emptyList()
+                                }
+
+                                val generatedDir =
+                                    getGeneratedDir(project, projectDir, src)
+                                        ?: return@readActionSmartCoroutine emptyList()
+
+                                val (pe, rootElements, sources) = project.psiClassesToApt(psiCaches)
+                                val currentModule = project.modules.find { it.name.endsWith(".$src") }
+                                val aptOptions = currentModule?.let { module ->
+                                    CompilerConfiguration.getInstance(project)
+                                        .getAnnotationProcessingConfiguration(module).processorOptions
+                                } ?: emptyMap()
+
+                                log.info("SourcesProcessJava Project:${projectDir.name}:${src} APTOptions:${aptOptions}")
+
+                                val option = createAptOption(
+                                    aptOptions,
+                                    pe.elementUtils,
+                                    pe.typeUtils,
+                                    pe.filer
+                                )
+                                val roundEnv = createRoundEnvironment(rootElements)
+
+                                try {
+                                    val immutableProcessor = ImmutableProcessor(option.context, pe.messager)
+                                    val immutableTypeElements = try {
+                                        ImmutableProcessor::class.java.getDeclaredMethod(
+                                            "parseImmutableTypes",
+                                            RoundEnvironment::class.java
+                                        )
+                                    } catch (_: Throwable) {
+                                        null
+                                    }?.let {
+                                        it.isAccessible = true
+                                        @Suppress("UNCHECKED_CAST")
+                                        it.invokeWithCatch(
+                                            immutableProcessor,
+                                            roundEnv
+                                        ) as Map<TypeElement, ImmutableType>
+                                    } ?: emptyMap()
+
+                                    val qualifiedNames: Set<String> = psiCaches
+                                        .mapNotNullTo(mutableSetOf()) { it.qualifiedName }
+
+                                    ImmutableProcessor::class.java.declaredMethods.find { it.name == "generateJimmerTypes" }
+                                        ?.also {
+                                            it.isAccessible = true
+                                            it.invokeWithCatch(
+                                                immutableProcessor,
+                                                immutableTypeElements.filter { ite ->
+                                                    ite.value.qualifiedName in qualifiedNames
+                                                })
+                                        }
+
+                                    EntryProcessor(option.context, immutableTypeElements.keys).process()
+                                    ErrorProcessor(option.context, option.checkedException).process(roundEnv)
+                                    TypedTupleProcessor(
+                                        option.context,
+                                        psiCaches.filter { it.hasTypedTupleAnnotation() }
+                                            .mapNotNull { it.qualifiedName }.toSet()
+                                    ).process(roundEnv)
+                                    sources.map { it to generatedDir }
+                                } catch (e: Throwable) {
+                                    if (e is ControlFlowException) {
+                                        throw e
+                                    }
+                                    log.error(e)
+                                    emptyList()
+                                }
                             }
-                        } catch (e: Throwable) {
-                            log.error(e)
+                            needRefresh.addAll(refreshItems)
+                        }
+                        job.invokeOnCompletion { ex ->
+                            if (ex != null && ex !is CancellationException && ex !is ControlFlowException) {
+                                log.error(ex)
+                            }
                         }
                     }
                 }
+
                 asyncRefreshSources(needRefresh)
             }
         }
 
         suspend fun dtoProcessJava(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Java DTO") {
-                val needRefresh = mutableListOf<Pair<Source, Path>>()
-                val (pe, rootElements, sources) = project.psiClassesToApt(emptySet())
-                project.runReadActionSmart {
-                    projects.forEach { (projectDir, sourceFiles, src) ->
-                        sourceFiles.forEach { sourceFile ->
-                            val currentModule = project.modules.find { it.name.endsWith(".$src") }
-                            val aptOptions = currentModule?.let { module ->
-                                CompilerConfiguration.getInstance(project)
-                                    .getAnnotationProcessingConfiguration(module).processorOptions
-                            } ?: emptyMap()
-                            log.info("DtoProcessJava Project:${projectDir.name}:${src} APTOptions:${aptOptions}")
-                            val option = createAptOption(
-                                aptOptions,
-                                pe.elementUtils,
-                                pe.typeUtils,
-                                pe.filer
-                            )
+                val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
 
-                            sourceFiles.isEmpty() && return@forEach
-                            val elements = pe.elementUtils
-                            val dtoFile = project.toDtoFile(projectDir, sourceFile)
-                            try {
-                                val compiler = AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
-                                val typeElement: TypeElement =
-                                    elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
-                                val compile = compiler.compile(option.context.getImmutableType(typeElement))
-                                compile.forEach {
-                                    DtoGenerator(option.context, DocMetadata(option.context), it).generate()
+                supervisorScope {
+                    projects.forEach { (projectDir, sourceFiles, src) ->
+                        if (sourceFiles.isEmpty()) return@forEach
+
+                        val job = launch {
+                            val refreshItems = project.readActionSmartCoroutine {
+                                val results = mutableListOf<Pair<Source, Path>>()
+                                val (pe, rootElements, sources) = project.psiClassesToApt(emptySet())
+                                sourceFiles.forEach { sourceFile ->
+                                    val currentModule = project.modules.find { it.name.endsWith(".$src") }
+                                    val aptOptions = currentModule?.let { module ->
+                                        CompilerConfiguration.getInstance(project)
+                                            .getAnnotationProcessingConfiguration(module).processorOptions
+                                    } ?: emptyMap()
+                                    log.info("DtoProcessJava Project:${projectDir.name}:${src} APTOptions:${aptOptions}")
+                                    val option = createAptOption(
+                                        aptOptions,
+                                        pe.elementUtils,
+                                        pe.typeUtils,
+                                        pe.filer
+                                    )
+
+                                    val elements = pe.elementUtils
+                                    val dtoFile = project.toDtoFile(projectDir, sourceFile)
+                                    try {
+                                        val compiler =
+                                            AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
+                                        val typeElement: TypeElement =
+                                            elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
+                                        val compile = compiler.compile(option.context.getImmutableType(typeElement))
+                                        compile.forEach {
+                                            DtoGenerator(option.context, DocMetadata(option.context), it).generate()
+                                        }
+                                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
+                                        sources.forEach {
+                                            results.add(it to generatedDir)
+                                        }
+                                    } catch (e: Throwable) {
+                                        if (e is ControlFlowException) {
+                                            // java.lang.Throwable: Control-flow exceptions (e.g. this class com.intellij.openapi.application.ReadAction$CannotReadException) should never be logged. Instead, these should have been rethrown if caught.
+                                            throw e
+                                        }
+                                        log.error(e)
+                                    }
                                 }
-                                val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
-                                sources.forEach {
-                                    needRefresh.add(it to generatedDir)
-                                }
-                            } catch (e: Throwable) {
-                                log.error(e)
+                                results
+                            }
+                            needRefresh.addAll(refreshItems)
+                        }
+
+                        job.invokeOnCompletion { ex ->
+                            if (ex != null && ex !is CancellationException && ex !is ControlFlowException) {
+                                log.error(ex)
                             }
                         }
                     }
@@ -460,41 +498,69 @@ object JimmerBuddy {
 
         suspend fun sourcesProcessKotlin(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Kotlin Source") {
-                val needRefresh = mutableListOf<Pair<Source, Path>>()
-                project.runReadActionSmart {
+                val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
+
+                supervisorScope {
                     projects.forEach { (projectDir, sourceFiles, src) ->
-                        sourceFiles.isEmpty() && return@forEach
-                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
-                        val (resolver, environment, sources) = project.ktClassesToKsp(
-                            sourceFiles.mapNotNull { sourceFile ->
-                                sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
-                                    ?.takeIf { it.hasJimmerAnnotation() }
-                            }.toSet()
-                        )
-                        try {
-                            val kspOptions = getKspOptions(project)
+                        if (sourceFiles.isEmpty()) return@forEach
 
-                            log.info("SourcesProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
+                        val job = launch {
+                            val refreshItems = project.readActionSmartCoroutine {
+                                val results = mutableListOf<Pair<Source, Path>>()
+                                val ktClasses = sourceFiles.mapNotNull { sourceFile ->
+                                    sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()
+                                        ?.takeIf { it.hasJimmerAnnotation() }
+                                }.toSet()
+                                if (ktClasses.isEmpty()) return@readActionSmartCoroutine emptyList()
+                                val generatedDir =
+                                    getGeneratedDir(project, projectDir, src)
+                                        ?: return@readActionSmartCoroutine emptyList()
+                                val (resolver, environment, sources) = project.ktClassesToKsp(
+                                    ktClasses
+                                )
+                                try {
+                                    val kspOptions = getKspOptions(project)
 
-                            val option = createKspOption(
-                                kspOptions,
-                                Context(resolver, environment),
-                                environment.codeGenerator
-                            )
-                            org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(
-                                option.context,
-                                option.isModuleRequired,
-                                option.excludedUserAnnotationPrefixes
-                            )
-                                .process()
-                            org.babyfish.jimmer.ksp.error.ErrorProcessor(option.context, option.checkedException)
-                                .process()
-                            org.babyfish.jimmer.ksp.tuple.TypedTupleProcessor(option.context, emptyList()).process()
-                            sources.forEach {
-                                needRefresh.add(it to generatedDir)
+                                    log.info("SourcesProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
+
+                                    val option = createKspOption(
+                                        kspOptions,
+                                        Context(resolver, environment),
+                                        environment.codeGenerator
+                                    )
+                                    org.babyfish.jimmer.ksp.immutable.ImmutableProcessor(
+                                        option.context,
+                                        option.isModuleRequired,
+                                        option.excludedUserAnnotationPrefixes
+                                    )
+                                        .process()
+                                    org.babyfish.jimmer.ksp.error.ErrorProcessor(
+                                        option.context,
+                                        option.checkedException
+                                    )
+                                        .process()
+                                    org.babyfish.jimmer.ksp.tuple.TypedTupleProcessor(option.context, emptyList())
+                                        .process()
+                                    sources.forEach {
+                                        results.add(it to generatedDir)
+                                    }
+                                } catch (e: Throwable) {
+                                    if (e is ControlFlowException) {
+                                        // java.lang.Throwable: Control-flow exceptions (e.g. this class com.intellij.openapi.application.ReadAction$CannotReadException) should never be logged. Instead, these should have been rethrown if caught.
+                                        throw e
+                                    }
+                                    log.error(e)
+                                }
+                                results
                             }
-                        } catch (e: Throwable) {
-                            log.error(e)
+
+                            needRefresh.addAll(refreshItems)
+                        }
+
+                        job.invokeOnCompletion { ex ->
+                            if (ex != null && ex !is CancellationException && ex !is ControlFlowException) {
+                                log.error(ex)
+                            }
                         }
                     }
                 }
@@ -504,55 +570,82 @@ object JimmerBuddy {
 
         suspend fun dtoProcessKotlin(projects: Set<GenerateProject>) {
             withBackgroundProgress(project, "Processing Kotlin DTO") {
-                val needRefresh = mutableListOf<Pair<Source, Path>>()
-                project.runReadActionSmart {
-                    val (resolver, environment, sources) = project.ktClassesToKsp(emptySet())
+                val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
+
+                supervisorScope {
                     projects.forEach { (projectDir, sourceFiles, src) ->
-                        sourceFiles.isEmpty() && return@forEach
+                        if (sourceFiles.isEmpty()) return@forEach
 
-                        val kspOptions = getKspOptions(project)
+                        val job = launch {
+                            val refreshItems = project.readActionSmartCoroutine {
+                                val results = mutableListOf<Pair<Source, Path>>()
+                                val (resolver, environment, sources) = project.ktClassesToKsp(emptySet())
 
-                        log.info("DtoProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
+                                val kspOptions = getKspOptions(project)
 
-                        val option = createKspOption(
-                            kspOptions,
-                            Context(resolver, environment),
-                            environment.codeGenerator
-                        )
+                                log.info("DtoProcessKotlin Project:${projectDir.name}:${src} KSPOptions:${kspOptions}")
 
-                        sourceFiles.forEach { sourceFile ->
-                            val dtoFile = project.toDtoFile(projectDir, sourceFile)
-                            try {
-                                val compiler =
-                                    KspDtoCompiler(
-                                        dtoFile,
-                                        option.context.resolver,
-                                        option.defaultNullableInputModifier
-                                    )
-                                val classDeclarationByName =
-                                    resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return@forEach
-                                val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
-                                compile.forEach { dtoType ->
-                                    org.babyfish.jimmer.ksp.dto.DtoGenerator(
-                                        option.context,
-                                        org.babyfish.jimmer.ksp.client.DocMetadata(option.context),
-                                        option.mutable,
-                                        dtoType,
-                                        option.context.environment.codeGenerator
-                                    ).generate(emptyList())
+                                val option = createKspOption(
+                                    kspOptions,
+                                    Context(resolver, environment),
+                                    environment.codeGenerator
+                                )
+
+                                sourceFiles.forEach { sourceFile ->
+                                    val dtoFile = project.toDtoFile(projectDir, sourceFile)
+                                    try {
+                                        val compiler =
+                                            KspDtoCompiler(
+                                                dtoFile,
+                                                option.context.resolver,
+                                                option.defaultNullableInputModifier
+                                            )
+                                        val classDeclarationByName =
+                                            resolver.getClassDeclarationByName(compiler.sourceTypeName)
+                                                ?: return@forEach
+                                        val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
+                                        compile.forEach { dtoType ->
+                                            org.babyfish.jimmer.ksp.dto.DtoGenerator(
+                                                option.context,
+                                                org.babyfish.jimmer.ksp.client.DocMetadata(option.context),
+                                                option.mutable,
+                                                dtoType,
+                                                option.context.environment.codeGenerator
+                                            ).generate(emptyList())
+                                        }
+                                        val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
+                                        sources.forEach { source ->
+                                            results.add(source to generatedDir)
+                                        }
+                                    } catch (e: Throwable) {
+                                        if (e is ControlFlowException) {
+                                            throw e
+                                        }
+                                        log.error(e)
+                                    }
                                 }
-                                val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
-                                sources.forEach { source ->
-                                    needRefresh.add(source to generatedDir)
-                                }
-                            } catch (e: Throwable) {
-                                log.error(e)
+                                results
+                            }
+                            needRefresh.addAll(refreshItems)
+                        }
+
+                        job.invokeOnCompletion { ex ->
+                            if (ex != null && ex !is CancellationException && ex !is ControlFlowException) {
+                                log.error(ex)
                             }
                         }
                     }
                 }
                 asyncRefreshSources(needRefresh)
             }
+        }
+    }
+
+    private fun Method.invokeWithCatch(obj: Any?, vararg args: Any?): Any? {
+        return try {
+            invoke(obj, *args)
+        } catch (e: InvocationTargetException) {
+            throw e.cause ?: e
         }
     }
 }

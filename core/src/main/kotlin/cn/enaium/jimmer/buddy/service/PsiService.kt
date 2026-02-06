@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTypeReference
+import java.util.concurrent.Executor
 
 /**
  * @author Enaium
@@ -45,4 +46,16 @@ interface PsiService {
     fun annotations(ktProperty: KtProperty): List<Annotation>
     fun type(ktTypeReference: KtTypeReference): Type
     fun receiver(ktLambdaExpression: KtLambdaExpression): KtClass?
+
+    suspend fun <T> readActionNonblockingCoroutine(
+        project: Project,
+        executor: Executor? = null,
+        block: () -> T
+    ): T
+
+    suspend fun <T> readActionSmartNonblockingCoroutine(
+        project: Project,
+        executor: Executor? = null,
+        block: () -> T
+    ): T
 }

@@ -18,8 +18,11 @@ package cn.enaium.jimmer.buddy
 
 import cn.enaium.jimmer.buddy.service.PsiService
 import cn.enaium.jimmer.buddy.utility.*
+import com.intellij.openapi.application.ReadConstraint
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
@@ -39,6 +42,9 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.constants.*
 import org.jetbrains.kotlin.resolve.constants.KClassValue.Value.NormalClass
+import java.util.concurrent.Executor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * @author Enaium
@@ -260,5 +266,46 @@ class PsiService242 : PsiService {
     fun KtTypeReference.arguments(): List<KtTypeReference> {
         return (this.typeElement as? KtNullableType)?.typeArgumentsAsTypes ?: this.typeArguments()
             .mapNotNull { it.typeReference }
+    }
+
+    /**
+     * Use [Write Allowing Read Action (WARA) API](https://plugins.jetbrains.com/docs/intellij/coroutine-read-actions.html#coroutine-read-actions-api)
+     * instead of Write Blocking Read Action (WBRA) API
+     */
+    override suspend fun <T> readActionNonblockingCoroutine(
+        project: Project,
+        executor: Executor?,
+        block: () -> T
+    ): T {
+        var context: CoroutineContext = EmptyCoroutineContext
+        if (executor != null) {
+            context += executor.asCoroutineDispatcher()
+        }
+
+        return withContext(context) {
+            com.intellij.openapi.application.constrainedReadAction(
+                ReadConstraint.withDocumentsCommitted(project),
+                action = block
+            )
+        }
+    }
+
+    override suspend fun <T> readActionSmartNonblockingCoroutine(
+        project: Project,
+        executor: Executor?,
+        block: () -> T
+    ): T {
+        var context: CoroutineContext = EmptyCoroutineContext
+        if (executor != null) {
+            context += executor.asCoroutineDispatcher()
+        }
+
+        return withContext(context) {
+            com.intellij.openapi.application.constrainedReadAction(
+                ReadConstraint.inSmartMode(project),
+                ReadConstraint.withDocumentsCommitted(project),
+                action = block
+            )
+        }
     }
 }
