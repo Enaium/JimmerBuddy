@@ -308,7 +308,8 @@ fun Project.psiClassesToApt(
     val typeElementCaches = mutableMapOf<String, TypeElement>()
 
     psiClasses.forEach { psiClass ->
-        typeElementCaches[psiClass.qualifiedName!!] = psiClass.asTypeElement(typeElementCaches)
+        val qualifiedName = psiClass.qualifiedName ?: return@forEach
+        typeElementCaches[qualifiedName] = psiClass.asTypeElement(typeElementCaches)
     }
 
     val sources = mutableListOf<Source>()
