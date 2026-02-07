@@ -32,6 +32,8 @@ All notable changes to this project will be documented in this file.
 - Update document
 - Fix current dir is not a project
 - Show dto prop type
+- Fix when immutable trace is a local variable
+- Reactor: Add non-blocking coroutine read actions for enhanced performance and concurrency handling.
 
 ## 1.10.x
 
