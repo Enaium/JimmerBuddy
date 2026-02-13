@@ -77,7 +77,7 @@ class AssociationAnnotationInspection : AbstractLocalInspectionTool() {
             ) {
                 if (element.hasToOneAnnotation()) {
                     holder.registerProblem(element, toManyProblem)
-                } else if (typeReference.arguments.firstOrNull()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.isComputed() && !element.hasManyToManyViewAnnotation()) {
+                } else if (typeReference.firstArgType()?.ktClass?.isEntity() == true && !element.hasToManyAnnotation() && !element.isComputed() && !element.hasManyToManyViewAnnotation()) {
                     holder.registerProblem(element, noToManyProblem)
                 }
             } else {

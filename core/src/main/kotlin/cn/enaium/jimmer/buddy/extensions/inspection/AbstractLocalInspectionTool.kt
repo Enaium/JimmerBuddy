@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.inspection
 
+import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
@@ -28,6 +29,7 @@ abstract class AbstractLocalInspectionTool : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
+                !element.project.workspace().isJimmerProject && return
                 visit(element, holder, isOnTheFly)
             }
         }

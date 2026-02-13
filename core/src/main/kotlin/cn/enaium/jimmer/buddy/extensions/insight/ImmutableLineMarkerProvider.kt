@@ -168,7 +168,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                         null
                                     }?.let {
                                         if (it.arguments.isNotEmpty()) {
-                                            it.arguments.firstOrNull()?.ktClass
+                                            it.firstArgType()?.ktClass
                                         } else {
                                             it.ktClass
                                         }
