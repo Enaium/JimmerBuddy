@@ -187,7 +187,7 @@ object JimmerBuddy {
         val javaImmutablePsiClassCache = CopyOnWriteArraySet<PsiClass>()
 
         var init = false
-        var initialized = false
+        var isJimmerProject = false
         var isJavaProject = false
         var isKotlinProject = false
         var isAndroidProject = false
@@ -197,6 +197,10 @@ object JimmerBuddy {
             if (project.isDumb()) return
             init = true
             CoroutineScope(Dispatchers.Default).launch {
+                isJimmerProject = project.isJimmerProject()
+                if (!isJimmerProject) {
+                    return@launch
+                }
                 val projects = project.findProjects()
                 log.info("Project ${project.name} is initializing")
                 isJavaProject = project.isJavaProject()
@@ -237,7 +241,6 @@ object JimmerBuddy {
                     }
                 }
                 log.info("Project ${project.name} is initialized")
-                initialized = true
             }
         }
 
@@ -294,8 +297,12 @@ object JimmerBuddy {
         fun asyncRefresh(files: List<Path>) {
             files.isEmpty() && return
             project.runWhenSmart {
-                VfsUtil.markDirtyAndRefresh(true, true, true, *files.map { it.toFile() }.toTypedArray())
-                log.info("Refreshed ${files.joinToString(", ") { it.name }}")
+                CoroutineScope(Dispatchers.IO).launch {
+                    VfsUtil.markDirtyAndRefresh(true, true, true, *files.map { it.toFile() }.toTypedArray())
+                }
+                invokeLater {
+                    log.info("Refreshed ${files.joinToString(", ") { it.name }}")
+                }
             }
         }
 

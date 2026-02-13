@@ -40,7 +40,11 @@ interface PsiService {
         val nullable: Boolean,
         val ktClass: KtClass?,
         val arguments: List<Type> = emptyList(),
-    )
+    ) {
+        fun firstArgType(): Type? {
+            return arguments.firstOrNull()
+        }
+    }
 
     fun annotations(ktClass: KtClass): List<Annotation>
     fun annotations(ktProperty: KtProperty): List<Annotation>

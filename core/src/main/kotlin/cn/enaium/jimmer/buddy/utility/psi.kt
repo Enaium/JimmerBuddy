@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.*
+import org.jspecify.annotations.Nullable
 import kotlin.reflect.KClass
 
 /**
@@ -172,24 +173,20 @@ fun PsiClass.hasJimmerAnnotation(): Boolean {
     return this.hasImmutableAnnotation() || this.hasErrorFamilyAnnotation() || this.hasTypedTupleAnnotation()
 }
 
+fun PsiMethod.hasAnnotation(vararg annotations: KClass<*>): Boolean {
+    return annotations.any { anno -> anno.qualifiedName in modifierList.annotations.map { it.qualifiedName } }
+}
+
 fun PsiMethod.hasToManyAnnotation(): Boolean {
-    return this.modifierList.annotations.any { annotation ->
-        annotation.hasQualifiedName(OneToMany::class.qualifiedName!!)
-                || annotation.hasQualifiedName(ManyToMany::class.qualifiedName!!)
-    }
+    return this.hasAnnotation(OneToMany::class, ManyToMany::class)
 }
 
 fun PsiMethod.hasToOneAnnotation(): Boolean {
-    return this.modifierList.annotations.any { annotation ->
-        annotation.hasQualifiedName(OneToOne::class.qualifiedName!!)
-                || annotation.hasQualifiedName(ManyToOne::class.qualifiedName!!)
-    }
+    return this.hasAnnotation(OneToOne::class, ManyToOne::class)
 }
 
 fun PsiMethod.hasTransientAnnotation(): Boolean {
-    return this.modifierList.annotations.any { annotation ->
-        annotation.hasQualifiedName(Transient::class.qualifiedName!!)
-    }
+    return this.hasAnnotation(Transient::class)
 }
 
 fun PsiMethod.isComputed(): Boolean {
@@ -220,27 +217,34 @@ fun PsiMethod.hasIdViewAnnotation(): Boolean {
     }
 }
 
+fun PsiMethod.hasIdAnnotation(): Boolean {
+    return this.hasAnnotation(Id::class)
+}
+
+fun PsiMethod.isNullable(): Boolean {
+    return this.modifierList.annotations.any { annotation ->
+        annotation.qualifiedName?.endsWith(Nullable::class.simpleName!!) == true
+    } || returnType !is PsiPrimitiveType
+}
+
+fun KtProperty.hasAnnotation(vararg annotations: KClass<*>): Boolean {
+    return annotations.any { anno -> anno.qualifiedName in annotations().map { it.fqName } }
+}
+
+fun KtProperty.hasIdAnnotation(): Boolean {
+    return hasAnnotation(Id::class)
+}
+
 fun KtProperty.hasToManyAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == OneToMany::class.qualifiedName!!
-                || fqName == ManyToMany::class.qualifiedName!!
-    }
+    return hasAnnotation(OneToMany::class, ManyToMany::class)
 }
 
 fun KtProperty.hasToOneAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == OneToOne::class.qualifiedName!!
-                || fqName == ManyToOne::class.qualifiedName!!
-    }
+    return hasAnnotation(OneToOne::class, ManyToOne::class)
 }
 
 fun KtProperty.hasTransientAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == Transient::class.qualifiedName!!
-    }
+    return hasAnnotation(Transient::class)
 }
 
 fun KtProperty.isComputed(): Boolean {
@@ -248,31 +252,19 @@ fun KtProperty.isComputed(): Boolean {
 }
 
 fun KtProperty.hasSerializedAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == Serialized::class.qualifiedName!!
-    }
+    return hasAnnotation(Serialized::class)
 }
 
 fun KtProperty.hasFormulaAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == Formula::class.qualifiedName!!
-    }
+    return hasAnnotation(Formula::class)
 }
 
 fun KtProperty.hasManyToManyViewAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == ManyToManyView::class.qualifiedName!!
-    }
+    return hasAnnotation(ManyToManyView::class)
 }
 
 fun KtProperty.hasIdViewAnnotation(): Boolean {
-    return this.annotations().any { annotation ->
-        val fqName = annotation.fqName
-        fqName == IdView::class.qualifiedName!!
-    }
+    return hasAnnotation(IdView::class)
 }
 
 fun PsiMethod.getTarget(): PsiClass? {
@@ -287,10 +279,36 @@ fun PsiMethod.getTarget(): PsiClass? {
     }
 }
 
+fun PsiMethod.getTargetName(unbox: Boolean = false): String? {
+    return if (this.returnType is PsiPrimitiveType) {
+        (this.returnType as? PsiPrimitiveType)?.name
+    } else {
+        this.getTarget()?.qualifiedName
+    }?.let {
+        if (unbox) {
+            if (it in listOf(
+                    java.lang.Long::class.java.name,
+                    java.lang.Integer::class.java.name,
+                    java.lang.Short::class.java.name,
+                    java.lang.Byte::class.java.name,
+                    java.lang.Float::class.java.name,
+                    java.lang.Double::class.java.name,
+                )
+            ) {
+                it.substringAfterLast(".").lowercase()
+            } else {
+                it
+            }
+        } else {
+            it
+        }
+    }
+}
+
 fun KtProperty.getTarget(): KtClass? {
     return this.typeReference?.type()?.let {
         if (it.arguments.isNotEmpty()) {
-            it.arguments.firstOrNull()?.ktClass
+            it.firstArgType()?.ktClass
         } else {
             it.ktClass
         }
@@ -611,4 +629,12 @@ fun KtQualifiedExpression.getImmutableTrace(execute: KtQualifiedExpression? = nu
     }
 
     return trace.reversed()
+}
+
+fun PsiClass.findIdMethod(): PsiMethod? {
+    return allMethods.find { it.hasIdAnnotation() }
+}
+
+fun KtClass.findIdProperty(): KtProperty? {
+    return getAllProperties().find { it.hasIdAnnotation() }
 }

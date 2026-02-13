@@ -31,6 +31,13 @@ import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
  * @author Enaium
  */
 class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
+
+    private val noValue = I18n.message("inspection.annotation.idView.withoutValue")
+    private val basePropNotExists = I18n.message("inspection.annotation.idView.basePropNotExist")
+    private val propNotCollection = I18n.message("inspection.annotation.idView.propIsNonCollection")
+    private val typeNotMatch = I18n.message("inspection.annotation.idView.typeNotMatch")
+    private val typeNullable = I18n.message("inspection.annotation.idView.typeNullable")
+
     override fun visit(
         element: PsiElement,
         holder: ProblemsHolder,
@@ -40,13 +47,19 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
             return
         }
 
-        val noValue = I18n.message("inspection.annotation.idView.withoutValue")
-        val basePropNotExists = I18n.message("inspection.annotation.idView.basePropNotExist")
-        val propNotCollection = I18n.message("inspection.annotation.idView.propIsNonCollection")
-
         if (!element.isAnnotation(IdView::class.qualifiedName!!)) return
+        javaIdView(element, holder)
+
+        ktIdView(element, holder)
+    }
+
+    private fun javaIdView(
+        element: PsiElement,
+        holder: ProblemsHolder
+    ) {
         element.getParentOfType<PsiMethod>(true)?.also { methodElement ->
             val returnPsiClass = methodElement.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }
+            val idViewTypeName = methodElement.getTargetName(true)
             if (returnPsiClass?.substitutor != PsiSubstitutor.EMPTY) {
                 if (!listOf(
                         List::class.java.name,
@@ -60,15 +73,18 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                     ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
                     ?.takeIf { it.isNotBlank() }?.also { value ->
                         methodElement.containingClass?.also { c ->
-                            if (c.allMethods.none { it.name == value }) {
-                                holder.registerProblem(methodElement, basePropNotExists)
-                            }
+                            c.allMethods.find { it.name == value }?.also { viewMethod ->
+                                viewMethod.containingClass?.findIdMethod()?.also { idMethod ->
+                                    val idTypeName = idMethod.getTargetName(true)
+                                    if (idTypeName != idViewTypeName) {
+                                        holder.registerProblem(element, typeNotMatch)
+                                    }
+                                }
+                            } ?: holder.registerProblem(methodElement, basePropNotExists)
                         }
                     } ?: holder.registerProblem(element, noValue)
             } else {
-                var baseProp: String? = null
-
-                baseProp =
+                var baseProp =
                     methodElement.modifierList.annotations.find { it.qualifiedName == IdView::class.qualifiedName }
                         ?.findAttributeValue("value")?.toAny(String::class.java)?.toString()
                         ?.takeIf { it.isNotBlank() }
@@ -78,15 +94,33 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 methodElement.containingClass?.also { c ->
-                    if (c.allMethods.none { it.name == baseProp }) {
-                        holder.registerProblem(element, basePropNotExists)
-                    }
+                    c.allMethods.find { it.name == baseProp }?.also { viewMethod ->
+                        viewMethod.containingClass?.findIdMethod()?.also { idMethod ->
+                            val idTypeName = idMethod.getTargetName(true)
+                            if (idTypeName != idViewTypeName) {
+                                holder.registerProblem(element, typeNotMatch)
+                            } else if (viewMethod.isNullable() != methodElement.isNullable()) {
+                                holder.registerProblem(element, typeNullable)
+                            }
+                        }
+                    } ?: holder.registerProblem(element, basePropNotExists)
                 }
             }
         }
+    }
 
+    private fun ktIdView(element: PsiElement, holder: ProblemsHolder) {
         element.getParentOfType<KtProperty>(true)?.also { propertyElement ->
             val typeReference = propertyElement.typeReference?.type()
+
+            val idViewType = propertyElement.typeReference?.type()?.let {
+                if (it.arguments.isNotEmpty()) {
+                    it.firstArgType()
+                } else {
+                    it
+                }
+            }
+
             if (typeReference?.arguments?.isNotEmpty() == true) {
                 if (!listOf(
                         List::class.qualifiedName,
@@ -106,15 +140,17 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                         }
 
                         propertyElement.containingClass()?.also { c ->
-                            if (c.findPropertyByName(value, true) == null) {
-                                holder.registerProblem(element, basePropNotExists)
-                            }
+                            c.findPropertyByName(value, true)?.also { viewProperty ->
+                                (viewProperty as? KtProperty)?.containingClass()?.findIdProperty()?.also { idProperty ->
+                                    if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
+                                        holder.registerProblem(element, typeNotMatch)
+                                    }
+                                }
+                            } ?: holder.registerProblem(element, basePropNotExists)
                         }
                     } ?: holder.registerProblem(element, noValue)
             } else {
-                var baseProp: String? = null
-
-                baseProp = propertyElement.annotations()
+                var baseProp = propertyElement.annotations()
                     .find { it.fqName == IdView::class.qualifiedName }?.findArgument("value")?.value?.toString()
 
                 if (baseProp == null && propertyElement.name?.endsWith("Id") == true) {
@@ -122,9 +158,17 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 propertyElement.containingClass()?.also { c ->
-                    if (c.findPropertyByName(baseProp ?: return, true) == null) {
-                        holder.registerProblem(element, basePropNotExists)
-                    }
+                    c.findPropertyByName(baseProp ?: return, true)?.also { viewProperty ->
+                        val viewReference = (viewProperty as? KtProperty)?.typeReference
+                        viewReference?.containingClass()?.findIdProperty()
+                            ?.also { idProperty ->
+                                if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
+                                    holder.registerProblem(element, typeNotMatch)
+                                } else if (viewReference.type().nullable != idViewType?.nullable) {
+                                    holder.registerProblem(element, typeNullable)
+                                }
+                            }
+                    } ?: holder.registerProblem(element, basePropNotExists)
                 }
             }
         }
