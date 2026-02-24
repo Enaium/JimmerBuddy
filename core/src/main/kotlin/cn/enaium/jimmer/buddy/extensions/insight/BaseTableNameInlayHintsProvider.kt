@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.insight
 
 import com.intellij.codeInsight.hints.declarative.*
-import com.intellij.openapi.editor.Editor
 import com.intellij.psi.*
 import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.sql.ast.table.base.BaseTable1
@@ -29,74 +28,67 @@ import org.jetbrains.kotlin.psi.psiUtil.*
 /**
  * @author Enaium
  */
-class BaseTableNameInlayHintsProvider : InlayHintsProvider {
-    override fun createCollector(
-        file: PsiFile,
-        editor: Editor
-    ): InlayHintsCollector {
-        return object : SharedBypassCollector {
-            override fun collectFromElement(
-                element: PsiElement,
-                sink: InlayTreeSink
+class BaseTableNameInlayHintsProvider : AbstractInlayHintsProvider() {
+    override fun collectFromElement(
+        element: PsiElement,
+        sink: InlayTreeSink
+    ) {
+        if (element is PsiMethodCallExpression) {
+            val methodExpression = element.methodExpression
+            val reference = methodExpression.reference?.resolve()
+            if (reference is PsiMethod && reference.containingClass?.qualifiedName
+                    ?.startsWith(BaseTable1::class.java.packageName) == true
             ) {
-                if (element is PsiMethodCallExpression) {
-                    val methodExpression = element.methodExpression
-                    val reference = methodExpression.reference?.resolve()
-                    if (reference is PsiMethod && reference.containingClass?.qualifiedName
-                            ?.startsWith(BaseTable1::class.java.packageName) == true
-                    ) {
-                        element.findBaseQueryExpression()?.also { baseQuery ->
-                            val addArgumentExpressions = baseQuery.findAddArgumentExpressions()
-                            val map = addArgumentExpressions
-                                .mapIndexed { idx, expression -> "get_${idx + 1}" to expression }.toMap()
-                            val position =
-                                InlineInlayPosition(methodExpression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                val expression =
-                                    map[methodExpression.referenceNameElement?.text] ?: return@addPresentation
-                                val text = when (expression) {
-                                    is PsiMethodCallExpression -> expression.methodExpression.referenceNameElement?.text
-                                    is PsiReferenceExpression -> expression.text
-                                    else -> null
-                                }
-                                text(
-                                    text ?: "unknow", InlayActionData(
-                                        PsiPointerInlayActionPayload(expression.createSmartPointer()),
-                                        PsiPointerInlayActionNavigationHandler.HANDLER_ID
-                                    )
-                                )
-                            }
+                element.findBaseQueryExpression()?.also { baseQuery ->
+                    val addArgumentExpressions = baseQuery.findAddArgumentExpressions()
+                    val map = addArgumentExpressions
+                        .mapIndexed { idx, expression -> "get_${idx + 1}" to expression }.toMap()
+                    val position =
+                        InlineInlayPosition(methodExpression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        val expression =
+                            map[methodExpression.referenceNameElement?.text] ?: return@addPresentation
+                        val text = when (expression) {
+                            is PsiMethodCallExpression -> expression.methodExpression.referenceNameElement?.text
+                            is PsiReferenceExpression -> expression.text
+                            else -> null
                         }
+                        text(
+                            text ?: "unknow", InlayActionData(
+                                PsiPointerInlayActionPayload(expression.createSmartPointer()),
+                                PsiPointerInlayActionNavigationHandler.HANDLER_ID
+                            )
+                        )
                     }
-                } else if (element is KtQualifiedExpression) {
-                    val selectorExpression = element.selectorExpression
-                    val reference = selectorExpression?.reference?.resolve()
-                    if (reference is KtProperty && reference.containingClass()?.fqName?.asString()
-                            ?.startsWith(KNonNullBaseTable1::class.java.packageName) == true
-                    ) {
-                        element.findBaseQueryExpression()?.also { baseQuery ->
-                            val addArgumentExpressions = baseQuery.findAddArgumentExpressions()
-                            val map =
-                                addArgumentExpressions.mapIndexed { idx, expression -> "_${idx + 1}" to expression }
-                                    .toMap()
+                }
+            }
+        } else if (element is KtQualifiedExpression) {
+            val selectorExpression = element.selectorExpression
+            val reference = selectorExpression?.reference?.resolve()
+            if (reference is KtProperty && reference.containingClass()?.fqName?.asString()
+                    ?.startsWith(KNonNullBaseTable1::class.java.packageName) == true
+            ) {
+                element.findBaseQueryExpression()?.also { baseQuery ->
+                    val addArgumentExpressions = baseQuery.findAddArgumentExpressions()
+                    val map =
+                        addArgumentExpressions.mapIndexed { idx, expression -> "_${idx + 1}" to expression }
+                            .toMap()
 
-                            val position =
-                                InlineInlayPosition(element.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                val expression = map[selectorExpression.text] ?: return@addPresentation
-                                val text = when (expression) {
-                                    is KtQualifiedExpression -> expression.selectorExpression?.text
-                                    is KtNameReferenceExpression -> expression.text
-                                    else -> null
-                                }
-                                text(
-                                    text ?: "unknow", InlayActionData(
-                                        PsiPointerInlayActionPayload(expression.createSmartPointer()),
-                                        PsiPointerInlayActionNavigationHandler.HANDLER_ID
-                                    )
-                                )
-                            }
+                    val position =
+                        InlineInlayPosition(element.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        val expression = map[selectorExpression.text] ?: return@addPresentation
+                        val text = when (expression) {
+                            is KtQualifiedExpression -> expression.selectorExpression?.text
+                            is KtNameReferenceExpression -> expression.text
+                            else -> null
                         }
+                        text(
+                            text ?: "unknow", InlayActionData(
+                                PsiPointerInlayActionPayload(expression.createSmartPointer()),
+                                PsiPointerInlayActionNavigationHandler.HANDLER_ID
+                            )
+                        )
                     }
                 }
             }

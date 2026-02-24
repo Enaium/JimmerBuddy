@@ -17,12 +17,12 @@
 package cn.enaium.jimmer.buddy.extensions.insight.template.postfix
 
 import cn.enaium.jimmer.buddy.utility.isDraft
+import cn.enaium.jimmer.buddy.utility.kotlinAllExpressions
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvider
 import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTemplate
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiUtil
-import org.jetbrains.kotlin.idea.codeInsight.postfix.allExpressions
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.toUElementOfType
 
@@ -36,14 +36,14 @@ open class KotlinDraftPropMethodPostfixTemplate(
 ) : StringBasedPostfixTemplate(
     name,
     "${method}(expr, prop)",
-    allExpressions({ expression ->
-        return@allExpressions expression.toUElementOfType<UThisExpression>()?.getExpressionType()
+    kotlinAllExpressions { expression ->
+        return@kotlinAllExpressions expression.toUElementOfType<UThisExpression>()?.getExpressionType()
             ?.let {
                 PsiUtil.resolveGenericsClassInType(
                     it
                 ).element?.isDraft()
             } == true
-    }),
+    },
     provider
 ), DumbAware {
     override fun getTemplateString(element: PsiElement): String? {

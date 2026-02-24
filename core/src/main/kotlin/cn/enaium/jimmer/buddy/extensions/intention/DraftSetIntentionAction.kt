@@ -17,12 +17,17 @@
 package cn.enaium.jimmer.buddy.extensions.intention
 
 import cn.enaium.jimmer.buddy.utility.*
-import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiWhiteSpace
+import kotlinx.coroutines.*
 import org.jetbrains.kotlin.idea.core.isOverridable
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
@@ -30,14 +35,10 @@ import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 /**
  * @author Enaium
  */
-class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
-
-    companion object {
-        val caches = mutableMapOf<Int, List<String>>()
-    }
+class DraftSetIntentionAction : AbstractIntentionAction() {
 
     override fun getText(): String {
-        return "Generate all set of the draft"
+        return I18n.message("intention.allDraftSet")
     }
 
     override fun getFamilyName(): String {
@@ -45,50 +46,63 @@ class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
     }
 
     fun Editor.insertLines(lines: List<String>) {
+        val project = project ?: return
         val caretOffset = caretModel.offset
         val caretLine = caretModel.logicalPosition.line
         val lineStartOffset = document.getLineStartOffset(caretLine)
         val lineText = document.text.substring(lineStartOffset, caretOffset)
         val indentation = lineText.takeWhile { it.isWhitespace() }
         val indentedResults = lines.joinToString("\n") { if (it == lines.first()) it else "$indentation$it" }
-        if (caches.containsKey(caretOffset)) {
-            caches.remove(caretOffset)
-        } else {
-            caches[caretOffset] = lines
+        WriteCommandAction.writeCommandAction(project).run<Throwable> {
+            document.insertString(caretOffset, indentedResults)
+            PsiDocumentManager.getInstance(project).commitDocument(document)
         }
-        document.insertString(caretOffset, indentedResults)
     }
 
-    override fun invoke(
+    override fun invokePsi(
         project: Project,
         editor: Editor?,
         element: PsiElement
     ) {
-        val results = mutableListOf<String>()
-        element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
-            editor?.also {
-                caches[it.caretModel.offset]?.also { cache ->
-                    results.addAll(cache)
-                } ?: run {
-                    val ktClass = thread { runReadOnly { lambda.receiver() } } ?: return@also
-                    ktClass.getProperties().forEach {
-                        if (it.isOverridable && it.isVar) {
-                            results += "${it.name} = TODO()"
+        CoroutineScope(Dispatchers.Default).launch {
+            withBackgroundProgress(project, "Generating all set") {
+                supervisorScope {
+                    val job = launch {
+                        project.readActionSmartCoroutine {
+                            val results = mutableListOf<String>()
+                            element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
+                                editor?.also {
+                                    val ktClass = lambda.receiver() ?: return@also
+                                    ktClass.getProperties().forEach {
+                                        if (it.isOverridable && it.isVar) {
+                                            results += "${it.name} = TODO()"
+                                        }
+                                    }
+                                }
+                            }
+                            element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
+                                val (name, psiClass) = lambda.firstArg() ?: return@also
+                                psiClass?.methods?.forEach {
+                                    if (it.name.startsWith("set")) {
+                                        results.add("${name}.${it.name}();")
+                                    }
+                                }
+                            }
+                            if (results.isNotEmpty()) {
+                                CoroutineScope(Dispatchers.EDT).launch {
+                                    editor?.insertLines(results)
+                                }
+                            }
+                        }
+                    }
+
+                    job.invokeOnCompletion { ex ->
+                        if (ex != null && ex !is CancellationException && ex !is ControlFlowException) {
+                            element.project.workspace().log.error(ex)
                         }
                     }
                 }
             }
-        }
-        element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
-            val (name, psiClass) = lambda.firstArg() ?: return@also
-            psiClass?.methods?.forEach {
-                if (it.name.startsWith("set")) {
-                    results.add("${name}.${it.name}();")
-                }
-            }
-        }
-        if (results.isNotEmpty()) {
-            editor?.insertLines(results)
         }
     }
 
@@ -103,11 +117,7 @@ class DraftSetIntentionAction : PsiElementBaseIntentionAction() {
         } == true
     }
 
-    override fun isAvailable(
-        p0: Project,
-        p1: Editor?,
-        element: PsiElement
-    ): Boolean {
+    override fun isAvailablePsi(project: Project, editor: Editor?, element: PsiElement): Boolean {
         return isJavaAvailable(element) || isKotlinAvailable(element)
     }
 }

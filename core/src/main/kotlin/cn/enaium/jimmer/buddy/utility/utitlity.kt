@@ -18,6 +18,8 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.gradle.ksp.KspData
+import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateExpressionSelector
+import com.intellij.codeInsight.template.postfix.util.JavaPostfixTemplatesUtils.selectorAllExpressionsWithCurrentOffset
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
@@ -27,9 +29,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.util.Condition
+import com.intellij.patterns.PatternCondition
+import com.intellij.patterns.PsiElementPattern
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
+import com.intellij.util.ProcessingContext
 import com.squareup.javapoet.TypeName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -44,10 +51,12 @@ import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.codeInsight.postfix.allExpressions
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.idea.util.sourceRoots
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.plugins.gradle.util.GradleUtil
 import java.io.File
 import java.io.Reader
@@ -320,4 +329,29 @@ internal suspend inline fun <T> Project.readActionSmartCoroutine(
     crossinline block: () -> T
 ): T {
     return JimmerBuddy.Services.PSI.readActionSmartNonblockingCoroutine(this) { block() }
+}
+
+fun javaAllExpressions(additionalFilter: Condition<in PsiElement>): PostfixTemplateExpressionSelector {
+    return selectorAllExpressionsWithCurrentOffset { expression ->
+        return@selectorAllExpressionsWithCurrentOffset expression.project.workspace().isJimmerProject && additionalFilter.value(
+            expression
+        )
+    }
+}
+
+fun kotlinAllExpressions(filter: (KtExpression) -> Boolean): PostfixTemplateExpressionSelector {
+    return allExpressions({ expression ->
+        expression.project.workspace().isJimmerProject && filter(expression)
+    })
+}
+
+fun PsiElementPattern.Capture<PsiElement>.isJimmerProject(): PsiElementPattern.Capture<PsiElement> {
+    return this.with(object : PatternCondition<PsiElement>("isJimmerProject") {
+        override fun accepts(
+            element: PsiElement,
+            context: ProcessingContext?
+        ): Boolean {
+            return element.project.workspace().isJimmerProject
+        }
+    })
 }

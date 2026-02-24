@@ -17,9 +17,9 @@
 package cn.enaium.jimmer.buddy.extensions.insight.template.postfix
 
 import cn.enaium.jimmer.buddy.utility.isDraft
+import cn.enaium.jimmer.buddy.utility.javaAllExpressions
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvider
 import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTemplate
-import com.intellij.codeInsight.template.postfix.util.JavaPostfixTemplatesUtils.selectorAllExpressionsWithCurrentOffset
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiParameter
@@ -36,14 +36,14 @@ open class JavaDraftPropMethodPostfixTemplate(
 ) : StringBasedPostfixTemplate(
     name,
     "ImmutableObjects.${method}(expr, prop)",
-    selectorAllExpressionsWithCurrentOffset { expression ->
+    javaAllExpressions { expression ->
         if (expression is PsiReferenceExpression) {
             val element = expression.advancedResolve(true).element
             if (element is PsiParameter) {
-                return@selectorAllExpressionsWithCurrentOffset PsiUtil.resolveGenericsClassInType(element.type).element?.isDraft() == true
+                return@javaAllExpressions PsiUtil.resolveGenericsClassInType(element.type).element?.isDraft() == true
             }
         }
-        return@selectorAllExpressionsWithCurrentOffset false
+        return@javaAllExpressions false
     },
     provider
 ), DumbAware {

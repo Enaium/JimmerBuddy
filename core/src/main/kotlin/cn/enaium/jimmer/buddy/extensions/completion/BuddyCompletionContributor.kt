@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.completion
 
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.patterns.PlatformPatterns
@@ -30,11 +31,14 @@ import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 class BuddyCompletionContributor : CompletionContributor() {
     private val basic = CompletionType.BASIC
     private val pattern =
-        PlatformPatterns.or(
-            PlatformPatterns.psiElement().withParent(PsiLiteralExpression::class.java)
-                .inside(PsiAnnotation::class.java),
-            PlatformPatterns.psiElement().withSuperParent(2, KtStringTemplateExpression::class.java)
-                .inside(KtAnnotationEntry::class.java)
+        PlatformPatterns.and(
+            PlatformPatterns.psiElement().isJimmerProject(),
+            PlatformPatterns.or(
+                PlatformPatterns.psiElement().withParent(PsiLiteralExpression::class.java)
+                    .inside(PsiAnnotation::class.java),
+                PlatformPatterns.psiElement().withSuperParent(2, KtStringTemplateExpression::class.java)
+                    .inside(KtAnnotationEntry::class.java)
+            )
         )
 
     init {

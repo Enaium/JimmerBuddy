@@ -19,9 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.insight
 import cn.enaium.jimmer.buddy.utility.findExecuteFun
 import cn.enaium.jimmer.buddy.utility.findExecuteMethod
 import com.intellij.codeInsight.hints.declarative.*
-import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiMethodCallExpression
 import org.babyfish.jimmer.sql.ast.tuple.Tuple2
@@ -36,60 +34,53 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 /**
  * @author Enaium
  */
-class TupleNameInlayHintsProvider : InlayHintsProvider {
-    override fun createCollector(
-        file: PsiFile,
-        editor: Editor
-    ): SharedBypassCollector {
-        return object : SharedBypassCollector {
-            override fun collectFromElement(
-                element: PsiElement,
-                sink: InlayTreeSink
-            ) {
-                if (element is PsiMethodCallExpression) {
-                    val methodExpression = element.methodExpression
-                    val reference = methodExpression.reference?.resolve()
-                    if (reference is PsiMethod && reference.containingClass?.qualifiedName?.startsWith(Tuple2::class.java.packageName) == true) {
-                        element.findExecuteMethod()?.also { execute ->
-                            val selectExpressions = execute.findSelectExpressions()
-                            val map = selectExpressions
-                                .mapIndexed { idx, expression -> "get_${idx + 1}" to expression }.toMap()
-                            val position =
-                                InlineInlayPosition(methodExpression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                val expression =
-                                    map[methodExpression.referenceNameElement?.text] ?: return@addPresentation
-                                text(
-                                    "${expression.methodExpression.referenceNameElement?.text}", InlayActionData(
-                                        PsiPointerInlayActionPayload(expression.createSmartPointer()),
-                                        PsiPointerInlayActionNavigationHandler.HANDLER_ID
-                                    )
-                                )
-                            }
-                        }
+class TupleNameInlayHintsProvider : AbstractInlayHintsProvider() {
+    override fun collectFromElement(
+        element: PsiElement,
+        sink: InlayTreeSink
+    ) {
+        if (element is PsiMethodCallExpression) {
+            val methodExpression = element.methodExpression
+            val reference = methodExpression.reference?.resolve()
+            if (reference is PsiMethod && reference.containingClass?.qualifiedName?.startsWith(Tuple2::class.java.packageName) == true) {
+                element.findExecuteMethod()?.also { execute ->
+                    val selectExpressions = execute.findSelectExpressions()
+                    val map = selectExpressions
+                        .mapIndexed { idx, expression -> "get_${idx + 1}" to expression }.toMap()
+                    val position =
+                        InlineInlayPosition(methodExpression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        val expression =
+                            map[methodExpression.referenceNameElement?.text] ?: return@addPresentation
+                        text(
+                            "${expression.methodExpression.referenceNameElement?.text}", InlayActionData(
+                                PsiPointerInlayActionPayload(expression.createSmartPointer()),
+                                PsiPointerInlayActionNavigationHandler.HANDLER_ID
+                            )
+                        )
                     }
-                } else if (element is KtQualifiedExpression) {
-                    val selectorExpression = element.selectorExpression
-                    val reference = selectorExpression?.reference?.resolve()
-                    if (reference is KtProperty && reference.containingClass()?.fqName?.asString()
-                            ?.startsWith(Tuple2::class.java.packageName) == true
-                    ) {
-                        element.findExecuteFun()?.also { execute ->
-                            val selectExpressions = execute.findSelectExpressions()
-                            val map = selectExpressions
-                                .mapIndexed { idx, expression -> "_${idx + 1}" to expression }.toMap()
-                            val position =
-                                InlineInlayPosition(selectorExpression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                val expression = map[selectorExpression.text] ?: return@addPresentation
-                                text(
-                                    "${expression.tupleName()}", InlayActionData(
-                                        PsiPointerInlayActionPayload(expression.createSmartPointer()),
-                                        PsiPointerInlayActionNavigationHandler.HANDLER_ID
-                                    )
-                                )
-                            }
-                        }
+                }
+            }
+        } else if (element is KtQualifiedExpression) {
+            val selectorExpression = element.selectorExpression
+            val reference = selectorExpression?.reference?.resolve()
+            if (reference is KtProperty && reference.containingClass()?.fqName?.asString()
+                    ?.startsWith(Tuple2::class.java.packageName) == true
+            ) {
+                element.findExecuteFun()?.also { execute ->
+                    val selectExpressions = execute.findSelectExpressions()
+                    val map = selectExpressions
+                        .mapIndexed { idx, expression -> "_${idx + 1}" to expression }.toMap()
+                    val position =
+                        InlineInlayPosition(selectorExpression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        val expression = map[selectorExpression.text] ?: return@addPresentation
+                        text(
+                            "${expression.tupleName()}", InlayActionData(
+                                PsiPointerInlayActionPayload(expression.createSmartPointer()),
+                                PsiPointerInlayActionNavigationHandler.HANDLER_ID
+                            )
+                        )
                     }
                 }
             }

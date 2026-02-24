@@ -26,7 +26,7 @@ import com.intellij.psi.PsiElementVisitor
  * @author Enaium
  */
 abstract class AbstractLocalInspectionTool : LocalInspectionTool() {
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
+    final override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 !element.project.workspace().isJimmerProject && return

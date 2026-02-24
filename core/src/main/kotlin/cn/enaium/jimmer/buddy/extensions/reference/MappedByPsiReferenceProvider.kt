@@ -59,9 +59,11 @@ object MappedByPsiReferenceProvider : PsiReferenceProvider() {
             }
 
             val result = mutableMapOf<String, PsiElement>()
-            element.getParentOfType<PsiAnnotation>(true)?.method()?.getTarget()?.allMethods?.forEach {
-                result[it.name] = it
-            }
+            element.getParentOfType<PsiAnnotation>(true)?.method()
+                ?.getTarget()?.allMethods?.filter { it.name !in Any::class.java.declaredMethods.map { method -> method.name } }
+                ?.forEach {
+                    result[it.name] = it
+                }
             element.getParentOfType<KtAnnotationEntry>(true)?.property()?.getTarget()?.getAllProperties()?.forEach {
                 result[it.name ?: "Unknown name"] = it
             }

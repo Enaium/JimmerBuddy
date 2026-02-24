@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.insight
 
 import cn.enaium.jimmer.buddy.utility.isImmutable
+import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering
 import com.intellij.codeInsight.hints.codeVision.CodeVisionProviderBase
 import com.intellij.lang.java.JavaLanguage
@@ -38,7 +39,7 @@ abstract class ImmutableCodeVisionProvider : CodeVisionProviderBase() {
         )
 
     override fun acceptsElement(element: PsiElement): Boolean {
-        return (element is PsiClass && element.isImmutable()) || (element is KtClass && element.isImmutable())
+        return element.project.workspace().isJimmerProject && (element is PsiClass && element.isImmutable()) || (element is KtClass && element.isImmutable())
     }
 
     override fun acceptsFile(file: PsiFile): Boolean {

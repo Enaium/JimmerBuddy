@@ -16,13 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.insight
 
-import com.intellij.codeInsight.hints.declarative.InlayHintsProvider
 import com.intellij.codeInsight.hints.declarative.InlayTreeSink
 import com.intellij.codeInsight.hints.declarative.InlineInlayPosition
-import com.intellij.codeInsight.hints.declarative.SharedBypassCollector
-import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiMethodCallExpression
 import org.babyfish.jimmer.sql.ast.query.MutableBaseQuery
@@ -39,45 +35,38 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 /**
  * @author Enaium
  */
-class SelectionSerialInlayHintsProvider : InlayHintsProvider {
-    override fun createCollector(
-        file: PsiFile,
-        editor: Editor
-    ): SharedBypassCollector {
-        return object : SharedBypassCollector {
-            override fun collectFromElement(
-                element: PsiElement,
-                sink: InlayTreeSink
-            ) {
-                if (element is PsiMethodCallExpression && element.resolveMethod()
-                        ?.let {
-                            it.name in listOf(
-                                "asBaseTable",
-                                "asCteBaseTable"
-                            ) && it.containingClass?.qualifiedName == TypedBaseQuery::class.qualifiedName
-                        } == true
-                ) {
-                    val expressions = element.findSelectionAddExpressions()
-                    if (expressions.size > 1) {
-                        expressions.forEachIndexed { idx, expression ->
-                            val position =
-                                InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                text("${idx + 1}")
-                            }
-                        }
+class SelectionSerialInlayHintsProvider : AbstractInlayHintsProvider() {
+    override fun collectFromElement(
+        element: PsiElement,
+        sink: InlayTreeSink
+    ) {
+        if (element is PsiMethodCallExpression && element.resolveMethod()
+                ?.let {
+                    it.name in listOf(
+                        "asBaseTable",
+                        "asCteBaseTable"
+                    ) && it.containingClass?.qualifiedName == TypedBaseQuery::class.qualifiedName
+                } == true
+        ) {
+            val expressions = element.findSelectionAddExpressions()
+            if (expressions.size > 1) {
+                expressions.forEachIndexed { idx, expression ->
+                    val position =
+                        InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        text("${idx + 1}")
                     }
-                } else if (element is KtBlockExpression) {
-                    element.getChildrenOfType<KtQualifiedExpression>().lastOrNull()?.also { selection ->
-                        val expressions = selection.findSelectionAddExpressions()
-                        if (expressions.size > 1) {
-                            expressions.forEachIndexed { idx, expression ->
-                                val position =
-                                    InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
-                                sink.addPresentation(position, hasBackground = true) {
-                                    text("${idx + 1}")
-                                }
-                            }
+                }
+            }
+        } else if (element is KtBlockExpression) {
+            element.getChildrenOfType<KtQualifiedExpression>().lastOrNull()?.also { selection ->
+                val expressions = selection.findSelectionAddExpressions()
+                if (expressions.size > 1) {
+                    expressions.forEachIndexed { idx, expression ->
+                        val position =
+                            InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
+                        sink.addPresentation(position, hasBackground = true) {
+                            text("${idx + 1}")
                         }
                     }
                 }

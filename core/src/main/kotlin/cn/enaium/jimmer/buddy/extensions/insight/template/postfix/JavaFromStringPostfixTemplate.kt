@@ -17,9 +17,9 @@
 package cn.enaium.jimmer.buddy.extensions.insight.template.postfix
 
 import cn.enaium.jimmer.buddy.utility.isImmutable
+import cn.enaium.jimmer.buddy.utility.javaAllExpressions
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvider
 import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTemplate
-import com.intellij.codeInsight.template.postfix.util.JavaPostfixTemplatesUtils.selectorAllExpressionsWithCurrentOffset
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReferenceExpression
@@ -31,11 +31,11 @@ class JavaFromStringPostfixTemplate(provider: PostfixTemplateProvider) :
     StringBasedPostfixTemplate(
         "fs",
         $$"ImmutableObjects.fromString($expr, \"\")",
-        selectorAllExpressionsWithCurrentOffset { expression ->
+        javaAllExpressions { expression ->
             if (expression is PsiReferenceExpression) {
-                return@selectorAllExpressionsWithCurrentOffset (expression.advancedResolve(true).element as? PsiClass)?.isImmutable() == true
+                return@javaAllExpressions (expression.advancedResolve(true).element as? PsiClass)?.isImmutable() == true
             }
-            return@selectorAllExpressionsWithCurrentOffset false
+            return@javaAllExpressions false
         },
         provider
     ) {

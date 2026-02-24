@@ -16,13 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.insight
 
-import com.intellij.codeInsight.hints.declarative.InlayHintsProvider
 import com.intellij.codeInsight.hints.declarative.InlayTreeSink
 import com.intellij.codeInsight.hints.declarative.InlineInlayPosition
-import com.intellij.codeInsight.hints.declarative.SharedBypassCollector
-import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethodCallExpression
 import org.babyfish.jimmer.sql.ast.query.selectable.RootSelectable
 import org.babyfish.jimmer.sql.kt.ast.query.KRootSelectable
@@ -35,42 +31,35 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 /**
  * @author Enaium
  */
-class SelectSerialInlayHintsProvider : InlayHintsProvider {
-    override fun createCollector(
-        file: PsiFile,
-        editor: Editor
-    ): SharedBypassCollector {
-        return object : SharedBypassCollector {
-            override fun collectFromElement(
-                element: PsiElement,
-                sink: InlayTreeSink
-            ) {
-                if (element is PsiMethodCallExpression && element.resolveMethod()
-                        ?.let { method -> method.name == "select" && method.containingClass?.qualifiedName == RootSelectable::class.qualifiedName } == true
-                ) {
-                    val expressions = element.argumentList.expressions
-                    if (expressions.size > 1) {
-                        expressions.forEachIndexed { idx, expression ->
-                            val position = InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                text("${idx + 1}")
-                            }
-                        }
+class SelectSerialInlayHintsProvider : AbstractInlayHintsProvider() {
+    override fun collectFromElement(
+        element: PsiElement,
+        sink: InlayTreeSink
+    ) {
+        if (element is PsiMethodCallExpression && element.resolveMethod()
+                ?.let { method -> method.name == "select" && method.containingClass?.qualifiedName == RootSelectable::class.qualifiedName } == true
+        ) {
+            val expressions = element.argumentList.expressions
+            if (expressions.size > 1) {
+                expressions.forEachIndexed { idx, expression ->
+                    val position = InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        text("${idx + 1}")
                     }
                 }
+            }
+        }
 
-                if (element is KtCallExpression && element.calleeExpression?.let { expression ->
-                        expression.text == "select" && expression.reference?.resolve()
-                            ?.let { function -> function is KtFunction && function.containingClass()?.fqName?.asString() == KRootSelectable::class.qualifiedName } == true
-                    } == true) {
-                    val expressions = element.valueArguments.mapNotNull { it.getChildOfType<KtQualifiedExpression>() }
-                    if (expressions.size > 1) {
-                        expressions.forEachIndexed { idx, expression ->
-                            val position = InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
-                            sink.addPresentation(position, hasBackground = true) {
-                                text("${idx + 1}")
-                            }
-                        }
+        if (element is KtCallExpression && element.calleeExpression?.let { expression ->
+                expression.text == "select" && expression.reference?.resolve()
+                    ?.let { function -> function is KtFunction && function.containingClass()?.fqName?.asString() == KRootSelectable::class.qualifiedName } == true
+            } == true) {
+            val expressions = element.valueArguments.mapNotNull { it.getChildOfType<KtQualifiedExpression>() }
+            if (expressions.size > 1) {
+                expressions.forEachIndexed { idx, expression ->
+                    val position = InlineInlayPosition(expression.textRange.endOffset, relatedToPrevious = true)
+                    sink.addPresentation(position, hasBackground = true) {
+                        text("${idx + 1}")
                     }
                 }
             }

@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.reference
 
+import cn.enaium.jimmer.buddy.utility.isJimmerProject
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiLiteral
@@ -30,11 +31,14 @@ import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 class JimmerReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(register: PsiReferenceRegistrar) {
         val pattern =
-            PlatformPatterns.or(
-                PlatformPatterns.psiElement(PsiLiteral::class.java)
-                    .inside(PsiAnnotation::class.java),
-                PlatformPatterns.psiElement(KtStringTemplateExpression::class.java)
-                    .inside(KtAnnotationEntry::class.java)
+            PlatformPatterns.and(
+                PlatformPatterns.psiElement().isJimmerProject(),
+                PlatformPatterns.or(
+                    PlatformPatterns.psiElement(PsiLiteral::class.java)
+                        .inside(PsiAnnotation::class.java),
+                    PlatformPatterns.psiElement(KtStringTemplateExpression::class.java)
+                        .inside(KtAnnotationEntry::class.java)
+                )
             )
         register.registerReferenceProvider(pattern, MappedByPsiReferenceProvider)
         register.registerReferenceProvider(pattern, IdViewPsiReferenceProvider)

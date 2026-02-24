@@ -17,10 +17,10 @@
 package cn.enaium.jimmer.buddy.extensions.insight.template.postfix
 
 import cn.enaium.jimmer.buddy.utility.isImmutable
+import cn.enaium.jimmer.buddy.utility.kotlinAllExpressions
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateProvider
 import com.intellij.codeInsight.template.postfix.templates.StringBasedPostfixTemplate
 import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.idea.codeInsight.postfix.allExpressions
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.toUElement
@@ -36,10 +36,10 @@ open class KotlinImmediatePostfixTemplate(
 ) : StringBasedPostfixTemplate(
     name,
     $$"sql.$${method}($expr::class)",
-    allExpressions({ expression ->
-        return@allExpressions ((expression.toUElementOfType<USimpleNameReferenceExpression>())?.resolve()
+    kotlinAllExpressions { expression ->
+        return@kotlinAllExpressions ((expression.toUElementOfType<USimpleNameReferenceExpression>())?.resolve()
             ?.toUElement()?.sourcePsi as? KtClass)?.isImmutable() == true
-    }),
+    },
     provider
 ) {
     override fun getTemplateString(element: PsiElement): String {
