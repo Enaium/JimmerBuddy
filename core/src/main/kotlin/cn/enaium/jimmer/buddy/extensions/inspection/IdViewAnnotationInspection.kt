@@ -37,6 +37,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
     private val propNotCollection = I18n.message("inspection.annotation.idView.propIsNonCollection")
     private val typeNotMatch = I18n.message("inspection.annotation.idView.typeNotMatch")
     private val typeNullable = I18n.message("inspection.annotation.idView.typeNullable")
+    private val typeNonNull = I18n.message("inspection.annotation.idView.typeNonNull")
 
     override fun visit(
         element: PsiElement,
@@ -94,13 +95,19 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 methodElement.containingClass?.also { c ->
-                    c.allMethods.find { it.name == baseProp }?.also { viewMethod ->
-                        viewMethod.containingClass?.findIdMethod()?.also { idMethod ->
+                    c.allMethods.find { it.name == baseProp }?.also { baseMethod ->
+                        baseMethod.containingClass?.findIdMethod()?.also { idMethod ->
                             val idTypeName = idMethod.getTargetName(true)
                             if (idTypeName != idViewTypeName) {
                                 holder.registerProblem(element, typeNotMatch)
-                            } else if (viewMethod.isNullable() != methodElement.isNullable()) {
-                                holder.registerProblem(element, typeNullable)
+                            } else if (baseMethod.isNullable() != methodElement.isNullable()) {
+                                holder.registerProblem(
+                                    element, if (baseMethod.isNullable()) {
+                                        typeNullable
+                                    } else {
+                                        typeNonNull
+                                    }
+                                )
                             }
                         }
                     } ?: holder.registerProblem(element, basePropNotExists)
@@ -158,14 +165,23 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 }
 
                 propertyElement.containingClass()?.also { c ->
-                    c.findPropertyByName(baseProp ?: return, true)?.also { viewProperty ->
-                        val viewReference = (viewProperty as? KtProperty)?.typeReference
-                        viewReference?.containingClass()?.findIdProperty()
+                    c.findPropertyByName(baseProp ?: return, true)?.also { baseProperty ->
+                        val baseReference = (baseProperty as? KtProperty)?.typeReference
+                        baseReference?.containingClass()?.findIdProperty()
                             ?.also { idProperty ->
                                 if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
                                     holder.registerProblem(element, typeNotMatch)
-                                } else if (viewReference.type().nullable != idViewType?.nullable) {
-                                    holder.registerProblem(element, typeNullable)
+                                } else {
+                                    val type = baseReference.type()
+                                    if (type.nullable != idViewType?.nullable) {
+                                        holder.registerProblem(
+                                            element, if (type.nullable) {
+                                                typeNullable
+                                            } else {
+                                                typeNonNull
+                                            }
+                                        )
+                                    }
                                 }
                             }
                     } ?: holder.registerProblem(element, basePropNotExists)

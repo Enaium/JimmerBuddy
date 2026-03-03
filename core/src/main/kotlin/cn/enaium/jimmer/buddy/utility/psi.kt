@@ -224,7 +224,14 @@ fun PsiMethod.hasIdAnnotation(): Boolean {
 fun PsiMethod.isNullable(): Boolean {
     return this.modifierList.annotations.any { annotation ->
         annotation.qualifiedName?.endsWith(Nullable::class.simpleName!!) == true
-    } || returnType !is PsiPrimitiveType
+    } || returnType?.canonicalText in listOf(
+        Long::class.javaObjectType.name,
+        Int::class.javaObjectType.name,
+        Short::class.javaObjectType.name,
+        Byte::class.javaObjectType.name,
+        Float::class.javaObjectType.name,
+        Double::class.javaObjectType.name
+    )
 }
 
 fun KtProperty.hasAnnotation(vararg annotations: KClass<*>): Boolean {
