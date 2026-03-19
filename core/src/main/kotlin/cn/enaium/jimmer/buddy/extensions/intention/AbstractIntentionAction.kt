@@ -16,11 +16,15 @@
 
 package cn.enaium.jimmer.buddy.extensions.intention
 
+import cn.enaium.jimmer.buddy.utility.readActionSmartCoroutine
 import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * @author Enaium
@@ -40,8 +44,7 @@ abstract class AbstractIntentionAction : PsiElementBaseIntentionAction() {
         editor: Editor?,
         element: PsiElement
     ): Boolean {
-        !element.project.workspace().isJimmerProject && return false
-        return isAvailablePsi(project, editor, element)
+        return element.project.workspace().isJimmerProject
     }
 
     abstract fun invokePsi(
@@ -49,10 +52,4 @@ abstract class AbstractIntentionAction : PsiElementBaseIntentionAction() {
         editor: Editor?,
         element: PsiElement
     )
-
-    abstract fun isAvailablePsi(
-        project: Project,
-        editor: Editor?,
-        element: PsiElement
-    ): Boolean
 }

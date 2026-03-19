@@ -70,24 +70,30 @@ class DraftSetIntentionAction : AbstractIntentionAction() {
                     val job = launch {
                         project.readActionSmartCoroutine {
                             val results = mutableListOf<String>()
-                            element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
-                                editor?.also {
-                                    val ktClass = lambda.receiver() ?: return@also
-                                    ktClass.getProperties().forEach {
-                                        if (it.isOverridable && it.isVar) {
-                                            results += "${it.name} = TODO()"
+                            if (isJavaAvailable(element)) {
+                                element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
+                                    val (name, psiClass) = lambda.firstArg() ?: return@also
+                                    psiClass?.methods?.forEach {
+                                        if (it.name.startsWith("set")) {
+                                            results.add("${name}.${it.name}();")
                                         }
                                     }
                                 }
                             }
-                            element.getParentOfType<PsiLambdaExpression>(true)?.also { lambda ->
-                                val (name, psiClass) = lambda.firstArg() ?: return@also
-                                psiClass?.methods?.forEach {
-                                    if (it.name.startsWith("set")) {
-                                        results.add("${name}.${it.name}();")
+
+                            if (isKotlinAvailable(element)) {
+                                element.getParentOfType<KtLambdaExpression>(true)?.also { lambda ->
+                                    editor?.also {
+                                        val ktClass = lambda.receiver() ?: return@also
+                                        ktClass.getProperties().forEach {
+                                            if (it.isOverridable && it.isVar) {
+                                                results += "${it.name} = TODO()"
+                                            }
+                                        }
                                     }
                                 }
                             }
+
                             if (results.isNotEmpty()) {
                                 CoroutineScope(Dispatchers.EDT).launch {
                                     editor?.insertLines(results)
@@ -112,12 +118,7 @@ class DraftSetIntentionAction : AbstractIntentionAction() {
     }
 
     fun isKotlinAvailable(element: PsiElement): Boolean {
-        return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>(true)?.let {
-            thread { runReadOnly { it.receiver()?.isDraft() } }
-        } == true
-    }
-
-    override fun isAvailablePsi(project: Project, editor: Editor?, element: PsiElement): Boolean {
-        return isJavaAvailable(element) || isKotlinAvailable(element)
+        return element is PsiWhiteSpace && element.getParentOfType<KtLambdaExpression>(true)
+            ?.let { it.receiver()?.isDraft() } == true
     }
 }
