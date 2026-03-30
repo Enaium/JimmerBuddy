@@ -20,7 +20,10 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.hasJimmerAnnotation
+import cn.enaium.jimmer.buddy.utility.isDumb
+import cn.enaium.jimmer.buddy.utility.runReadOnly
+import cn.enaium.jimmer.buddy.utility.visibleWithImmutable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent

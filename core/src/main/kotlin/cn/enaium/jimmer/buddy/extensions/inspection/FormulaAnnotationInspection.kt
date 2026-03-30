@@ -77,7 +77,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                             dependencies
                         }?.flatten()?.toSet()
 
-                 val trace = element.getImmutableTrace().takeIf { it.isNotEmpty() } ?: return
+                val trace = element.getImmutableTrace().takeIf { it.isNotEmpty() } ?: return
                 if (dependencies?.contains(trace.joinToString(".")) != true) {
                     holder.registerProblem(element, I18n.message("inspection.annotation.formula.dependencyNotFound"))
                 }

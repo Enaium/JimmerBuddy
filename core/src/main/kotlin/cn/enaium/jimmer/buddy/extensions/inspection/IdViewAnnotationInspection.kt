@@ -75,12 +75,13 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                     ?.takeIf { it.isNotBlank() }?.also { value ->
                         methodElement.containingClass?.also { c ->
                             c.allMethods.find { it.name == value }?.also { viewMethod ->
-                                viewMethod.containingClass?.findIdMethod()?.also { idMethod ->
-                                    val idTypeName = idMethod.getTargetName(true)
-                                    if (idTypeName != idViewTypeName) {
-                                        holder.registerProblem(element, typeNotMatch)
+                                viewMethod.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }?.element?.findIdMethod()
+                                    ?.also { idMethod ->
+                                        val idTypeName = idMethod.getTargetName(true)
+                                        if (idTypeName != idViewTypeName) {
+                                            holder.registerProblem(element, typeNotMatch)
+                                        }
                                     }
-                                }
                             } ?: holder.registerProblem(methodElement, basePropNotExists)
                         }
                     } ?: holder.registerProblem(element, noValue)
@@ -96,20 +97,21 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
 
                 methodElement.containingClass?.also { c ->
                     c.allMethods.find { it.name == baseProp }?.also { baseMethod ->
-                        baseMethod.containingClass?.findIdMethod()?.also { idMethod ->
-                            val idTypeName = idMethod.getTargetName(true)
-                            if (idTypeName != idViewTypeName) {
-                                holder.registerProblem(element, typeNotMatch)
-                            } else if (baseMethod.isNullable() != methodElement.isNullable()) {
-                                holder.registerProblem(
-                                    element, if (baseMethod.isNullable()) {
-                                        typeNullable
-                                    } else {
-                                        typeNonNull
-                                    }
-                                )
+                        baseMethod.returnType?.let { PsiUtil.resolveGenericsClassInType(it) }?.element?.findIdMethod()
+                            ?.also { idMethod ->
+                                val idTypeName = idMethod.getTargetName(true)
+                                if (idTypeName != idViewTypeName) {
+                                    holder.registerProblem(element, typeNotMatch)
+                                } else if (baseMethod.isNullable() != methodElement.isNullable()) {
+                                    holder.registerProblem(
+                                        element, if (baseMethod.isNullable()) {
+                                            typeNullable
+                                        } else {
+                                            typeNonNull
+                                        }
+                                    )
+                                }
                             }
-                        }
                     } ?: holder.registerProblem(element, basePropNotExists)
                 }
             }
@@ -148,11 +150,12 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
 
                         propertyElement.containingClass()?.also { c ->
                             c.findPropertyByName(value, true)?.also { viewProperty ->
-                                (viewProperty as? KtProperty)?.containingClass()?.findIdProperty()?.also { idProperty ->
-                                    if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
-                                        holder.registerProblem(element, typeNotMatch)
+                                (viewProperty as? KtProperty)?.typeReference?.type()?.ktClass?.findIdProperty()
+                                    ?.also { idProperty ->
+                                        if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
+                                            holder.registerProblem(element, typeNotMatch)
+                                        }
                                     }
-                                }
                             } ?: holder.registerProblem(element, basePropNotExists)
                         }
                     } ?: holder.registerProblem(element, noValue)
@@ -167,7 +170,7 @@ class IdViewAnnotationInspection : AbstractLocalInspectionTool() {
                 propertyElement.containingClass()?.also { c ->
                     c.findPropertyByName(baseProp ?: return, true)?.also { baseProperty ->
                         val baseReference = (baseProperty as? KtProperty)?.typeReference
-                        baseReference?.containingClass()?.findIdProperty()
+                        baseReference?.type()?.ktClass?.findIdProperty()
                             ?.also { idProperty ->
                                 if (idProperty.typeReference?.type()?.fqName != idViewType?.fqName) {
                                     holder.registerProblem(element, typeNotMatch)

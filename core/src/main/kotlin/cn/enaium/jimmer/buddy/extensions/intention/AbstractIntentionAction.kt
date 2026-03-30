@@ -16,15 +16,11 @@
 
 package cn.enaium.jimmer.buddy.extensions.intention
 
-import cn.enaium.jimmer.buddy.utility.readActionSmartCoroutine
 import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * @author Enaium

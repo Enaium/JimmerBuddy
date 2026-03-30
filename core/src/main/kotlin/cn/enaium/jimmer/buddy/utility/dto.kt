@@ -19,7 +19,6 @@ package cn.enaium.jimmer.buddy.utility
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot

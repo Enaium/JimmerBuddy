@@ -17,7 +17,10 @@
 package cn.enaium.jimmer.buddy.extensions.dto.inspection
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.findProjectDir
+import cn.enaium.jimmer.buddy.utility.ktClassesToKsp
+import cn.enaium.jimmer.buddy.utility.psiClassesToApt
+import cn.enaium.jimmer.buddy.utility.workspace
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder

@@ -23,7 +23,6 @@ import org.babyfish.jimmer.error.ErrorFamily;
 import org.babyfish.jimmer.error.ErrorField;
 import org.babyfish.jimmer.jackson.Converter;
 import org.babyfish.jimmer.jackson.JsonConverter;
-import org.babyfish.jimmer.jackson.LongToStringConverter;
 import org.babyfish.jimmer.sql.*;
 import org.babyfish.jimmer.sql.meta.LogicalDeletedValueGenerator;
 import org.babyfish.jimmer.sql.meta.UserIdGenerator;

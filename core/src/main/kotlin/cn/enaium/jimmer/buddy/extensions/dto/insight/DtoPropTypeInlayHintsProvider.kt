@@ -19,7 +19,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.insight
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
 import cn.enaium.jimmer.buddy.utility.endOffset
-import cn.enaium.jimmer.buddy.utility.firstCharUppercase
 import cn.enaium.jimmer.buddy.utility.resolveClass
 import cn.enaium.jimmer.buddy.utility.resolveGenericsClassInType
 import cn.enaium.jimmer.buddy.utility.type
