@@ -48,6 +48,7 @@ import org.babyfish.jimmer.apt.error.ErrorProcessor
 import org.babyfish.jimmer.apt.immutable.ImmutableProcessor
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableType
 import org.babyfish.jimmer.apt.tuple.TypedTupleProcessor
+import org.babyfish.jimmer.dto.compiler.Anno.EnumValue
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
@@ -612,10 +613,22 @@ object JimmerBuddy {
                                                 ?: return@forEach
                                         val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
                                         compile.forEach { dtoType ->
+
+                                            val mutable = dtoType.annotations.firstOrNull {
+                                                it.qualifiedName == "org.babyfish.jimmer.kt.dto.KotlinDto"
+                                            }?.let {
+                                                val value = it.valueMap["immutability"] as EnumValue
+                                                when (value.constant) {
+                                                    "IMMUTABLE" -> false
+                                                    "MUTABLE" -> true
+                                                    else -> null
+                                                }
+                                            } ?: option.mutable
+
                                             org.babyfish.jimmer.ksp.dto.DtoGenerator(
                                                 option.context,
                                                 org.babyfish.jimmer.ksp.client.DocMetadata(option.context),
-                                                option.mutable,
+                                                mutable,
                                                 dtoType,
                                                 option.context.environment.codeGenerator
                                             ).generate(emptyList())
