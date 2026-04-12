@@ -17,6 +17,16 @@ body:
       placeholder: ex. 25.3
     validations:
       required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      description: What language did you use
+      options:
+        - Kotlin
+        - Java
+    validations:
+      required: true
   - type: textarea
     id: steps-to-reproduce
     attributes:

@@ -61,7 +61,6 @@ import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.CopyOnWriteArraySet
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
@@ -184,9 +183,6 @@ object JimmerBuddy {
     class Workspace(val project: Project) {
 
         val log = Log(project)
-
-        val javaImmutablePsiClassCache = CopyOnWriteArraySet<PsiClass>()
-
         var init = false
         var isJimmerProject = false
         var isJavaProject = false
@@ -251,7 +247,6 @@ object JimmerBuddy {
         }
 
         fun reset() {
-            javaImmutablePsiClassCache.clear()
             init = false
         }
 
