@@ -434,7 +434,7 @@ object JimmerBuddy {
             }
         }
 
-        suspend fun dtoProcessJava(projects: Set<GenerateProject>) {
+        suspend fun dtoProcessJava(projects: Set<GenerateProject>, name: String? = null) {
             withBackgroundProgress(project, "Processing Java DTO") {
                 val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
 
@@ -468,8 +468,15 @@ object JimmerBuddy {
                                         val typeElement: TypeElement =
                                             elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
                                         val compile = compiler.compile(option.context.getImmutableType(typeElement))
-                                        compile.forEach {
-                                            DtoGenerator(option.context, DocMetadata(option.context), it).generate()
+                                        compile.forEach { dtoType ->
+                                            if (name != null && dtoType.name != name) {
+                                                return@forEach
+                                            }
+                                            DtoGenerator(
+                                                option.context,
+                                                DocMetadata(option.context),
+                                                dtoType
+                                            ).generate()
                                         }
                                         val generatedDir = getGeneratedDir(project, projectDir, src) ?: return@forEach
                                         sources.forEach {
@@ -571,7 +578,7 @@ object JimmerBuddy {
             }
         }
 
-        suspend fun dtoProcessKotlin(projects: Set<GenerateProject>) {
+        suspend fun dtoProcessKotlin(projects: Set<GenerateProject>, name: String? = null) {
             withBackgroundProgress(project, "Processing Kotlin DTO") {
                 val needRefresh = ConcurrentLinkedQueue<Pair<Source, Path>>()
 
@@ -608,7 +615,9 @@ object JimmerBuddy {
                                                 ?: return@forEach
                                         val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
                                         compile.forEach { dtoType ->
-
+                                            if (name != null && dtoType.name != name) {
+                                                return@forEach
+                                            }
                                             val mutable = dtoType.annotations.firstOrNull {
                                                 it.qualifiedName == "org.babyfish.jimmer.kt.dto.KotlinDto"
                                             }?.let {

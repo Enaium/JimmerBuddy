@@ -18,13 +18,12 @@ package cn.enaium.jimmer.buddy.extensions
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiTreeChangeAdapter
-import com.intellij.psi.PsiTreeChangeEvent
+import com.intellij.psi.*
+import com.intellij.psi.util.findParentOfType
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import kotlin.io.path.extension
@@ -34,36 +33,32 @@ import kotlin.io.path.extension
  */
 class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
     override fun childAdded(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
+        event.file?.onChange(event.parent)
     }
 
     override fun childRemoved(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
+        event.file?.onChange(event.parent)
     }
 
     override fun childReplaced(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
-    }
-
-    override fun childrenChanged(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
+        event.file?.onChange(event.parent)
     }
 
     override fun childMoved(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
+        event.file?.onChange(event.parent)
     }
 
     override fun propertyChanged(event: PsiTreeChangeEvent) {
-        event.file?.also { onChange(it) }
+        event.file?.onChange(event.parent)
     }
 
-    private fun onChange(psiFile: PsiFile) {
+    private fun PsiFile.onChange(parent: PsiElement?) {
         !project.workspace().isJimmerProject && return
         if (!JimmerBuddySetting.INSTANCE.state.autoGenerate) {
             return
         }
         val path = try {
-            psiFile.virtualFile.toNioPath()
+            this.virtualFile.toNioPath()
         } catch (_: Throwable) {
             return
         }
@@ -74,7 +69,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
             JimmerBuddy.getWorkspace(project).also {
                 if (it.isJavaProject) {
                     if (path.extension == "java" && runReadOnly {
-                            psiFile.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
+                            this.getChildOfType<PsiClass>()?.hasJimmerAnnotation()
                         } == true) {
                         it.sourcesProcessJava(
                             GenerateProject.generate(
@@ -87,12 +82,13 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                             GenerateProject.generate(
                                 path,
                                 GenerateProject.SourceRootType.DTO
-                            )
+                            ),
+                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.name?.text }
                         )
                     }
                 } else if (it.isKotlinProject) {
                     if (path.extension == "kt" && runReadOnly {
-                            psiFile.getChildOfType<KtClass>()?.hasJimmerAnnotation()
+                            this.getChildOfType<KtClass>()?.hasJimmerAnnotation()
                         } == true) {
                         it.sourcesProcessKotlin(
                             GenerateProject.generate(
@@ -108,7 +104,8 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                             GenerateProject.generate(
                                 path,
                                 GenerateProject.SourceRootType.DTO
-                            )
+                            ),
+                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.name?.text }
                         )
                     }
                 }
