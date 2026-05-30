@@ -7,5 +7,5 @@ subprojects {
 }
 
 tasks.register("buildPlugins") {
-    dependsOn(listOf("231", "242", "253").map { project(":since:$it").tasks.named("buildPlugin") })
+    dependsOn(listOf("231", "242", "253", "262").map { project(":since:$it").tasks.named("buildPlugin") })
 }

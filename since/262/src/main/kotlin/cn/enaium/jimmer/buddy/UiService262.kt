@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.utility
+package cn.enaium.jimmer.buddy
 
-import com.intellij.DynamicBundle
+import cn.enaium.jimmer.buddy.service.UiService
+import com.intellij.ui.dsl.builder.Row
+import com.intellij.ui.dsl.builder.SegmentedButton
 
 /**
  * @author Enaium
  */
-object I18n : DynamicBundle("messages.BuddyBundles") {
-    fun message(key: String, vararg params: Any?): String {
-        return getMessage(key, *params)
-    }
-}
-
-object IdeBundle : DynamicBundle("messages.IdeBundle") {
-    fun message(key: String, vararg params: Any?): String {
-        return getMessage(key, *params)
+class UiService262 : UiService {
+    override fun <T> segmentedButtonText(
+        row: Row,
+        items: Collection<T>,
+        renderer: (T) -> String
+    ): SegmentedButton<T> {
+        return row.segmentedButton(items) {
+            text = renderer(it)
+        }
     }
 }

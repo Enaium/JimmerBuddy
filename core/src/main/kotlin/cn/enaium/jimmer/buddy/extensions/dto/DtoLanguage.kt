@@ -37,10 +37,9 @@ object DtoLanguage : Language(JimmerBuddy.DTO_LANGUAGE_ID) {
         get() = PSIElementTypeFactory.getTokenIElementTypes(DtoLanguage)
 
     init {
-        val vocab = DtoParser.VOCABULARY
         PSIElementTypeFactory.defineLanguageIElementTypes(
             DtoLanguage,
-            Array(vocab.maxTokenType + 1) { vocab.getDisplayName(it) },
+            DtoParser.VOCABULARY,
             DtoParser.ruleNames,
         )
     }

@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.utility
+package cn.enaium.jimmer.buddy
 
-import com.intellij.DynamicBundle
+import cn.enaium.jimmer.buddy.service.NavigationService
+import com.intellij.codeInsight.navigation.getPsiElementPopup
+import com.intellij.openapi.ui.popup.JBPopup
+import com.intellij.psi.PsiElement
 
 /**
  * @author Enaium
  */
-object I18n : DynamicBundle("messages.BuddyBundles") {
-    fun message(key: String, vararg params: Any?): String {
-        return getMessage(key, *params)
-    }
-}
-
-object IdeBundle : DynamicBundle("messages.IdeBundle") {
-    fun message(key: String, vararg params: Any?): String {
-        return getMessage(key, *params)
+class NavigationService262 : NavigationService {
+    override fun getPsiElementPopup(
+        elements: List<PsiElement>,
+        title: String
+    ): JBPopup {
+        return getPsiElementPopup(elements.toTypedArray(), title)
     }
 }

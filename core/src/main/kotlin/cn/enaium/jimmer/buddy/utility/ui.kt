@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.utility
 
 import com.intellij.icons.AllIcons
-import com.intellij.ide.IdeBundle
 import com.intellij.ide.util.PackageChooserDialog
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory

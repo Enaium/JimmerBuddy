@@ -28,7 +28,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLambdaExpression
 import com.intellij.psi.PsiWhiteSpace
 import kotlinx.coroutines.*
-import org.jetbrains.kotlin.idea.core.isOverridable
+import org.jetbrains.kotlin.idea.search.KotlinSearchUsagesSupport.SearchUtils.isOverridable
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
@@ -86,7 +86,7 @@ class DraftSetIntentionAction : AbstractIntentionAction() {
                                     editor?.also {
                                         val ktClass = lambda.receiver() ?: return@also
                                         ktClass.getProperties().forEach {
-                                            if (it.isOverridable && it.isVar) {
+                                            if (it.isOverridable() && it.isVar) {
                                                 results += "${it.name} = TODO()"
                                             }
                                         }
