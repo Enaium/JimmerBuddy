@@ -71,7 +71,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                             dependencies.add(it)
                             var dependency = it
                             while (dependency.contains(".")) {
-                                dependency = it.substringBeforeLast(".")
+                                dependency = dependency.substringBeforeLast(".")
                                 dependencies.add(dependency)
                             }
                             dependencies
@@ -95,7 +95,7 @@ class FormulaAnnotationInspection : AbstractLocalInspectionTool() {
                     dependencies.add(it)
                     var dependency = it
                     while (dependency.contains(".")) {
-                        dependency = it.substringBeforeLast(".")
+                        dependency = dependency.substringBeforeLast(".")
                         dependencies.add(dependency)
                     }
                     dependencies
