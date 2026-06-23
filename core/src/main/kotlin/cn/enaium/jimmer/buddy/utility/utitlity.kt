@@ -30,6 +30,7 @@ import com.intellij.openapi.project.modules
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Condition
+import com.intellij.openapi.vfs.readText
 import com.intellij.patterns.PatternCondition
 import com.intellij.patterns.PsiElementPattern
 import com.intellij.psi.JavaPsiFacade
@@ -196,8 +197,9 @@ suspend fun Project.isAndroidProject(): Boolean = withContext(Dispatchers.IO) {
         return@withContext false
     }
 
-    return@withContext OrderEnumerator.orderEntries(this@isAndroidProject)
-        .runtimeOnly().classesRoots.any { it.name.startsWith("android-device-provider") }
+    return@withContext this@isAndroidProject.modules.any {
+        GradleUtil.getGradleBuildScriptSource(it)?.readText()?.contains("android {") == true
+    }
 }
 
 fun Project.runWhenSmart(block: () -> Unit) {

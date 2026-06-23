@@ -34,6 +34,8 @@ All notable changes to this project will be documented in this file.
 - Show dto prop type
 - Fix when immutable trace is a local variable
 - Reactor: Add non-blocking coroutine read actions for enhanced performance and concurrency handling.
+- Support navigate to dto prop
+- Fix the infinite loop caused by paths like a.b.c (with more than two levels).
 
 ## 1.10.x
 
