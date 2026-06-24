@@ -628,8 +628,12 @@ fun KtQualifiedExpression.getImmutableTrace(execute: KtQualifiedExpression? = nu
                 trace.add(property.name ?: continue)
             }
         }
-        child = if (child is KtNameReferenceExpression && child.reference?.resolve() is KtFunctionLiteral) {
-            child.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
+        child = if (child is KtNameReferenceExpression) {
+            when (val resolve = child.reference?.resolve()) {
+                is KtFunctionLiteral -> child.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
+                is KtParameter -> resolve.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
+                else -> child.firstChild
+            }
         } else {
             child.firstChild
         }
