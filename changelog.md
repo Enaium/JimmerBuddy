@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Reactor: Add non-blocking coroutine read actions for enhanced performance and concurrency handling.
 - Support navigate to dto prop
 - Fix the infinite loop caused by paths like a.b.c (with more than two levels).
+- Fix lambda parameter reference resolution (#179)
 
 ## 1.10.x
 
