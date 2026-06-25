@@ -100,15 +100,42 @@ fun isGradleProject(path: Path): Boolean {
     return path.resolve("build.gradle.kts").exists() || path.resolve("build.gradle").exists()
 }
 
+private val generatedDirectoryNames = setOf(
+    "generated",
+    "generated-sources",
+    ".apt_generated",
+)
+
+private val jimmerGeneratedFileSuffixes = setOf(
+    "Draft",
+    "Fetcher",
+    "FetcherDsl",
+    "Props",
+)
+
 fun isGeneratedFile(path: Path): Boolean {
     var current: Path? = path.parent
     while (current != null) {
-        if (current.name == "generated") {
+        if (current.name in generatedDirectoryNames) {
             return true
         }
         current = current.parent
     }
     return false
+}
+
+fun isGeneratedFile(path: String): Boolean {
+    return path.split('/', '\\').any { it in generatedDirectoryNames }
+}
+
+fun isJimmerGeneratedFile(path: String): Boolean {
+    if (!isGeneratedFile(path)) {
+        return false
+    }
+
+    val fileName = path.replace('\\', '/').substringAfterLast('/')
+    val sourceName = fileName.substringBeforeLast('.', fileName)
+    return jimmerGeneratedFileSuffixes.any { sourceName.endsWith(it) }
 }
 
 fun Project.findProjects(): Set<Path> {
