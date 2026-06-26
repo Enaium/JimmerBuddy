@@ -50,7 +50,7 @@ class KotlinEntityGenerate : EntityGenerate {
 
         val idSuffix = "_${generateEntity.primaryKeyName}"
 
-        val commonColumns = getCommonColumns(tables)
+        val commonColumns = if (generateEntity.baseEntity || tables.size == 1) getCommonColumns(tables) else emptyList()
 
         val type2Builder = mutableMapOf<String, TypeSpec.Builder>()
 
