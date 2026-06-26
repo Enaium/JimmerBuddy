@@ -20,12 +20,14 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
@@ -132,14 +134,44 @@ class ImmutableTree(val project: Project) : JPanel() {
         })
         add(
             JPanel(BorderLayout()).apply {
-                add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
-                    override fun actionPerformed(e: AnActionEvent) {
-                        if (project.isDumb()) {
-                            return
+                add(JPanel().apply {
+                    val refreshBtn = ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
+                        override fun actionPerformed(e: AnActionEvent) {
+                            refreshImmutables()
                         }
-                        loadImmutables(project)
-                    }
-                }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                    }, null, "Refresh", Dimension(24, 24))
+                    add(refreshBtn)
+                    val propsToggle = ActionButton(object : ToggleAction(I18n.message("toolWindow.buddy.button.filter.generated.props"), I18n.message("toolWindow.buddy.button.filter.generated.hint"), null) {
+                        override fun isSelected(e: AnActionEvent): Boolean {
+                            return JimmerBuddySetting.INSTANCE.state.hideGeneratedProps
+                        }
+                        override fun setSelected(e: AnActionEvent, state: Boolean) {
+                            JimmerBuddySetting.INSTANCE.state.hideGeneratedProps = state
+                            refreshImmutables()
+                        }
+                    }, null, "Props", Dimension(24, 24))
+                    add(propsToggle)
+                    val fetcherToggle = ActionButton(object : ToggleAction(I18n.message("toolWindow.buddy.button.filter.generated.fetcher"), I18n.message("toolWindow.buddy.button.filter.generated.hint"), null) {
+                        override fun isSelected(e: AnActionEvent): Boolean {
+                            return JimmerBuddySetting.INSTANCE.state.hideGeneratedFetcher
+                        }
+                        override fun setSelected(e: AnActionEvent, state: Boolean) {
+                            JimmerBuddySetting.INSTANCE.state.hideGeneratedFetcher = state
+                            refreshImmutables()
+                        }
+                    }, null, "Fetcher", Dimension(24, 24))
+                    add(fetcherToggle)
+                    val draftToggle = ActionButton(object : ToggleAction(I18n.message("toolWindow.buddy.button.filter.generated.draft"), I18n.message("toolWindow.buddy.button.filter.generated.hint"), null) {
+                        override fun isSelected(e: AnActionEvent): Boolean {
+                            return JimmerBuddySetting.INSTANCE.state.hideGeneratedDraft
+                        }
+                        override fun setSelected(e: AnActionEvent, state: Boolean) {
+                            JimmerBuddySetting.INSTANCE.state.hideGeneratedDraft = state
+                            refreshImmutables()
+                        }
+                    }, null, "Draft", Dimension(24, 24))
+                    add(draftToggle)
+                }, BorderLayout.WEST)
                 add(ActionButton(object : AnAction(AllIcons.Actions.More) {
                     override fun actionPerformed(e: AnActionEvent) {
                         val sourceComponent = (e.inputEvent?.source as? Component) ?: return
@@ -176,6 +208,20 @@ class ImmutableTree(val project: Project) : JPanel() {
     }
 
 
+    private fun isGeneratedType(qualifiedName: String): Boolean {
+        val setting = JimmerBuddySetting.INSTANCE.state
+        val simpleName = qualifiedName.substringAfterLast(".")
+        return (setting.hideGeneratedProps && simpleName.endsWith("Props"))
+                || (setting.hideGeneratedFetcher && (simpleName.endsWith("Fetcher") || simpleName.endsWith("FetcherDsl")))
+                || (setting.hideGeneratedDraft && simpleName.endsWith("Draft"))
+    }
+
+    private fun refreshImmutables() {
+        if (!project.isDumb()) {
+            loadImmutables(project)
+        }
+    }
+
     fun loadImmutables(project: Project) {
         CoroutineScope(Dispatchers.Default).launch {
             withBackgroundProgress(project, "Loading Immutables") {
@@ -190,6 +236,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                             sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
                                 ?.let { psiClass ->
                                     if (psiClass.isImmutable()) {
+                                        if (isGeneratedType(psiClass.qualifiedName ?: "")) {
+                                            return@mapNotNullTo null
+                                        }
                                         try {
                                             ImmutableType(psiClass).apply {
                                                 psiClass.toImmutable().toCommonImmutableType().props().forEach {
@@ -222,6 +271,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                         sourceFiles.mapNotNullTo(results) { sourceFile ->
                             sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.let { ktClass ->
                                 if (ktClass.isImmutable()) {
+                                    if (isGeneratedType(ktClass.fqName?.asString() ?: "")) {
+                                        return@mapNotNullTo null
+                                    }
                                     try {
                                         ImmutableType(ktClass).apply {
                                             ktClass.toImmutable().toCommonImmutableType().props().forEach {

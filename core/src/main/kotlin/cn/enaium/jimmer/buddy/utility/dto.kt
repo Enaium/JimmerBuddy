@@ -23,7 +23,12 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.search.searches.ReferencesSearch
+import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.base.util.projectScope
 import com.intellij.psi.util.findParentOfType
 
 /**
@@ -46,4 +51,17 @@ fun DtoPsiDtoType.generatedName(): String? {
             ?: "${exportType.substringBeforeLast(".")}.dto"
 
     return "$exportPackage.$name"
+}
+
+fun DtoPsiDtoType.generatedReferences(): List<PsiElement> {
+    val target = JavaPsiFacade.getInstance(project)
+        .findClass(generatedName() ?: return emptyList(), project.allScope())
+        ?: return emptyList()
+
+    return ReferencesSearch.search(target, project.projectScope())
+        .mapNotNull { reference ->
+            val virtualFile = reference.element.containingFile?.virtualFile ?: return@mapNotNull null
+            reference.element.takeIf { !isGeneratedFile(virtualFile.path) }
+        }
+        .toList()
 }

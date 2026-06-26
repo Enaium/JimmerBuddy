@@ -11,6 +11,11 @@
         <backgroundPostStartupActivity implementation="cn.enaium.jimmer.buddy.extensions.BuddyStartupActivity"/>
         <projectCloseHandler implementation="cn.enaium.jimmer.buddy.extensions.BuddyProjectCloseHandler"/>
         <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.extensions.BuddyPsiTreeChange"/>
+        <customScopesProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceScopeProvider"/>
+        <findInProjectExtension implementation="cn.enaium.jimmer.buddy.extensions.search.FindInProjectGeneratedSourceFilter"/>
+        <generatedSourcesFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
+        <generatedSourceUsageFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
+        <usageFilteringRuleProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceUsageFilteringRuleProvider"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
         <toolWindow factoryClass="cn.enaium.jimmer.buddy.extensions.window.BuddyToolWindow" id="Jimmer Buddy"

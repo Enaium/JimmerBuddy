@@ -21,11 +21,8 @@ import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChildren
 import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import cn.enaium.jimmer.buddy.utility.DTO_TYPE
-import cn.enaium.jimmer.buddy.utility.generatedName
 import com.intellij.lang.ASTNode
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.idea.base.util.allScope
 import javax.swing.Icon
 
 class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType {
@@ -43,9 +40,6 @@ class DtoPsiDtoTypeImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiDtoType
     }
 
     override fun reference(): PsiElement? {
-        val target =
-            JavaPsiFacade.getInstance(project).findClass(generatedName() ?: return null, project.allScope())
-                ?: return null
-        return target
+        return name ?: this
     }
 }

@@ -16,21 +16,16 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.insight
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.utility.generatedName
+import cn.enaium.jimmer.buddy.utility.generatedReferences
 import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering
 import com.intellij.codeInsight.hints.codeVision.CodeVisionProviderBase
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction
 import com.intellij.java.JavaBundle
 import com.intellij.openapi.editor.Editor
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.search.searches.ReferencesSearch
-import com.intellij.ui.awt.RelativePoint
-import org.jetbrains.kotlin.idea.base.util.allScope
-import org.jetbrains.kotlin.idea.base.util.projectScope
 import java.awt.event.MouseEvent
 
 /**
@@ -54,13 +49,11 @@ class DtoReferencesCodeVisionProvider : CodeVisionProviderBase() {
 
     override fun getHint(element: PsiElement, file: PsiFile): String? {
         if (element is DtoPsiDtoType) {
-            val target =
-                JavaPsiFacade.getInstance(element.project)
-                    .findClass(element.generatedName() ?: return null, element.project.allScope())
-                    ?: return null
-
-            val search = ReferencesSearch.search(target, element.project.projectScope())
-            return JavaBundle.message("usages.telescope", search.count())
+            val count = element.generatedReferences().size
+            if (count == 0) {
+                return null
+            }
+            return JavaBundle.message("usages.telescope", count)
         }
         return null
     }
@@ -71,17 +64,13 @@ class DtoReferencesCodeVisionProvider : CodeVisionProviderBase() {
         event: MouseEvent?
     ) {
         if (element is DtoPsiDtoType) {
-            val target =
-                JavaPsiFacade.getInstance(element.project)
-                    .findClass(element.generatedName() ?: return, element.project.allScope())
-                    ?: return
+            val references = element.generatedReferences()
+            if (references.isEmpty()) {
+                return
+            }
 
-            GotoDeclarationAction.startFindUsages(
-                editor,
-                target.project,
-                target,
-                if (event == null) null else RelativePoint(event)
-            )
+            JimmerBuddy.Services.NAVIGATION.getPsiElementPopup(references, "Choose DTO Reference")
+                .showInBestPositionFor(editor)
         }
     }
 }

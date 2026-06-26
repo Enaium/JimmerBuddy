@@ -18,15 +18,12 @@ package cn.enaium.jimmer.buddy.extensions.dto.insight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import cn.enaium.jimmer.buddy.utility.DTO_TYPE
+import cn.enaium.jimmer.buddy.utility.generatedReferences
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.findParentOfType
-import org.jetbrains.kotlin.idea.base.util.allScope
 
 /**
  * @author Enaium
@@ -37,19 +34,13 @@ class DtoLineMarkerProvider : RelatedItemLineMarkerProvider() {
         result: MutableCollection<in RelatedItemLineMarkerInfo<*>>
     ) {
         if (element is DtoPsiDtoType) {
-            val name = element.name?.value ?: return
-            val dtoPsiRoot = element.findParentOfType<DtoPsiRoot>() ?: return
-            val exportType = dtoPsiRoot.qualifiedName() ?: return
-            val exportPackage =
-                dtoPsiRoot.exportStatement?.packageParts?.qualifiedName()
-                    ?: "${exportType.substringBeforeLast(".")}.dto"
-
-            val target =
-                JavaPsiFacade.getInstance(element.project).findClass("$exportPackage.$name", element.project.allScope())
-                    ?: return
+            val references = element.generatedReferences()
+            if (references.isEmpty()) {
+                return
+            }
 
             result.add(
-                NavigationGutterIconBuilder.create(JimmerBuddy.Icons.Nodes.DTO_TYPE).setTargets(listOf(target))
+                NavigationGutterIconBuilder.create(JimmerBuddy.Icons.Nodes.DTO_TYPE).setTargets(references)
                     .createLineMarkerInfo(element)
             )
         }

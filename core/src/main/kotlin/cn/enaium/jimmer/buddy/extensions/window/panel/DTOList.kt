@@ -20,11 +20,13 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
@@ -90,14 +92,27 @@ class DTOList(val project: Project) : JPanel() {
         })
         add(
             JPanel(BorderLayout()).apply {
-                add(ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
-                    override fun actionPerformed(e: AnActionEvent) {
-                        if (project.isDumb()) {
-                            return
+                add(JPanel().apply {
+                    val refreshBtn = ActionButton(object : AnAction(AllIcons.Actions.Refresh) {
+                        override fun actionPerformed(e: AnActionEvent) {
+                            if (project.isDumb()) {
+                                return
+                            }
+                            loadDTOs()
                         }
-                        loadDTOs()
-                    }
-                }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                    }, null, "Refresh", Dimension(24, 24))
+                    add(refreshBtn)
+                    val dtoToggle = ActionButton(object : ToggleAction(I18n.message("toolWindow.buddy.button.filter.generated.dto"), I18n.message("toolWindow.buddy.button.filter.generated.hint"), null) {
+                        override fun isSelected(e: AnActionEvent): Boolean {
+                            return JimmerBuddySetting.INSTANCE.state.hideGeneratedDto
+                        }
+                        override fun setSelected(e: AnActionEvent, state: Boolean) {
+                            JimmerBuddySetting.INSTANCE.state.hideGeneratedDto = state
+                            loadDTOs()
+                        }
+                    }, null, "DTO", Dimension(24, 24))
+                    add(dtoToggle)
+                }, BorderLayout.WEST)
                 add(ActionButton(object : AnAction(AllIcons.Actions.More) {
                     override fun actionPerformed(e: AnActionEvent) {
                         val sourceComponent = (e.inputEvent?.source as? Component) ?: return
@@ -144,6 +159,12 @@ class DTOList(val project: Project) : JPanel() {
                 ).forEach { (_, sourceFiles, _) ->
                     ReadAction.run<Throwable> {
                         sourceFiles.mapNotNullTo(results) { sourceFile ->
+                            // DTO generated 过滤
+                            if (JimmerBuddySetting.INSTANCE.state.hideGeneratedDto
+                                && isGeneratedFile(sourceFile)
+                            ) {
+                                return@mapNotNullTo null
+                            }
                             sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<DtoPsiRoot>()
                                 ?.let { root ->
                                     DtoFile(root).apply {
