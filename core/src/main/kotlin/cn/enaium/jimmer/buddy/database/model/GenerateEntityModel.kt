@@ -28,6 +28,7 @@ class GenerateEntityModel : BaseState() {
     val packageNameProperty = graph.property("")
     val languageProperty = graph.property(Language.KOTLIN)
     val commentProperty = graph.property(false)
+    val baseEntityProperty = graph.property(false)
     val tableAnnotationProperty = graph.property(false)
     val columnAnnotationProperty = graph.property(false)
     val idViewAnnotationProperty = graph.property(false)
@@ -43,6 +44,7 @@ class GenerateEntityModel : BaseState() {
     val packageName: String by packageNameProperty
     val language: Language by languageProperty
     val comment: Boolean by commentProperty
+    val baseEntity: Boolean by baseEntityProperty
     val tableAnnotation: Boolean by tableAnnotationProperty
     val columnAnnotation: Boolean by columnAnnotationProperty
     val idViewAnnotation: Boolean by idViewAnnotationProperty

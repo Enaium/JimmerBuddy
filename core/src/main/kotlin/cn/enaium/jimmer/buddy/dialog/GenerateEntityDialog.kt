@@ -84,6 +84,9 @@ class GenerateEntityDialog(
                         checkBox(I18n.message("dialog.generate.entity.checkbox.comment")).bindSelected(
                             generateEntityModel.commentProperty
                         )
+                        checkBox(I18n.message("dialog.generate.entity.checkbox.baseEntity")).bindSelected(
+                            generateEntityModel.baseEntityProperty
+                        )
                         checkBox(I18n.message("dialog.generate.entity.checkbox.table")).bindSelected(
                             generateEntityModel.tableAnnotationProperty
                         )
