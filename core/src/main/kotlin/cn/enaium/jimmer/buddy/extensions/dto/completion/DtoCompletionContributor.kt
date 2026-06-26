@@ -127,6 +127,7 @@ class DtoCompletionContributor : CompletionContributor() {
         extend(
             basic,
             DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiProp::class.java)
                 .inside(DtoPsiDtoBody::class.java),
             FuncNameCompletionProvider
         )
@@ -177,6 +178,14 @@ class DtoCompletionContributor : CompletionContributor() {
                 DtoPsiQualifiedName::class.java,
             ).inside(DtoPsiMacro::class.java),
             MacroArgCompletionProvider
+        )
+        extend(
+            basic,
+            DtoPsiPatterns.psiElement().withParents(
+                DtoPsiName::class.java,
+                DtoPsiAnnotationNamedArgument::class.java,
+            ).inside(DtoPsiAnnotationArguments::class.java),
+            AnnotationParametersCompletionProvider
         )
     }
 }

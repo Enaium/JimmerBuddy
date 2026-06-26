@@ -344,7 +344,7 @@ annotationArguments
 
 annotationNamedArgument
     :
-    name EQUAL annotationValue
+    name (EQUAL annotationValue)?
     ;
 
 annotationValue
