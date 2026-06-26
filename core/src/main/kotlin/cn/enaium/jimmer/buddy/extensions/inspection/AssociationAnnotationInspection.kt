@@ -30,7 +30,6 @@ import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.OneToOne
-import org.jetbrains.kotlin.idea.core.ShortenReferences
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
@@ -139,7 +138,7 @@ private class AddAssociationAnnotationQuickFix(
                 val annotation = element.addAnnotationEntry(
                     KtPsiFactory(project).createAnnotationEntry("@$annotationQualifiedName")
                 )
-                ShortenReferences.DEFAULT.process(annotation)
+                JavaCodeStyleManager.getInstance(project).shortenClassReferences(annotation)
             }
         }
     }
