@@ -22,7 +22,6 @@ import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLexerAdaptor
 import cn.enaium.jimmer.buddy.extensions.dto.DtoParserAdaptor
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.i.DtoPsiAnnotationValueImpl
 import cn.enaium.jimmer.buddy.extensions.dto.psi.impl.*
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
@@ -97,6 +96,7 @@ class DtoParserDefinition : ParserDefinition {
             DtoParser.RULE_dtoBody -> DtoPsiDtoBodyImpl(node)
             DtoParser.RULE_macro -> DtoPsiMacroImpl(node)
             DtoParser.RULE_explicitProp -> DtoPsiExplicitPropImpl(node)
+            DtoParser.RULE_foldProp -> DtoPsiFoldPropImpl(node)
             DtoParser.RULE_aliasGroup -> DtoPsiAliasGroupImpl(node)
             DtoParser.RULE_aliasGroupBody -> DtoPsiAliasGroupBodyImpl(node)
             DtoParser.RULE_aliasPattern -> DtoPsiAliasPatternImpl(node)

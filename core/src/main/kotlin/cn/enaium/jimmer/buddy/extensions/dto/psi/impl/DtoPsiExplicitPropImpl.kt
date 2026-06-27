@@ -26,6 +26,8 @@ import javax.swing.Icon
 class DtoPsiExplicitPropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiExplicitProp {
     override val aliasGroup: DtoPsiAliasGroup?
         get() = findChild<DtoPsiAliasGroup>("/explicitProp/aliasGroup")
+    override val foldProp: DtoPsiFoldProp?
+        get() = findChild<DtoPsiFoldProp>("/explicitProp/foldProp")
     override val positiveProp: DtoPsiPositiveProp?
         get() = findChild<DtoPsiPositiveProp>("/explicitProp/positiveProp")
     override val negativeProp: DtoPsiNegativeProp?

@@ -1,4 +1,4 @@
-package cn.enaium.jimmer.buddy.extensions.dto.psi.i
+package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationArguments
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationValue
