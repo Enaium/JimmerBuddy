@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NodeSelectedNotifier
 import cn.enaium.jimmer.buddy.utility.I18n
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
@@ -48,22 +49,24 @@ class DtoInfo(project: Project) : JPanel() {
                 panel.removeAll()
                 panel.repaint()
                 panel.revalidate()
-                val editor = when (node) {
-                    is DtoTree.DtoTypeNode -> {
-                        DtoTypeEditor(node)
+                runReadAction {
+                    val editor = when (node) {
+                        is DtoTree.DtoTypeNode -> {
+                            DtoTypeEditor(node)
+                        }
+
+                        is DtoTree.DtoPropNode -> {
+                            DtoPropEditor(node)
+                        }
+
+                        else -> noSelected
                     }
 
-                    is DtoTree.DtoPropNode -> {
-                        DtoPropEditor(node)
+                    editor.also {
+                        panel.add(JBScrollPane(editor).apply {
+                            horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+                        }, BorderLayout.CENTER)
                     }
-
-                    else -> noSelected
-                }
-
-                editor.also {
-                    panel.add(JBScrollPane(editor).apply {
-                        horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-                    }, BorderLayout.CENTER)
                 }
 
                 panel.repaint()

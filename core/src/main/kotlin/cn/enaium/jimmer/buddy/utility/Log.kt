@@ -18,7 +18,6 @@ package cn.enaium.jimmer.buddy.utility
 
 import com.intellij.execution.impl.ConsoleViewImpl
 import com.intellij.execution.ui.ConsoleViewContentType
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
@@ -29,15 +28,12 @@ import java.time.format.DateTimeFormatter
  * @author Enaium
  */
 class Log(project: Project) : ConsoleViewImpl(project, true) {
-    private val logger = thisLogger()
 
     fun info(text: String) {
-        logger.info(text)
         print(log(text), ConsoleViewContentType.NORMAL_OUTPUT)
     }
 
     fun error(e: Throwable) {
-        logger.error(e)
         val out = ByteArrayOutputStream()
         val writer = PrintWriter(out)
         e.printStackTrace(writer)
@@ -46,7 +42,6 @@ class Log(project: Project) : ConsoleViewImpl(project, true) {
     }
 
     fun warn(text: String) {
-        logger.warn(text)
         print(log(text), ConsoleViewContentType.LOG_WARNING_OUTPUT)
     }
 
