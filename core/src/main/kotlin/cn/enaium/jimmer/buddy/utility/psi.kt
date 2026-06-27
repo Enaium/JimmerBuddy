@@ -18,9 +18,13 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.service.PsiService
+import com.intellij.ide.highlighter.JavaFileType
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.javadoc.PsiDocComment
+import com.intellij.psi.search.FileTypeIndex
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.Draft
@@ -35,6 +39,8 @@ import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.KExecutable
 import org.babyfish.jimmer.sql.kt.ast.query.KTypedRootQuery
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
+import org.jetbrains.kotlin.idea.base.util.allScope
+import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
@@ -648,4 +654,45 @@ fun PsiClass.findIdMethod(): PsiMethod? {
 
 fun KtClass.findIdProperty(): KtProperty? {
     return getAllProperties().find { it.hasIdAnnotation() }
+}
+
+fun PsiClass.findGeneratedClass(): PsiClass? {
+    val qualifiedName = this.qualifiedName ?: return null
+    val scope = project.allScope()
+    val facade = JavaPsiFacade.getInstance(project)
+    val found = facade.findClass(qualifiedName, scope) ?: return null
+    if (found.containingFile?.virtualFile?.let { isGeneratedSourceFile(it) } == true) {
+        return found
+    }
+
+    val simpleName = qualifiedName.substringAfterLast('.')
+    val generatedFiles = FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScope.projectScope(project))
+        .asSequence()
+        .filter { it.name == "$simpleName.java" && isGeneratedSourceFile(it) }
+    return generatedFiles.firstNotNullOfOrNull { virtualFile ->
+        val psiFile = PsiManager.getInstance(project).findFile(virtualFile) ?: return@firstNotNullOfOrNull null
+        (psiFile as? PsiClassOwner)?.classes?.firstOrNull { it.qualifiedName == qualifiedName }
+    }
+}
+
+fun KtClass.findGeneratedClass(): KtClass? {
+    val fqName = this.fqName?.asString() ?: return null
+    val scope = project.allScope()
+    val allClasses = KotlinFullClassNameIndex[fqName, project, scope]
+    return allClasses.firstOrNull { ktClass ->
+        val virtualFile = ktClass.containingFile.virtualFile ?: return@firstOrNull false
+        isGeneratedSourceFile(virtualFile)
+    } as? KtClass
+}
+
+private fun isGeneratedSourceFile(virtualFile: VirtualFile): Boolean {
+    var current = virtualFile.toNioPath().parent
+    while (current != null) {
+        val name = current.fileName?.toString()
+        if (name == "generated" || name == "generated-sources") {
+            return true
+        }
+        current = current.parent
+    }
+    return false
 }
