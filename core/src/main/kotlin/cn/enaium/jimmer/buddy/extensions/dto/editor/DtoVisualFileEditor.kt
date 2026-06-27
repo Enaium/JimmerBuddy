@@ -57,7 +57,7 @@ class DtoVisualFileEditor(project: Project, private val file: VirtualFile) : Use
     }
 
     override fun isValid(): Boolean {
-        return true
+        return panel.isValid
     }
 
     override fun addPropertyChangeListener(p0: PropertyChangeListener) {}
