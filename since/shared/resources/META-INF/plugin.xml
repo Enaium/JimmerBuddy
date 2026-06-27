@@ -229,6 +229,7 @@
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyJavaPostfixTemplateProvider"/>
         <codeInsight.template.postfixTemplateProvider language="kotlin"
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyKotlinPostfixTemplateProvider"/>
+        <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.editor.ImmutableEditorProvider"/>
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
         <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"
                                  implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
