@@ -66,11 +66,19 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
                     }
                 }
 
-                val content = """
-                ## $name
-                
-                ${props.joinToString(", ") { "`${it.name()}`" }}
-            """.trimIndent()
+                val content = buildString {
+                    append("## $name")
+
+                    val aliasGroup = element.findParentOfType<DtoPsiAliasGroup>()
+                    aliasGroup?.pattern?.also { aliasPattern ->
+                        props.forEach { prop ->
+                            append("\n\n`${prop.name()}` as ${pattern(prop.name(), aliasPattern)}")
+                        }
+                        return@buildString
+                    }
+
+                    append("\n\n${props.joinToString(", ") { "`${it.name()}`" }}")
+                }
                 return content.toHtml()
             }
         }
