@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.12.x
+
+- Add `BaseEntity` switch for generate entity (#187)
+- Support annotation parameters completion (#188)
+- Support fold func and then macro alias (#190)
+- Support entity designer (#192)
+
 ## 1.11.x
+
 - Support change the new dto file dir
 - Formula dependencies skip non-member
 - Support jspecify
