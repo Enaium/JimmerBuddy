@@ -200,6 +200,7 @@
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.FullClassIndex"/>
         <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoLineMarkerProvider"/>
+        <editorFactoryListener implementation="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoReferenceEditorFactoryListener"/>
         <lang.formatter language="JimmerBuddy.DTO"
                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.formatter.DtoFormattingModelBuilder"/>
         <lang.braceMatcher language="JimmerBuddy.DTO"
@@ -301,5 +302,4 @@
         </group>
     </actions>
 </idea-plugin>
-
 
