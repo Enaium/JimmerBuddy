@@ -375,7 +375,7 @@ private fun KtExpression.lastReferenceExpression(): KtReferenceExpression? {
     }
 }
 
-private fun Project.findSpringBeanTargets(beanName: String): List<PsiElement> {
+fun Project.findSpringBeanTargets(beanName: String): List<PsiElement> {
     val scope = GlobalSearchScope.projectScope(this)
     val cache = PsiShortNamesCache.getInstance(this)
     val targets = mutableListOf<PsiElement>()

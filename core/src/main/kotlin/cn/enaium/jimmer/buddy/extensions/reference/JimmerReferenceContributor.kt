@@ -45,5 +45,6 @@ class JimmerReferenceContributor : PsiReferenceContributor() {
         register.registerReferenceProvider(pattern, FormulaPsiReferenceProvider)
         register.registerReferenceProvider(pattern, FetchByPsiReferenceProvider)
         register.registerReferenceProvider(pattern, OrderedPropPsiReferenceProvider)
+        register.registerReferenceProvider(pattern, TransientPsiReferenceProvider)
     }
 }
