@@ -114,12 +114,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                             }
                                     }
 
-                                    if (method.hasTransientAnnotation()) {
-                                        element.findGeneratedClass()?.findMethodsByName(method.name, false)
-                                            ?.forEach { target ->
-                                                targets.add(target)
-                                            }
-                                    }
+                                    targets.addAll(method.findTransientNavigationTargets())
                                     nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
@@ -191,12 +186,7 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                             }
                                     }
 
-                                    val propertyName = property.name
-                                    if (property.hasTransientAnnotation() && propertyName != null) {
-                                        element.findGeneratedClass()?.findPropertyByName(propertyName)?.also { target ->
-                                            targets.add(target)
-                                        }
-                                    }
+                                    targets.addAll(property.findTransientNavigationTargets())
                                     nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
