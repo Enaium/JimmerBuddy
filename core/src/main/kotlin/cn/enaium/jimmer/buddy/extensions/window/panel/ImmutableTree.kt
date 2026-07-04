@@ -38,6 +38,7 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import kotlinx.coroutines.CoroutineScope
@@ -48,6 +49,7 @@ import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.createSmartPointer
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
@@ -76,7 +78,7 @@ class ImmutableTree(val project: Project) : JPanel() {
                 tree.lastSelectedPathComponent?.also { select ->
                     fun navigate() {
                         if (select is ImmutableNode) {
-                            (select.target as Navigatable).navigate(true)
+                            (select.target.element as? Navigatable)?.navigate(true)
                         }
                     }
 
@@ -90,7 +92,11 @@ class ImmutableTree(val project: Project) : JPanel() {
                             if (select is ImmutableType) {
                                 add(JMenuItem(I18n.message("toolwindow.buddy.menu.newDto")).apply {
                                     addActionListener {
-                                        NewDtoFileDialog(project, select.sourceFile, select.qualifiedName).show()
+                                        NewDtoFileDialog(
+                                            project,
+                                            select.sourceFile ?: return@addActionListener,
+                                            select.qualifiedName
+                                        ).show()
                                     }
                                 })
                                 add(JMenuItem(I18n.message("toolwindow.buddy.menu.generateDDL")).apply {
@@ -100,14 +106,14 @@ class ImmutableTree(val project: Project) : JPanel() {
                                                 tree.selectionModel.selectionPaths.mapNotNull { selectionPath ->
                                                     val target =
                                                         (selectionPath.lastPathComponent as? ImmutableType)?.target
-                                                    when (target) {
+                                                    when (val element = target?.element) {
                                                         is PsiClass -> {
-                                                            target.takeIf { it.isEntity() }?.toImmutable()
+                                                            element.takeIf { it.isEntity() }?.toImmutable()
                                                                 ?.toCommonImmutableType()
                                                         }
 
                                                         is KtClass -> {
-                                                            target.takeIf { it.isEntity() }?.toImmutable()
+                                                            element.takeIf { it.isEntity() }?.toImmutable()
                                                                 ?.toCommonImmutableType()
                                                         }
 
@@ -191,11 +197,11 @@ class ImmutableTree(val project: Project) : JPanel() {
                                 ?.let { psiClass ->
                                     if (psiClass.isImmutable()) {
                                         try {
-                                            ImmutableType(psiClass).apply {
+                                            ImmutableType(psiClass.createSmartPointer()).apply {
                                                 psiClass.toImmutable().toCommonImmutableType().props().forEach {
                                                     psiClass.methods.find { method -> method.name == it.name() }
                                                         ?.also { method ->
-                                                            add(ImmutableProp(method, it))
+                                                            add(ImmutableProp(method.createSmartPointer(), it))
                                                         }
                                                 }
                                             }
@@ -223,11 +229,11 @@ class ImmutableTree(val project: Project) : JPanel() {
                             sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.let { ktClass ->
                                 if (ktClass.isImmutable()) {
                                     try {
-                                        ImmutableType(ktClass).apply {
+                                        ImmutableType(ktClass.createSmartPointer()).apply {
                                             ktClass.toImmutable().toCommonImmutableType().props().forEach {
                                                 ktClass.getProperties().find { property -> property.name == it.name() }
                                                     ?.also { property ->
-                                                        add(ImmutableProp(property, it))
+                                                        add(ImmutableProp(property.createSmartPointer(), it))
                                                     }
                                             }
                                         }
@@ -283,22 +289,22 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableNode(val target: PsiElement) :
+    private open class ImmutableNode(val target: SmartPsiElementPointer<PsiElement>) :
         DefaultMutableTreeNode()
 
-    private open class ImmutableType(target: PsiElement) : ImmutableNode(target) {
-        val sourceFile = target.containingFile.virtualFile.toNioPath()
-        val qualifiedName: String = when (target) {
+    private open class ImmutableType(target: SmartPsiElementPointer<PsiElement>) : ImmutableNode(target) {
+        val sourceFile = target.element?.containingFile?.virtualFile?.toNioPath()
+        val qualifiedName: String = when (val element = target.element) {
             is PsiClass -> {
-                target.qualifiedName ?: "Unknown Name"
+                element.qualifiedName ?: "Unknown Name"
             }
 
             is KtClass -> {
-                target.fqName?.asString() ?: "Unknown Name"
+                element.fqName?.asString() ?: "Unknown Name"
             }
 
             else -> {
-                target.text
+                element?.text ?: "Unknown Name"
             }
         }
 
@@ -311,19 +317,22 @@ class ImmutableTree(val project: Project) : JPanel() {
         }
     }
 
-    private open class ImmutableProp(target: PsiElement, val prop: CommonImmutableType.CommonImmutableProp) :
+    private open class ImmutableProp(
+        target: SmartPsiElementPointer<PsiElement>,
+        val prop: CommonImmutableType.CommonImmutableProp
+    ) :
         ImmutableNode(target) {
-        val name = when (target) {
+        val name = when (val element = target.element) {
             is PsiMethod -> {
-                target.name
+                element.name
             }
 
             is KtProperty -> {
-                (target.name ?: "Unknown Name")
+                (element.name ?: "Unknown Name")
             }
 
             else -> {
-                target.text
+                element?.text
             }
         }.let { name ->
             "$name: ${prop.simpleTypeName()} (${prop.type().description})".let { typeName ->

@@ -337,7 +337,27 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 type = it.type
             }
 
-            val typeMapping = typeMapping0(name, type)
+            val typeMapping =
+                when (val psi = commonImmutableType.props().find { it.columnName() == name }?.psi(project)) {
+                    is PsiMethod -> {
+                        if (generateDDLModel.database in listOf(Database.MYSQL, Database.MARIADB, Database.POSTGRES)) {
+                            psi.modifierList.findAnnotation(Serialized::class.qualifiedName!!)?.let { "json" }
+                        } else {
+                            null
+                        }
+                    }
+
+                    is KtProperty -> {
+                        if (generateDDLModel.database in listOf(Database.MYSQL, Database.MARIADB, Database.POSTGRES)) {
+                            psi.findAnnotation(Serialized::class.qualifiedName!!)?.let { "json" }
+                        } else {
+                            null
+                        }
+                    }
+
+                    else -> null
+                } ?: typeMapping0(name, type)
+
             return "$name $typeMapping".let {
                 if (defaultValue != null) {
                     val string = typeMapping.startsWith("text") || typeMapping.startsWith("varchar")
