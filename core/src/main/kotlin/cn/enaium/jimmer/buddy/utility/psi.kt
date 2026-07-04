@@ -124,9 +124,9 @@ fun PsiClass.hasTypedTupleAnnotation(): Boolean {
 }
 
 fun KtClass.hasAnnotation(vararg annotations: KClass<*>): Boolean {
-    return this.toUElementOfType<UClass>()?.uAnnotations?.any { uAnnotation ->
-        annotations.map { it.qualifiedName }.any { it == uAnnotation.qualifiedName }
-    } == true
+    return this.annotations().any { annotation ->
+        annotations.map { it.qualifiedName }.any { it == annotation.fqName }
+    }
 }
 
 fun KtClass.hasEntityAnnotation(): Boolean {

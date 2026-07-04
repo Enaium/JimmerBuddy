@@ -27,7 +27,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -54,7 +53,7 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
     private val contentPanel = JPanel(BorderLayout())
 
     /** Currently displayed element, stored so we can refresh after annotation changes. */
-    private var currentElement: PsiElement? = null
+    private var currentElement: SmartPsiElementPointer<PsiElement>? = null
 
     init {
         layout = BorderLayout()
@@ -64,7 +63,7 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
         }, BorderLayout.CENTER)
     }
 
-    fun show(element: PsiElement?) {
+    fun show(element: SmartPsiElementPointer<PsiElement>?) {
         contentPanel.removeAll()
         currentElement = element
 
@@ -73,7 +72,7 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
         } else {
             runReadOnly {
                 val infoPanel = try {
-                    when (val resolved = resolveElementInCurrentFile(element)) {
+                    when (val resolved = resolveElementInCurrentFile(element.element ?: return@runReadOnly)) {
                         is PsiClass -> buildClassInfo(resolved)
                         is KtClass -> buildKtClassInfo(resolved)
                         is PsiMethod -> buildJavaPropertyInfo(resolved)
@@ -242,9 +241,9 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
 
             // Business Key: @Key (only for table column properties)
             val isTableColumn = !method.hasAnno(IdView::class) && !method.hasAnno(Formula::class)
-                && !method.hasAnno(Transient::class) && !method.hasAnno(OneToOne::class)
-                && !method.hasAnno(ManyToOne::class) && !method.hasAnno(OneToMany::class)
-                && !method.hasAnno(ManyToMany::class)
+                    && !method.hasAnno(Transient::class) && !method.hasAnno(OneToOne::class)
+                    && !method.hasAnno(ManyToOne::class) && !method.hasAnno(OneToMany::class)
+                    && !method.hasAnno(ManyToMany::class)
             if (isTableColumn) {
                 addJavaKeyRow(method)
                 addJavaColumnRow(method)
@@ -331,9 +330,9 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
 
             // Business Key: @Key (only for table column properties)
             val isTableColumn = !property.hasKtAnno(IdView::class) && !property.hasKtAnno(Formula::class)
-                && !property.hasKtAnno(Transient::class) && !property.hasKtAnno(OneToOne::class)
-                && !property.hasKtAnno(ManyToOne::class) && !property.hasKtAnno(OneToMany::class)
-                && !property.hasKtAnno(ManyToMany::class)
+                    && !property.hasKtAnno(Transient::class) && !property.hasKtAnno(OneToOne::class)
+                    && !property.hasKtAnno(ManyToOne::class) && !property.hasKtAnno(OneToMany::class)
+                    && !property.hasKtAnno(ManyToMany::class)
             if (isTableColumn) {
                 addKotlinKeyRow(property)
                 addKotlinColumnRow(property)

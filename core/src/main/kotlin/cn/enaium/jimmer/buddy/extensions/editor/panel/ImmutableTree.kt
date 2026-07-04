@@ -21,16 +21,15 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiJavaFile
-import com.intellij.psi.PsiMethod
+import com.intellij.pom.Navigatable
+import com.intellij.psi.*
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.psiUtil.createSmartPointer
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
@@ -47,7 +46,7 @@ import javax.swing.tree.DefaultTreeModel
 class ImmutableTree(
     private val project: Project,
     private val file: VirtualFile,
-    private val onSelected: ((PsiElement?) -> Unit)? = null
+    private val onSelected: ((SmartPsiElementPointer<PsiElement>?) -> Unit)? = null
 ) : JPanel() {
 
     private val root = DefaultMutableTreeNode()
@@ -59,13 +58,11 @@ class ImmutableTree(
         tree.cellRenderer = NodeRenderer()
 
         tree.addTreeSelectionListener {
-            ReadAction.run<Throwable> {
-                val element = when (val node = tree.lastSelectedPathComponent) {
-                    is ClassNode -> node.element
-                    is PropertyNode -> node.element
-                    else -> null
+            tree.lastSelectedPathComponent?.also { select ->
+                if (select is ImmutableNode) {
+                    (select.target.element as? Navigatable)?.navigate(true)
+                    onSelected?.invoke(select.target)
                 }
-                onSelected?.invoke(element)
             }
         }
 
@@ -80,16 +77,16 @@ class ImmutableTree(
             when (psiFile) {
                 is PsiJavaFile -> {
                     val psiClass = psiFile.getChildOfType<PsiClass>() ?: return@run
-                    val classNode = ClassNode(psiClass)
-                    root.add(classNode)
-                    loadJavaProperties(psiClass, classNode)
+                    val immutableType = ImmutableType(psiClass.createSmartPointer())
+                    root.add(immutableType)
+                    loadJavaProperties(psiClass, immutableType)
                 }
 
                 is KtFile -> {
                     val ktClass = psiFile.getChildOfType<KtClass>() ?: return@run
-                    val classNode = ClassNode(ktClass)
-                    root.add(classNode)
-                    loadKotlinProperties(ktClass, classNode)
+                    val immutableType = ImmutableType(ktClass.createSmartPointer())
+                    root.add(immutableType)
+                    loadKotlinProperties(ktClass, immutableType)
                 }
             }
         }
@@ -98,32 +95,32 @@ class ImmutableTree(
         expandAll()
     }
 
-    private fun loadJavaProperties(psiClass: PsiClass, classNode: ClassNode) {
+    private fun loadJavaProperties(psiClass: PsiClass, classNode: ImmutableType) {
         try {
             val immutableType = psiClass.toImmutable().toCommonImmutableType()
             immutableType.props().forEach { prop ->
                 psiClass.methods.find { it.name == prop.name() }?.let { method ->
-                    classNode.add(PropertyNode(method))
+                    classNode.add(ImmutableProp(method.createSmartPointer()))
                 }
             }
         } catch (_: Exception) {
             psiClass.methods
                 .filter { it.parameterList.parametersCount == 0 && it.returnType != null }
                 .filterNot { it.name in listOf("toString", "hashCode", "equals") }
-                .forEach { classNode.add(PropertyNode(it)) }
+                .forEach { classNode.add(ImmutableProp(it.createSmartPointer())) }
         }
     }
 
-    private fun loadKotlinProperties(ktClass: KtClass, classNode: ClassNode) {
+    private fun loadKotlinProperties(ktClass: KtClass, classNode: ImmutableType) {
         try {
             val immutableType = ktClass.toImmutable().toCommonImmutableType()
             immutableType.props().forEach { prop ->
                 ktClass.getProperties().find { it.name == prop.name() }?.let { property ->
-                    classNode.add(PropertyNode(property))
+                    classNode.add(ImmutableProp(property.createSmartPointer()))
                 }
             }
         } catch (_: Exception) {
-            ktClass.getProperties().forEach { classNode.add(PropertyNode(it)) }
+            ktClass.getProperties().forEach { classNode.add(ImmutableProp(it.createSmartPointer())) }
         }
     }
 
@@ -134,34 +131,37 @@ class ImmutableTree(
         }
     }
 
-    private class ClassNode(val element: PsiElement) : DefaultMutableTreeNode(element) {
+    private open class ImmutableNode(val target: SmartPsiElementPointer<PsiElement>) :
+        DefaultMutableTreeNode()
+
+    private class ImmutableType(target: SmartPsiElementPointer<PsiElement>) : ImmutableNode(target) {
         override fun toString(): String = runReadOnly {
-            when (element) {
+            when (val element = target.element) {
                 is PsiClass -> element.name ?: ""
                 is KtClass -> element.name ?: ""
-                else -> element.text
+                else -> element?.text ?: ""
             }
         }
 
         override fun isLeaf(): Boolean = false
 
-        override fun equals(other: Any?): Boolean = other is ClassNode && other.element == element
-        override fun hashCode(): Int = element.hashCode()
+        override fun equals(other: Any?): Boolean = other is ImmutableType && other.target == target
+        override fun hashCode(): Int = target.hashCode()
     }
 
-    private class PropertyNode(val element: PsiElement) : DefaultMutableTreeNode(element) {
+    private class ImmutableProp(target: SmartPsiElementPointer<PsiElement>) : ImmutableNode(target) {
         override fun toString(): String = runReadOnly {
-            when (element) {
+            when (val element = target.element) {
                 is PsiMethod -> element.name
                 is KtProperty -> element.name ?: ""
-                else -> element.text
+                else -> element?.text ?: ""
             }
         }
 
         override fun isLeaf(): Boolean = true
 
-        override fun equals(other: Any?): Boolean = other is PropertyNode && other.element == element
-        override fun hashCode(): Int = element.hashCode()
+        override fun equals(other: Any?): Boolean = other is ImmutableProp && other.target == target
+        override fun hashCode(): Int = target.hashCode()
     }
 
     private class NodeRenderer : DefaultTreeCellRenderer() {
@@ -182,8 +182,8 @@ class ImmutableTree(
                 }
                 add(JLabel(value.toString()).apply {
                     when (value) {
-                        is ClassNode -> icon = JimmerBuddy.Icons.IMMUTABLE
-                        is PropertyNode -> icon = JimmerBuddy.Icons.PROP
+                        is ImmutableType -> icon = JimmerBuddy.Icons.IMMUTABLE
+                        is ImmutableProp -> icon = JimmerBuddy.Icons.PROP
                     }
                 }, BorderLayout.CENTER)
             }
