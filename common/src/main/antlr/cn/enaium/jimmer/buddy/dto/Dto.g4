@@ -99,7 +99,19 @@ dtoBody
 
 explicitProp
     :
-    aliasGroup | positiveProp | negativeProp | userProp
+    aliasGroup | foldProp | positiveProp | negativeProp | userProp
+    ;
+
+foldProp
+    :
+    (DocComment)?
+    (annotation)*
+    FOLD LEFT_PARENTHESIS Identifier RIGHT_PARENTHESIS
+    (optional = QUESTION_MARK)?
+    (DocComment)?
+    (annotation)*
+    (implements)?
+    dtoBody
     ;
 
 macro
@@ -344,7 +356,7 @@ annotationArguments
 
 annotationNamedArgument
     :
-    name EQUAL annotationValue
+    name (EQUAL annotationValue)?
     ;
 
 annotationValue
@@ -436,6 +448,7 @@ EXPORT : 'export';
 PACKAGE : 'package';
 IMPORT : 'import';
 AS : 'as';
+FOLD : 'fold';
 INPUT : 'input';
 SPECIFICATION : 'specification';
 UNSAFE : 'unsafe';

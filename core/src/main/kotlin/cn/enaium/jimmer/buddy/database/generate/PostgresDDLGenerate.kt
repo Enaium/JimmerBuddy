@@ -47,7 +47,12 @@ class PostgresDDLGenerate(project: Project, generateDDLModel: GenerateDDLModel) 
             LocalTime::class.java.name -> "time"
             UUID::class.java.name -> "uuid"
             InetAddress::class.java.name -> "inet"
-            else -> throw UnsupportedOperationException("text")
+            else -> if (type.startsWith("kotlin.Array")) {
+                val substringBefore = type.substringAfter("<").substringBefore(">")
+                "${typeMapping(substringBefore)}[]"
+            } else {
+                throw UnsupportedOperationException("text")
+            }
         }
     }
 }

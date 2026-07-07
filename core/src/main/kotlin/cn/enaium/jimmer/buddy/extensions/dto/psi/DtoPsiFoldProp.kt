@@ -16,10 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
-interface DtoPsiExplicitProp : DtoPsiElement {
-    val aliasGroup: DtoPsiAliasGroup?
-    val foldProp: DtoPsiFoldProp?
-    val positiveProp: DtoPsiPositiveProp?
-    val negativeProp: DtoPsiNegativeProp?
-    val userProp: DtoPsiUserProp?
+interface DtoPsiFoldProp : DtoPsiElement {
+    val annotations: List<DtoPsiAnnotation>
+    val body: DtoPsiDtoBody?
+    val implements: DtoPsiImplements?
 }
