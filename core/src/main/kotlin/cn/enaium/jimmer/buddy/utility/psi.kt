@@ -137,6 +137,25 @@ fun KtClass.hasMappedSuperclassAnnotation(): Boolean {
     return this.hasAnnotation(MappedSuperclass::class)
 }
 
+fun KtClass.hasImmutableAnnotationBySyntax(): Boolean {
+    val immutableAnnotationNames = setOf(
+        Immutable::class.qualifiedName,
+        Entity::class.qualifiedName,
+        MappedSuperclass::class.qualifiedName,
+        Embeddable::class.qualifiedName,
+        Immutable::class.simpleName,
+        Entity::class.simpleName,
+        MappedSuperclass::class.simpleName,
+        Embeddable::class.simpleName
+    )
+
+    return annotationEntries.any { annotationEntry ->
+        val shortName = annotationEntry.shortName?.asString()
+        val typeText = annotationEntry.typeReference?.text
+        shortName in immutableAnnotationNames || typeText in immutableAnnotationNames
+    }
+}
+
 fun KtClass.hasImmutableAnnotation(): Boolean {
     return this.hasAnnotation(Immutable::class, Entity::class, MappedSuperclass::class, Embeddable::class)
 }

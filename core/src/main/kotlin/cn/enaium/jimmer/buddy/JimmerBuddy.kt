@@ -28,11 +28,13 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.findPsiFile
@@ -106,6 +108,7 @@ object JimmerBuddy {
     fun getWorkspace(project: Project): Workspace {
         return workspaces[project] ?: Workspace(project).also {
             workspaces[project] = it
+            Disposer.register(project, it)
         }
     }
 
@@ -180,7 +183,7 @@ object JimmerBuddy {
         }
     }
 
-    class Workspace(val project: Project) {
+    class Workspace(val project: Project) : Disposable {
 
         val log = Log(project)
         var init = false
@@ -188,6 +191,11 @@ object JimmerBuddy {
         var isJavaProject = false
         var isKotlinProject = false
         var isAndroidProject = false
+
+        override fun dispose() {
+            workspaces.remove(project, this)
+            log.dispose()
+        }
 
         fun init(enable: Boolean = true) {
             if (init) return
