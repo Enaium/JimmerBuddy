@@ -1,6 +1,7 @@
 package cn.enaium.jimmer.buddy.extensions.editor
 
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
+import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotationBySyntax
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
@@ -30,7 +31,7 @@ class ImmutableEditorProvider : FileEditorProvider, DumbAware {
             }
 
             is KotlinFileType -> {
-                file.toPsiFile(project)?.getChildOfType<KtClass>()?.hasImmutableAnnotation() == true
+                file.toPsiFile(project)?.getChildOfType<KtClass>()?.hasImmutableAnnotationBySyntax() == true
             }
 
             else -> false
