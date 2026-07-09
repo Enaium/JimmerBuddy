@@ -113,6 +113,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                                 targets.addAll(psiClass.findMethodsByName(it, false))
                                             }
                                     }
+
+                                    targets.addAll(method.findTransientNavigationTargets())
                                     nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
@@ -183,6 +185,8 @@ class ImmutableLineMarkerProvider : RelatedItemLineMarkerProvider() {
                                                 }
                                             }
                                     }
+
+                                    targets.addAll(property.findTransientNavigationTargets())
                                     nav.setTargets(targets)
                                 }
                                 .createLineMarkerInfo(it)
