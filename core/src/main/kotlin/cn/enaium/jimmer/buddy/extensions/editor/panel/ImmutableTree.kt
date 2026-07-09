@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.editor.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.utility.*
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -25,6 +26,11 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
@@ -71,28 +77,33 @@ class ImmutableTree(
     }
 
     private fun buildTree() {
-        ReadAction.run<Throwable> {
-            val psiFile = file.toPsiFile(project) ?: return@run
+        CoroutineScope(Dispatchers.Default).launch {
+            supervisorScope {
+                ReadAction.run<Throwable> {
+                    val psiFile = file.toPsiFile(project) ?: return@run
 
-            when (psiFile) {
-                is PsiJavaFile -> {
-                    val psiClass = psiFile.getChildOfType<PsiClass>() ?: return@run
-                    val immutableType = ImmutableType(psiClass.createSmartPointer())
-                    root.add(immutableType)
-                    loadJavaProperties(psiClass, immutableType)
-                }
+                    when (psiFile) {
+                        is PsiJavaFile -> {
+                            val psiClass = psiFile.getChildOfType<PsiClass>() ?: return@run
+                            val immutableType = ImmutableType(psiClass.createSmartPointer())
+                            root.add(immutableType)
+                            loadJavaProperties(psiClass, immutableType)
+                        }
 
-                is KtFile -> {
-                    val ktClass = psiFile.getChildOfType<KtClass>() ?: return@run
-                    val immutableType = ImmutableType(ktClass.createSmartPointer())
-                    root.add(immutableType)
-                    loadKotlinProperties(ktClass, immutableType)
+                        is KtFile -> {
+                            val ktClass = psiFile.getChildOfType<KtClass>() ?: return@run
+                            val immutableType = ImmutableType(ktClass.createSmartPointer())
+                            root.add(immutableType)
+                            loadKotlinProperties(ktClass, immutableType)
+                        }
+                    }
                 }
             }
+            withContext(Dispatchers.EDT) {
+                (tree.model as DefaultTreeModel).nodeStructureChanged(root)
+                expandAll()
+            }
         }
-
-        (tree.model as DefaultTreeModel).nodeStructureChanged(root)
-        expandAll()
     }
 
     private fun loadJavaProperties(psiClass: PsiClass, classNode: ImmutableType) {

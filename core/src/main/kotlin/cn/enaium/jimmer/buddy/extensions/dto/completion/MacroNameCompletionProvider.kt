@@ -20,7 +20,10 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.codeInsight.template.Template
+import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.util.ProcessingContext
 
 /**
@@ -32,9 +35,27 @@ object MacroNameCompletionProvider : CompletionProvider<CompletionParameters>() 
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
-        listOf("allScalars", "allReferences").forEach {
+        listOf("allScalars", "allReferences", "exhaustive", "types").forEach { macro ->
             result.addElement(
-                LookupElementBuilder.create(it).withIcon(AllIcons.Nodes.Template).withTypeText("Macro")
+                LookupElementBuilder.create(macro).withIcon(AllIcons.Nodes.Template).withTypeText("Macro").let {
+                    if (macro == "types") {
+                        it.withInsertHandler { context, _ ->
+                            val project = context.project
+                            val editor = context.editor
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                val tm = TemplateManager.getInstance(project)
+                                val template: Template = tm.createTemplate("", "")
+                                template.isToReformat = true
+                                template.addTextSegment(" {\n")
+                                template.addEndVariable()
+                                template.addTextSegment("\n}")
+                                tm.startTemplate(editor, template)
+                            }
+                        }
+                    } else {
+                        it
+                    }
+                }
             )
         }
     }

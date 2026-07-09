@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 - Support annotation parameters completion (#188)
 - Support fold func and then macro alias (#190)
 - Support entity designer (#192)
+- Support array type for generate ddl
+- Exclude jimmer generated files from search (#183)
+- Add quick fix for missing formula dependencies (#197)
+- Add association annotation quick fixes (#182)
+- Add @transient navigation to resolver or generated implementation (#185)
+- Support Jimmer 0.11.0
 
 ## 1.11.x
 
