@@ -54,6 +54,11 @@ public class Utility {
             public String microServiceName() {
                 return "";
             }
+
+            @Override
+            public EntityInstantiability instantiability() {
+                return EntityInstantiability.AUTO;
+            }
         };
     }
 

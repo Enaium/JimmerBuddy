@@ -81,7 +81,7 @@ class DtoInspection : LocalInspectionTool() {
                         }
                     }, findProjectDir(path)?.absolutePathString() ?: "", "", emptyList(), path.name)
                     try {
-                        val compiler = AptDtoCompiler(dtoFile, elements, DtoModifier.STATIC)
+                        val compiler = AptDtoCompiler(dtoFile, context, elements, DtoModifier.STATIC)
                         val typeElement: TypeElement = elements.getTypeElement(compiler.sourceTypeName) ?: return
                         registerProblem(file, document, holder) {
                             compiler.compile(context.getImmutableType(typeElement))
@@ -106,7 +106,7 @@ class DtoInspection : LocalInspectionTool() {
                         }
                     }, findProjectDir(path)?.name ?: "", "", emptyList(), path.name)
                     try {
-                        val compiler = KspDtoCompiler(dtoFile, context.resolver, DtoModifier.STATIC)
+                        val compiler = KspDtoCompiler(dtoFile, context, DtoModifier.STATIC)
                         val classDeclarationByName =
                             resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return
                         registerProblem(file, document, holder) {

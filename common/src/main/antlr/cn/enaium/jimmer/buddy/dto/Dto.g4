@@ -82,7 +82,7 @@ implements
     ;
 
 modifier
-    : INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY
+    : INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY | SEALED
     ;
 
 name
@@ -93,13 +93,48 @@ dtoBody
     :
     LEFT_BRACE
     macro*
-    ((explicitProp) (COMMA | SEMICOLON)?)*
+    ((typesBlock | explicitProp) (COMMA | SEMICOLON)?)*
     RIGHT_BRACE
     ;
 
 explicitProp
     :
     aliasGroup | foldProp | positiveProp | negativeProp | userProp
+    ;
+
+typesBlock
+    :
+    TYPES LEFT_BRACE (typesElement)* RIGHT_BRACE
+    ;
+
+typesElement
+    :
+    exhaustiveMacro | defaultBranch | typeBranch
+    ;
+
+exhaustiveMacro
+    :
+    '#exhaustive'
+    ;
+
+defaultBranch
+    :
+    (doc = DocComment)?
+    (annotations += annotation)*
+    DEFAULT
+    (CLASS Identifier)?
+    (implements)?
+    dtoBody
+    ;
+
+typeBranch
+    :
+    (doc = DocComment)?
+    (annotations += annotation)*
+    targetType = qualifiedName
+    (CLASS Identifier)?
+    (implements)?
+    dtoBody
     ;
 
 foldProp
@@ -455,6 +490,7 @@ UNSAFE : 'unsafe';
 FIXED : 'fixed';
 STATIC : 'static';
 DYNAMIC : 'dynamic';
+SEALED: 'sealed';
 FUZZY : 'fuzzy';
 IMPLEMENTS : 'implements';
 NULL : 'null';
@@ -475,6 +511,8 @@ TRUE : 'true';
 FALSE : 'false';
 SINGLE_QUOTE: '\'';
 DOUBLE_QUOTE: '"';
+TYPES: '#types';
+DEFAULT: 'DEFAULT';
 
 Identifier
     :

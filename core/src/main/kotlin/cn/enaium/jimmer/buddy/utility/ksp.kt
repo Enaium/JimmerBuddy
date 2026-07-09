@@ -26,6 +26,7 @@ import com.intellij.psi.util.PsiUtil
 import org.babyfish.jimmer.dto.compiler.DtoModifier
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.JimmerProcessor
+import org.babyfish.jimmer.ksp.util.fastResolve
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtEnumEntry
@@ -240,6 +241,14 @@ fun KtClass.asKSClassDeclaration(caches: Cache = mutableMapOf()): KSClassDeclara
                         },
                         type = {
                             typeReference.asKSTypeReference(fqName, caches)
+                        },
+                        asMemberOf = {
+                            if (it.arguments.isEmpty()) {
+                                typeReference.asKSTypeReference(fqName, caches).fastResolve()
+                            } else {
+                                it.arguments[0].type?.fastResolve()
+                                    ?: throw IllegalStateException("The generic type is null")
+                            }
                         },
                         getter = {
                             property.getter?.let {

@@ -189,7 +189,7 @@ fun PsiMethod.asExecutableElement(caches: MutableMap<String, TypeElement>): Exec
         },
         getReturnType = {
             val returnType = returnType ?: throw IllegalStateException("Return type is null")
-            returnType.asTypeMirror(caches)
+            returnType.asExecuteType(caches)
         },
         getAnnotation = { anno ->
             modifierList.annotations.find { it.hasQualifiedName(anno.name) }
@@ -233,6 +233,15 @@ fun PsiTypeParameter.asTypeMirror(caches: MutableMap<String, TypeElement>): Type
         asElement = {
             this.asTypeElement(caches)
         }
+    )
+}
+
+fun PsiType.asExecuteType(caches: MutableMap<String, TypeElement>): TypeMirror {
+    val asTypeMirror = this.asTypeMirror(caches)
+    return createExecuteType(
+        getQualifiedName = { asTypeMirror.toString() },
+        getReturnType = { asTypeMirror },
+        getAnnotationMirrors = { emptyList() }
     )
 }
 
@@ -682,12 +691,19 @@ fun Project.psiClassesToApt(
                     }
 
                     override fun asMemberOf(
-                        containing: DeclaredType?,
-                        element: Element?
+                        containing: DeclaredType,
+                        element: Element
                     ): TypeMirror? {
-                        TODO("Not yet implemented")
+                        return if (containing.typeArguments.isEmpty()) {
+                            if (element is ExecutableElement) {
+                                element.returnType
+                            } else {
+                                throw UnsupportedOperationException("Unsupported the type ${element.javaClass.name}")
+                            }
+                        } else {
+                            containing.typeArguments[0]
+                        }
                     }
-
                 }
             }
 
@@ -746,7 +762,8 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
             InvocationHandlerAdapter.of { proxy, method, args ->
                 this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
                     ?.arrayWrapper(method.returnType)
-                    ?: method.invoke(it)
+                    ?: it.javaClass.methods.find { rawMethod -> rawMethod.name == method.name }
+                        ?.also { it.isAccessible = true }?.invoke(it)
             }
         ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
             it.isAccessible = true
@@ -1147,11 +1164,74 @@ private fun createTypeVariable(
             TODO("Not yet implemented")
         }
 
-        override fun <R : Any?, P : Any?> accept(
+        override fun <R, P> accept(
             v: TypeVisitor<R?, P?>?,
             p: P?
         ): R? {
             return v?.visitTypeVariable(this, p)
+        }
+    }
+}
+
+
+private fun createExecuteType(
+    getQualifiedName: () -> String,
+    getTypeVariables: () -> List<TypeVariable> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getReturnType: () -> TypeMirror = { TODO("${getQualifiedName()} Not yet implemented") },
+    getParameterTypes: () -> List<TypeMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getReceiverType: () -> TypeMirror = { TODO("${getQualifiedName()} Not yet implemented") },
+    getThrownTypes: () -> List<TypeMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getKind: () -> TypeKind = { TypeKind.EXECUTABLE },
+    getAnnotationMirrors: () -> List<AnnotationMirror> = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotation: (Class<Annotation>) -> Annotation? = { TODO("${getQualifiedName()} Not yet implemented") },
+    getAnnotationsByType: (Class<Annotation>) -> Array<Annotation> = { TODO("${getQualifiedName()} Not yet implemented") },
+): ExecutableType {
+    return object : ExecutableType {
+        override fun getTypeVariables(): List<TypeVariable> {
+            return getTypeVariables()
+        }
+
+        override fun getReturnType(): TypeMirror {
+            return getReturnType()
+        }
+
+        override fun getParameterTypes(): List<TypeMirror> {
+            return getParameterTypes()
+        }
+
+        override fun getReceiverType(): TypeMirror {
+            return getReceiverType()
+        }
+
+        override fun getThrownTypes(): List<TypeMirror> {
+            return getThrownTypes()
+        }
+
+        override fun getKind(): TypeKind {
+            return getKind()
+        }
+
+        override fun getAnnotationMirrors(): List<AnnotationMirror> {
+            return getAnnotationMirrors()
+        }
+
+        override fun <A : Annotation> getAnnotation(annotationType: Class<A>): A? {
+            return getAnnotation.invoke(annotationType as Class<Annotation>) as A?
+        }
+
+        override fun <A : Annotation> getAnnotationsByType(annotationType: Class<A>): Array<A> {
+            return getAnnotationsByType.invoke(annotationType as Class<Annotation>) as Array<A>
+        }
+
+        override fun <R, P> accept(
+            v: TypeVisitor<R?, P?>?,
+            p: P?
+        ): R? {
+            return v?.visitExecutable(this, p)
+        }
+
+        override fun toString(): String {
+            return getQualifiedName()
         }
     }
 }

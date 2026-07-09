@@ -472,7 +472,12 @@ object JimmerBuddy {
                                     val dtoFile = project.toDtoFile(projectDir, sourceFile)
                                     try {
                                         val compiler =
-                                            AptDtoCompiler(dtoFile, elements, option.defaultNullableInputModifier)
+                                            AptDtoCompiler(
+                                                dtoFile,
+                                                option.context,
+                                                elements,
+                                                option.defaultNullableInputModifier
+                                            )
                                         val typeElement: TypeElement =
                                             elements.getTypeElement(compiler.sourceTypeName) ?: return@forEach
                                         val compile = compiler.compile(option.context.getImmutableType(typeElement))
@@ -615,7 +620,7 @@ object JimmerBuddy {
                                         val compiler =
                                             KspDtoCompiler(
                                                 dtoFile,
-                                                option.context.resolver,
+                                                option.context,
                                                 option.defaultNullableInputModifier
                                             )
                                         val classDeclarationByName =
