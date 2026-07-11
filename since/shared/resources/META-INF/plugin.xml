@@ -12,7 +12,6 @@
         <projectCloseHandler implementation="cn.enaium.jimmer.buddy.extensions.BuddyProjectCloseHandler"/>
         <psi.treeChangeListener implementation="cn.enaium.jimmer.buddy.extensions.BuddyPsiTreeChange"/>
         <customScopesProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceScopeProvider"/>
-        <findInProjectExtension implementation="cn.enaium.jimmer.buddy.extensions.search.FindInProjectGeneratedSourceFilter"/>
         <generatedSourcesFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
         <generatedSourceUsageFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
         <usageFilteringRuleProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceUsageFilteringRuleProvider"/>
@@ -200,6 +199,7 @@
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.FullClassIndex"/>
         <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoLineMarkerProvider"/>
+
         <lang.formatter language="JimmerBuddy.DTO"
                         implementationClass="cn.enaium.jimmer.buddy.extensions.dto.formatter.DtoFormattingModelBuilder"/>
         <lang.braceMatcher language="JimmerBuddy.DTO"
