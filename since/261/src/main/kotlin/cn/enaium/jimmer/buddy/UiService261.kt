@@ -16,19 +16,21 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.service.NavigationService
-import com.intellij.codeInsight.navigation.getPsiElementPopup
-import com.intellij.openapi.ui.popup.JBPopup
-import com.intellij.psi.PsiElement
+import cn.enaium.jimmer.buddy.service.UiService
+import com.intellij.ui.dsl.builder.Row
+import com.intellij.ui.dsl.builder.SegmentedButton
 
 /**
  * @author Enaium
  */
-class NavigationService262 : NavigationService {
-    override fun getPsiElementPopup(
-        elements: List<PsiElement>,
-        title: String
-    ): JBPopup {
-        return getPsiElementPopup(elements.toTypedArray(), title)
+class UiService261 : UiService {
+    override fun <T> segmentedButtonText(
+        row: Row,
+        items: Collection<T>,
+        renderer: (T) -> String
+    ): SegmentedButton<T> {
+        return row.segmentedButton(items) {
+            text = renderer(it)
+        }
     }
 }

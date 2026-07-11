@@ -1,0 +1,8 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <customScopesProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceScopeProvider"/>
+        <usageFilteringRuleProvider
+                implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceUsageFilteringRuleProvider"/>
+        <generatedSourcesFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
+    </extensions>
+</idea-plugin>

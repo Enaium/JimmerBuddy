@@ -306,7 +306,7 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
 
     // ==================== Kotlin Property Info ====================
     // NOTE: All annotation checks use direct PSI access (annotationEntries)
-    // instead of PsiService262 to avoid the Kotlin FIR analysis API's
+    // instead of PsiService261 to avoid the Kotlin FIR analysis API's
     // ProhibitedAnalysisException ("Analysis is not allowed: Called in the EDT thread").
 
     private fun buildKotlinPropertyInfo(property: KtProperty): JPanel {
@@ -867,7 +867,7 @@ class ImmutableInfo(private val project: Project, private val file: VirtualFile)
 
     // ==================== Direct PSI Annotation Helpers ====================
     // These use direct PSI tree access (annotationEntries / modifierList.annotations)
-    // instead of going through PsiService262 (Kotlin FIR) or PsiAnnotation.qualifiedName
+    // instead of going through PsiService261 (Kotlin FIR) or PsiAnnotation.qualifiedName
     // (Java index), both of which are prohibited on the EDT.
 
     // --- Kotlin: avoid FIR analysis API ---

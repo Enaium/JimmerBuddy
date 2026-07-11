@@ -41,6 +41,7 @@ tasks.processResources {
     filesMatching("plugin.xml") {
         expand(
             mapOf(
+                "include" to "${project.name}.xml",
                 "supportsK1" to project.property("supportsK1"),
                 "supportsK2" to project.property("supportsK2")
             )

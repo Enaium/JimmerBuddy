@@ -43,7 +43,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 /**
  * @author Enaium
  */
-class PsiService262 : PsiService {
+class PsiService261 : PsiService {
     override fun annotations(ktClass: KtClass): List<PsiService.Annotation> {
         return analyze(ktClass) {
             ktClass.symbol.annotations.map {
