@@ -187,6 +187,16 @@ class DtoCompletionContributor : CompletionContributor() {
             ).inside(DtoPsiAnnotationArguments::class.java),
             AnnotationParametersCompletionProvider
         )
+        extend(
+            basic,
+            DtoPsiPatterns.psiElement().withParents(
+                DtoPsiPart::class.java,
+                DtoPsiQualifiedNameParts::class.java,
+                DtoPsiQualifiedName::class.java,
+                DtoPsiTypeBranch::class.java
+            ).inside(DtoPsiTypesBlock::class.java),
+            TypesBranchCompletionProvider
+        )
     }
 }
 

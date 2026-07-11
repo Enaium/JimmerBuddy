@@ -49,7 +49,8 @@ class DtoBlock(
     val body = TokenSet.create(
         RULE[RULE_dtoBody],
         RULE[RULE_aliasGroupBody],
-        RULE[RULE_enumBody]
+        RULE[RULE_enumBody],
+        RULE[RULE_typesBlock]
     )
 
     override fun getChildIndent(): Indent? {

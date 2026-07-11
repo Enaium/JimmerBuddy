@@ -750,6 +750,8 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     org.jspecify.annotations.Nullable::class.qualifiedName -> Utility.jspecifyNullable()
     TypedTuple::class.qualifiedName -> Utility.typedTuple()
     JsonConverter::class.qualifiedName -> Utility.jsonConverter()
+    Inheritance::class.qualifiedName -> Utility.inheritance()
+    DiscriminatorValue::class.qualifiedName -> Utility.discriminatorValue()
     else -> null
 }?.let {
     ByteBuddy()
@@ -763,7 +765,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
                 this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
                     ?.arrayWrapper(method.returnType)
                     ?: it.javaClass.methods.find { rawMethod -> rawMethod.name == method.name }
-                        ?.also { it.isAccessible = true }?.invoke(it)
+                        ?.also { rawMethod -> rawMethod.isAccessible = true }?.invoke(it)
             }
         ).make().load(it.javaClass.classLoader).loaded.getDeclaredConstructor().also {
             it.isAccessible = true

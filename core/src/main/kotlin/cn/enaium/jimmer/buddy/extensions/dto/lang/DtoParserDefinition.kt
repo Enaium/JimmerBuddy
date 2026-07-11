@@ -115,6 +115,9 @@ class DtoParserDefinition : ParserDefinition {
             DtoParser.RULE_qualifiedNameParts -> DtoPsiQualifiedNamePartsImpl(node)
             DtoParser.RULE_enumBody -> DtoPsiEnumBodyImpl(node)
             DtoParser.RULE_enumMapping -> DtoPsiEnumMappingImpl(node)
+            DtoParser.RULE_typesBlock -> DtoPsiTypesBlockImpl(node)
+            DtoParser.RULE_typesElement -> DtoPsiTypesElementImpl(node)
+            DtoParser.RULE_typeBranch -> DtoPsiTypeBranchImpl(node)
             else -> ANTLRPsiNode(node)
         }
     }

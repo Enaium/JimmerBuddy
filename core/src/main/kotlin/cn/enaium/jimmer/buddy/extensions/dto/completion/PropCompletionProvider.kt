@@ -17,8 +17,8 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeBranch
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
@@ -30,7 +30,6 @@ import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 
 /**
@@ -71,6 +70,7 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
                                     val template: Template = tm.createTemplate("", "")
                                     template.isToReformat = true
                                     template.addTextSegment(" {\n")
+                                    template.addTextSegment("\t")
                                     template.addEndVariable()
                                     template.addTextSegment("\n}")
                                     tm.startTemplate(editor, template)
@@ -89,7 +89,11 @@ fun getTrace(position: PsiElement?): List<String> {
     val trace = mutableSetOf<String>()
     var parent: PsiElement? = position?.parent
     while (parent != null) {
-        (parent.findParentOfType<DtoPsiDtoBody>()?.parent as? DtoPsiPositiveProp)?.prop?.value?.also { trace.add(it) }
+        if (parent is DtoPsiPositiveProp) {
+            parent.prop?.value?.also { trace.add(it) }
+        } else if (parent is DtoPsiTypeBranch) {
+            parent.qualifiedName?.qualifiedNameParts?.parts?.lastOrNull()?.also { trace.add(it.text) }
+        }
         parent = parent.parent
     }
     return trace.reversed()

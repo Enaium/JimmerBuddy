@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.I18n
-import cn.enaium.jimmer.buddy.utility.annotations
+import cn.enaium.jimmer.buddy.utility.hasSuperAnnotation
 import cn.enaium.jimmer.buddy.utility.isImmutable
 import cn.enaium.jimmer.buddy.utility.type
 import com.intellij.codeInspection.ProblemsHolder
@@ -25,7 +25,6 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiReferenceList
-import org.babyfish.jimmer.sql.MappedSuperclass
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
@@ -43,15 +42,14 @@ class SuperTypeInspection : AbstractLocalInspectionTool() {
             element.getChildrenOfType<PsiReferenceList>().forEach { psiReferenceList ->
                 psiReferenceList.getChildrenOfType<PsiJavaCodeReferenceElement>()
                     .forEach { psiJavaCodeReferenceElement ->
-                        if ((psiJavaCodeReferenceElement.resolve() as? PsiClass)?.annotations?.any { annotation -> annotation.qualifiedName == MappedSuperclass::class.qualifiedName } == false) {
+                        if ((psiJavaCodeReferenceElement.resolve() as? PsiClass)?.hasSuperAnnotation() == false) {
                             holder.registerProblem(psiJavaCodeReferenceElement, descriptionTemplate)
                         }
                     }
             }
         } else if (element is KtClass && element.isImmutable()) {
             element.superTypeListEntries.forEach { superTypeListEntry ->
-                superTypeListEntry.typeReference?.type()?.ktClass?.annotations()
-                    ?.find { annotation -> annotation.fqName == MappedSuperclass::class.qualifiedName }
+                superTypeListEntry.typeReference?.type()?.ktClass?.hasSuperAnnotation()
                     ?: run {
                         holder.registerProblem(superTypeListEntry, descriptionTemplate)
                     }

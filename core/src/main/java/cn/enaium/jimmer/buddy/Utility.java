@@ -565,4 +565,39 @@ public class Utility {
             }
         };
     }
+
+    public static Inheritance inheritance() {
+        return new Inheritance() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Inheritance.class;
+            }
+
+            @Override
+            public InheritanceType strategy() {
+                return InheritanceType.SINGLE_TABLE;
+            }
+
+            @Override
+            public JoinedTableDissociateAction joinedTableDissociateAction() {
+                return JoinedTableDissociateAction.DELETE;
+            }
+        };
+    }
+
+    public static DiscriminatorValue discriminatorValue() {
+        return new DiscriminatorValue() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return DiscriminatorValue.class;
+            }
+
+            @Override
+            public String value() {
+                return null;
+            }
+        };
+    }
 }

@@ -47,6 +47,7 @@ object MacroNameCompletionProvider : CompletionProvider<CompletionParameters>() 
                                 val template: Template = tm.createTemplate("", "")
                                 template.isToReformat = true
                                 template.addTextSegment(" {\n")
+                                template.addTextSegment("\t")
                                 template.addEndVariable()
                                 template.addTextSegment("\n}")
                                 tm.startTemplate(editor, template)

@@ -40,9 +40,9 @@ import org.babyfish.jimmer.sql.ast.query.TypedRootQuery
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.KExecutable
 import org.babyfish.jimmer.sql.kt.ast.query.KTypedRootQuery
-import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.findPropertyByName
@@ -97,6 +97,10 @@ fun PsiClass.hasAnnotation(vararg annotations: KClass<*>): Boolean {
 
 fun PsiClass.hasImmutableAnnotation(): Boolean {
     return this.hasAnnotation(Immutable::class, Entity::class, MappedSuperclass::class, Embeddable::class)
+}
+
+fun PsiClass.hasSuperAnnotation(): Boolean {
+    return this.hasAnnotation(MappedSuperclass::class, Inheritance::class)
 }
 
 fun PsiClass.hasEntityAnnotation(): Boolean {
@@ -167,6 +171,12 @@ fun KtClass.hasImmutableAnnotationBySyntax(): Boolean {
 fun KtClass.hasImmutableAnnotation(): Boolean {
     return this.hasAnnotation(Immutable::class, Entity::class, MappedSuperclass::class, Embeddable::class)
 }
+
+
+fun KtClass.hasSuperAnnotation(): Boolean {
+    return this.hasAnnotation(MappedSuperclass::class, Inheritance::class)
+}
+
 
 fun KtClass.isImmutable(): Boolean {
     return hasImmutableAnnotation() && isInterface()
@@ -863,8 +873,12 @@ fun KtQualifiedExpression.getImmutableTrace(execute: KtQualifiedExpression? = nu
         }
         child = if (child is KtNameReferenceExpression) {
             when (val resolve = child.reference?.resolve()) {
-                is KtFunctionLiteral -> child.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
-                is KtParameter -> resolve.findParentOfType<KtLambdaExpression>()?.findParentOfType<KtQualifiedExpression>()
+                is KtFunctionLiteral -> child.findParentOfType<KtLambdaExpression>()
+                    ?.findParentOfType<KtQualifiedExpression>()
+
+                is KtParameter -> resolve.findParentOfType<KtLambdaExpression>()
+                    ?.findParentOfType<KtQualifiedExpression>()
+
                 else -> child.firstChild
             }
         } else {

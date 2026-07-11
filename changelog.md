@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - Add association annotation quick fixes (#182)
 - Add @transient navigation to resolver or generated implementation (#185)
 - Support Jimmer 0.11.0
+- Add Jimmer usage filter menu (#200)
+- Support Type branch completion
 
 ## 1.11.x
 

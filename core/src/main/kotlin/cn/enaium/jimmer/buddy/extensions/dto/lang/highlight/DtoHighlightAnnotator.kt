@@ -17,8 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.lang.highlight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dto.DtoParser.AT
-import cn.enaium.jimmer.buddy.dto.DtoParser.HASH
+import cn.enaium.jimmer.buddy.dto.DtoParser.*
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
 import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.lang.annotation.AnnotationHolder
@@ -95,6 +94,10 @@ class DtoHighlightAnnotator : Annotator {
 
                 TOKEN[AT] -> {
                     element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
+                }
+
+                TOKEN[TYPES], TOKEN[EXHAUSTIVE] -> {
+                    macro
                 }
 
                 else -> {

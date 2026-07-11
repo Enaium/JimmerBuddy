@@ -24,6 +24,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.apt.MetaException
 import org.babyfish.jimmer.apt.createContext
@@ -36,6 +37,8 @@ import org.babyfish.jimmer.sql.ManyToManyView
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.uast.UClass
+import org.jetbrains.uast.toUElementOfType
 
 /**
  * @author Enaium
@@ -245,7 +248,7 @@ enum class PropType(val description: String) {
 
 fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val project = element.project
-    val trace = getTrace(element)
+    val trace = element.parent?.let { getTrace(it) } ?: emptyList()
     val typeName =
         element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
     try {
@@ -262,8 +265,27 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
         var currentImmutable = commonImmutable
 
         trace.forEach { trace ->
-            currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
-                currentImmutable = it
+            if (trace.firstOrNull()?.isUpperCase() == true) {
+                currentImmutable.psi(project)?.toUElementOfType<UClass>()?.javaPsi?.also { psi ->
+                    ClassInheritorsSearch.search(psi, element.project.allScope(), false).find { it.name == trace }
+                        ?.also {
+                            when (val nav = it.navigationElement) {
+                                is PsiClass -> {
+                                    currentImmutable = nav.toImmutable().toCommonImmutableType()
+                                }
+
+                                is KtClass -> {
+                                    currentImmutable = nav.toImmutable().toCommonImmutableType()
+                                }
+
+                                else -> {}
+                            }
+                        }
+                }
+            } else {
+                currentImmutable.props().find { it.name() == trace }?.targetType()?.also {
+                    currentImmutable = it
+                }
             }
         }
         return currentImmutable

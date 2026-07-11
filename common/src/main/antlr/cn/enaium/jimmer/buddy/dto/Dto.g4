@@ -114,13 +114,13 @@ typesElement
 
 exhaustiveMacro
     :
-    '#exhaustive'
+    EXHAUSTIVE
     ;
 
 defaultBranch
     :
     (doc = DocComment)?
-    (annotations += annotation)*
+    (annotation)*
     DEFAULT
     (CLASS Identifier)?
     (implements)?
@@ -130,8 +130,8 @@ defaultBranch
 typeBranch
     :
     (doc = DocComment)?
-    (annotations += annotation)*
-    targetType = qualifiedName
+    (annotation)*
+    qualifiedName
     (CLASS Identifier)?
     (implements)?
     dtoBody
@@ -512,6 +512,7 @@ FALSE : 'false';
 SINGLE_QUOTE: '\'';
 DOUBLE_QUOTE: '"';
 TYPES: '#types';
+EXHAUSTIVE: '#exhaustive';
 DEFAULT: 'DEFAULT';
 
 Identifier
