@@ -14,7 +14,6 @@
         <customScopesProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceScopeProvider"/>
         <findInProjectExtension implementation="cn.enaium.jimmer.buddy.extensions.search.FindInProjectGeneratedSourceFilter"/>
         <generatedSourcesFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
-        <generatedSourceUsageFilter implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceFilter"/>
         <usageFilteringRuleProvider implementation="cn.enaium.jimmer.buddy.extensions.search.GeneratedSourceUsageFilteringRuleProvider"/>
         <statusBarWidgetFactory implementation="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"
                                 id="cn.enaium.jimmer.buddy.extensions.status.StatusBarItemFactory"/>
@@ -301,5 +300,3 @@
         </group>
     </actions>
 </idea-plugin>
-
-

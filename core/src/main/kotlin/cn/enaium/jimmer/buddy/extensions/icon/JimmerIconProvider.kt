@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.storage.JimmerBuddySetting
 import cn.enaium.jimmer.buddy.utility.IMMUTABLE
 import cn.enaium.jimmer.buddy.utility.hasImmutableAnnotation
 import com.intellij.ide.IconProvider
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -39,24 +40,44 @@ class JimmerIconProvider : IconProvider() {
 
         when (p0) {
             is PsiClass -> {
-                if (p0.hasImmutableAnnotation()) {
+                if (p0.hasImmutableAnnotationSafely()) {
                     return JimmerBuddy.Icons.IMMUTABLE
                 }
             }
 
             is PsiFile -> {
-                if (p0.getChildOfType<KtClass>()?.hasImmutableAnnotation() == true) {
+                if (p0.getChildOfType<KtClass>()?.hasImmutableAnnotationSafely() == true) {
                     return JimmerBuddy.Icons.IMMUTABLE
                 }
             }
 
             is KtClass -> {
-                if (p0.hasImmutableAnnotation()) {
+                if (p0.hasImmutableAnnotationSafely()) {
                     return JimmerBuddy.Icons.IMMUTABLE
                 }
             }
         }
 
         return null
+    }
+
+    private fun PsiClass.hasImmutableAnnotationSafely(): Boolean {
+        return try {
+            hasImmutableAnnotation()
+        } catch (e: ProcessCanceledException) {
+            throw e
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun KtClass.hasImmutableAnnotationSafely(): Boolean {
+        return try {
+            hasImmutableAnnotation()
+        } catch (e: ProcessCanceledException) {
+            throw e
+        } catch (_: Throwable) {
+            false
+        }
     }
 }

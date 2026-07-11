@@ -106,12 +106,37 @@ private val generatedDirectoryNames = setOf(
     ".apt_generated",
 )
 
-private val jimmerGeneratedFileSuffixes = setOf(
-    "Draft",
-    "Fetcher",
-    "FetcherDsl",
-    "Props",
-)
+/*
+ * Jimmer generated files are identified only by generated source paths and file name suffixes.
+ * Do not depend on PSI here so search/usage filtering stays dumb-aware and cheap.
+ */
+enum class JimmerGeneratedFileKind(
+    val suffixes: Set<String>
+) {
+    DRAFT(setOf("Draft", "DraftImpl", "DraftInterceptor")),
+    FETCHER(setOf("Fetcher", "FetcherDsl")),
+    PROPS(setOf("Props")),
+    TABLE(setOf("Table", "TableEx")),
+    VIEW(setOf("View")),
+    INPUT(setOf("Input")),
+    SPECIFICATION(setOf("Specification", "Spec")),
+}
+
+fun jimmerGeneratedFileKind(path: String): JimmerGeneratedFileKind? {
+    if (!isGeneratedFile(path)) {
+        return null
+    }
+
+    val fileName = path.replace('\\', '/').substringAfterLast('/')
+    val sourceName = fileName.substringBeforeLast('.', fileName)
+    return JimmerGeneratedFileKind.entries.firstOrNull { kind ->
+        kind.suffixes.any { sourceName.endsWith(it) }
+    }
+}
+
+fun isJimmerGeneratedFile(path: String): Boolean {
+    return jimmerGeneratedFileKind(path) != null
+}
 
 fun isGeneratedFile(path: Path): Boolean {
     var current: Path? = path.parent
@@ -128,15 +153,6 @@ fun isGeneratedFile(path: String): Boolean {
     return path.split('/', '\\').any { it in generatedDirectoryNames }
 }
 
-fun isJimmerGeneratedFile(path: String): Boolean {
-    if (!isGeneratedFile(path)) {
-        return false
-    }
-
-    val fileName = path.replace('\\', '/').substringAfterLast('/')
-    val sourceName = fileName.substringBeforeLast('.', fileName)
-    return jimmerGeneratedFileSuffixes.any { sourceName.endsWith(it) }
-}
 
 fun Project.findProjects(): Set<Path> {
     return modules.flatMap { it.sourceRoots.mapNotNull { findProjectDir(it.toNioPath()) } }.toSet()
