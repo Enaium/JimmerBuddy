@@ -189,25 +189,40 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
         private const val JSON_ARRAY_LIMIT = 50
 
         private fun ObjectReference.jimmerProps(): List<JimmerProp> {
-            return referenceType()
-                .allFields()
+            val type = referenceType()
+            val fields = type.allFields()
+            val propNames = fields
                 .asSequence()
-                .filter { field ->
-                    field.name().startsWith(FIELD_PREFIX) &&
-                        field.name().endsWith(LOADED_SUFFIX) &&
-                        field.typeName() == "boolean"
+                .mapNotNull { field ->
+                    val fieldName = field.name()
+                    when {
+                        fieldName.startsWith(FIELD_PREFIX) && fieldName.endsWith(VALUE_SUFFIX) -> {
+                            fieldName.substring(FIELD_PREFIX.length, fieldName.length - VALUE_SUFFIX.length)
+                        }
+                        fieldName.startsWith(FIELD_PREFIX) && fieldName.endsWith(LOADED_SUFFIX) && field.typeName() == "boolean" -> {
+                            fieldName.substring(FIELD_PREFIX.length, fieldName.length - LOADED_SUFFIX.length)
+                        }
+                        else -> null
+                    }
                 }
-                .map { loadedField ->
-                    val fieldName = loadedField.name()
-                    val propName = fieldName.substring(FIELD_PREFIX.length, fieldName.length - LOADED_SUFFIX.length)
-                    val valueField = referenceType().fieldByName("$FIELD_PREFIX$propName$VALUE_SUFFIX")
-                    JimmerProp(
-                        name = propName,
-                        loaded = (getValue(loadedField) as? BooleanValue)?.value() == true,
-                        value = valueField?.let { getValue(it) }
-                    )
-                }
+                .distinct()
                 .toList()
+
+            return propNames.map { propName ->
+                val loadedField = type.fieldByName("$FIELD_PREFIX$propName$LOADED_SUFFIX")
+                val valueField = type.fieldByName("$FIELD_PREFIX$propName$VALUE_SUFFIX")
+                val value = valueField?.let { getValue(it) }
+                val loaded = if (loadedField != null) {
+                    (getValue(loadedField) as? BooleanValue)?.value() == true
+                } else {
+                    value != null
+                }
+                JimmerProp(
+                    name = propName,
+                    loaded = loaded,
+                    value = value
+                )
+            }
         }
 
         private fun ObjectReference.compactShape(props: List<JimmerProp>): String {
