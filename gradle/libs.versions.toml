@@ -13,6 +13,7 @@ h2 = "2.4.240"
 gradleToolingExtension = "231.9423.9"
 jackson = "2.21.3"
 jspecify = "1.0.0"
+grammar = "2022.3.2.2"
 
 [libraries]
 jimmer-core = { module = "org.babyfish.jimmer:jimmer-core", version.ref = "jimmer" }
@@ -34,3 +35,6 @@ kotlin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.pl
 intellij-platform = { module = "org.jetbrains.intellij.platform:org.jetbrains.intellij.platform.gradle.plugin", version.ref = "intellij" }
 changelog = { module = "org.jetbrains.changelog:org.jetbrains.changelog.gradle.plugin", version.ref = "changelog" }
 jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
+
+[plugins]
+grammar = { id = "org.jetbrains.grammarkit", version.ref = "grammar" }
