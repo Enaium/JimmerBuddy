@@ -18,4 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 import com.intellij.psi.PsiElement
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiElement : PsiElement

@@ -21,6 +21,9 @@ import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import com.intellij.openapi.fileTypes.LanguageFileType
 import javax.swing.Icon
 
+/**
+ * @author Enaium
+ */
 object DtoFileType : LanguageFileType(DtoLanguage) {
     override fun getName(): String = JimmerBuddy.DTO_NAME
 

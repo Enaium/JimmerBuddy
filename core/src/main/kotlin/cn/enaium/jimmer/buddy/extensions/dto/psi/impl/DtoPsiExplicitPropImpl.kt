@@ -23,6 +23,9 @@ import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 import javax.swing.Icon
 
+/**
+ * @author Enaium
+ */
 class DtoPsiExplicitPropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiExplicitProp {
     override val aliasGroup: DtoPsiAliasGroup?
         get() = findChild<DtoPsiAliasGroup>("/explicitProp/aliasGroup")

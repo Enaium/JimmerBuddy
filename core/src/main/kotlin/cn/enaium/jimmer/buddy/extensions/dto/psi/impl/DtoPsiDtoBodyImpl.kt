@@ -23,6 +23,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiDtoBodyImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiDtoBody {
     override val macros: List<DtoPsiMacro>
         get() = findChildren("/dtoBody/macro")

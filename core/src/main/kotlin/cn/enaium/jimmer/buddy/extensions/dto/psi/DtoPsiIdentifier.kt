@@ -16,6 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiIdentifier : DtoPsiElement {
     val id: String
 }

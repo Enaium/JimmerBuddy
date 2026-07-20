@@ -20,6 +20,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAlias
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiAliasImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAlias {
     override val value: String
         get() = node.text

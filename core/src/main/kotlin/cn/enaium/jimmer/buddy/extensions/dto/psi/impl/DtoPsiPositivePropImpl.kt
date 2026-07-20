@@ -21,6 +21,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiPositivePropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiPositiveProp {
     override val prop: DtoPsiProp?
         get() = findChild<DtoPsiProp>("/positiveProp/prop")

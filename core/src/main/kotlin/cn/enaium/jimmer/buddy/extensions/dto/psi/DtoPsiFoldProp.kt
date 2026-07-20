@@ -16,6 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiFoldProp : DtoPsiElement {
     val annotations: List<DtoPsiAnnotation>
     val body: DtoPsiDtoBody?

@@ -23,6 +23,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiUserProp
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiUserPropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiUserProp {
     override val prop: DtoPsiProp?
         get() = findChild<DtoPsiProp>("/userProp/prop")

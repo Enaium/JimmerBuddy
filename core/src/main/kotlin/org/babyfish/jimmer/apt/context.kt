@@ -17,6 +17,7 @@
 package org.babyfish.jimmer.apt
 
 import org.babyfish.jimmer.dto.compiler.DtoModifier
+import org.babyfish.jimmer.dto.compiler.SourceTypeFilter
 import java.util.*
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -38,8 +39,8 @@ fun createContext(
     types: Types,
     filer: Filer,
     keepIsPrefix: Boolean = false,
-    includes: Array<String> = emptyArray(),
-    excludes: Array<String> = emptyArray(),
+    includes: String? = null,
+    excludes: String? = null,
     immutablesTypeName: String? = null,
     tablesTypeName: String? = null,
     tableExesTypeName: String? = null,
@@ -51,8 +52,10 @@ fun createContext(
         types,
         filer,
         keepIsPrefix,
-        includes,
-        excludes,
+        SourceTypeFilter(
+            includes,
+            excludes,
+        ),
         false,
         immutablesTypeName,
         tablesTypeName,

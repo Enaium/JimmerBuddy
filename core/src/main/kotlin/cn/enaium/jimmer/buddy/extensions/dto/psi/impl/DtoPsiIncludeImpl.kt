@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.extensions.dto.psi
+package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
+
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiInclude
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
+import com.intellij.lang.ASTNode
+import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 /**
  * @author Enaium
  */
-interface DtoPsiAliasPattern : DtoPsiElement {
-    val prefix: Boolean
-    val suffix: Boolean
-    val original: Original?
-    val replacement: Replacement?
-
-    interface Original : DtoPsiElement {
-        val value: String
-    }
-
-    interface Replacement : DtoPsiElement {
-        val value: String
-    }
+class DtoPsiIncludeImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiInclude {
+    override val qualifiedName: DtoPsiQualifiedName?
+        get() = findChild<DtoPsiQualifiedName>("/include/qualifiedName")
 }

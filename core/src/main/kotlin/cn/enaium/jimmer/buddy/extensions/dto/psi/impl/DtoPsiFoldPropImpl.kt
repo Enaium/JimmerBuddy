@@ -25,6 +25,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImplements
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiFoldPropImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiFoldProp {
     override val annotations: List<DtoPsiAnnotation>
         get() = findChildren<DtoPsiAnnotation>("/foldProp/annotation")

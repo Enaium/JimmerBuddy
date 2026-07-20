@@ -25,6 +25,9 @@ import org.antlr.intellij.adaptor.lexer.PSIElementTypeFactory
 import org.antlr.intellij.adaptor.lexer.RuleIElementType
 import org.antlr.intellij.adaptor.xpath.XPath
 
+/**
+ * @author Enaium
+ */
 object DtoLanguage : Language(JimmerBuddy.DTO_LANGUAGE_ID) {
     private fun readResolve(): Any = DtoLanguage
     val XPATH: XPath

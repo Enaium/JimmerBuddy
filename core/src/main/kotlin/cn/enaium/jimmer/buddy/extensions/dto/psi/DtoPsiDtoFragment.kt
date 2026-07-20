@@ -19,17 +19,8 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 /**
  * @author Enaium
  */
-interface DtoPsiAliasPattern : DtoPsiElement {
-    val prefix: Boolean
-    val suffix: Boolean
-    val original: Original?
-    val replacement: Replacement?
-
-    interface Original : DtoPsiElement {
-        val value: String
-    }
-
-    interface Replacement : DtoPsiElement {
-        val value: String
-    }
+interface DtoPsiDtoFragment : DtoPsiElement {
+    val name: DtoPsiName?
+    val qualifiedName: DtoPsiQualifiedName?
+    val body: DtoPsiDtoBody?
 }

@@ -16,6 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiDtoBody : DtoPsiElement {
     val macros: List<DtoPsiMacro>
     val explicitProps: List<DtoPsiExplicitProp>

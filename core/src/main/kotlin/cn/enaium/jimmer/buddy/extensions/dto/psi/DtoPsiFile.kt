@@ -25,6 +25,9 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.FileViewProvider
 import javax.swing.Icon
 
+/**
+ * @author Enaium
+ */
 class DtoPsiFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, DtoLanguage), DtoPsiElement {
     override fun getFileType(): FileType {
         return DtoFileType

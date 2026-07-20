@@ -17,18 +17,23 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroupBody
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoFragment
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
 /**
  * @author Enaium
  */
-class DtoPsiAliasGroupImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAliasGroup {
-    override val pattern: DtoPsiAliasPattern?
-        get() = findChild<DtoPsiAliasPattern>("/aliasGroup/aliasPattern")
-    override val body: DtoPsiAliasGroupBody?
-        get() = findChild<DtoPsiAliasGroupBody>("/aliasGroup/aliasGroupBody")
+class DtoPsiDtoFragmentImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiDtoFragment {
+    override val name: DtoPsiName?
+        get() = findChild<DtoPsiName>("/dtoFragment/name")
+
+    override val qualifiedName: DtoPsiQualifiedName?
+        get() = findChild<DtoPsiQualifiedName>("/dtoFragment/qualifiedName")
+
+    override val body: DtoPsiDtoBody?
+        get() = findChild<DtoPsiDtoBody>("/dtoFragment/dtoBody")
 }

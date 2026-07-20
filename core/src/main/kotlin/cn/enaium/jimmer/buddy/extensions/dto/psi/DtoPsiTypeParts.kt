@@ -16,6 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiTypeParts : DtoPsiElement {
     val qualifiedNameParts: DtoPsiQualifiedNameParts?
     fun qualifiedName(): String?

@@ -24,6 +24,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.findParentOfType
 import org.jetbrains.kotlin.idea.base.util.allScope
 
+/**
+ * @author Enaium
+ */
 class DtoPsiPartImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiPart {
     override fun getName(): String = text
     override fun reference(): PsiElement? {

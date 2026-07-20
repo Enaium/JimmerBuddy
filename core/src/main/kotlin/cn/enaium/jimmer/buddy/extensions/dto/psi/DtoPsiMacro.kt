@@ -16,6 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiMacro : DtoPsiElement {
     val name: DtoPsiName?
     val args: List<DtoPsiQualifiedName>

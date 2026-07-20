@@ -20,6 +20,9 @@ import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 import org.jetbrains.annotations.NonNls
 import javax.swing.Icon
 
+/**
+ * @author Enaium
+ */
 class DtoPsiAnnotationArgumentsImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiAnnotationArguments {
 
 }

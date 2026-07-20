@@ -23,11 +23,25 @@ package cn.enaium.jimmer.buddy.dto;
 
 dto
     :
+    packageStatement?
     exportStatement?
     importStatement*
-    dtoType*
+    (dtoType | dtoFragment)*
     EOF
     ;
+
+packageStatement
+    :
+    PACKAGE packageParts
+    ;
+
+dtoFragment
+    :
+    FRAGMENT name
+    (FOR qualifiedName)?
+    dtoBody
+    ;
+
 
 exportStatement
     :
@@ -53,6 +67,7 @@ importStatement
     :
     IMPORT qualifiedNameParts
     (
+        DOT MULTIPLY |
         DOT LEFT_BRACE importedType (COMMA importedType)* RIGHT_BRACE |
         AS alias
     )?
@@ -73,6 +88,7 @@ dtoType
     annotation*
     (modifier)*
     name
+    (FOR qualifiedName)?
     implements?
     dtoBody
     ;
@@ -92,9 +108,13 @@ name
 dtoBody
     :
     LEFT_BRACE
-    macro*
-    ((typesBlock | explicitProp) (COMMA | SEMICOLON)?)*
+    ((include | macro | typesBlock | explicitProp) (COMMA | SEMICOLON)?)*
     RIGHT_BRACE
+    ;
+
+include
+    :
+    INCLUDE LEFT_PARENTHESIS qualifiedName RIGHT_PARENTHESIS
     ;
 
 explicitProp
@@ -513,7 +533,10 @@ SINGLE_QUOTE: '\'';
 DOUBLE_QUOTE: '"';
 TYPES: '#types';
 EXHAUSTIVE: '#exhaustive';
+INCLUDE: '#include';
 DEFAULT: 'DEFAULT';
+FRAGMENT: 'fragment';
+FOR : 'for';
 
 Identifier
     :

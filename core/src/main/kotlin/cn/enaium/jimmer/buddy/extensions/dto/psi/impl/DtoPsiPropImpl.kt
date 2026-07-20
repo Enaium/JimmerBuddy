@@ -30,6 +30,9 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
 import javax.swing.Icon
 
+/**
+ * @author Enaium
+ */
 class DtoPsiPropImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiProp {
     override val value: String
         get() = node.text

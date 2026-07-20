@@ -81,6 +81,8 @@ class DtoParserDefinition : ParserDefinition {
 
         return when (elementType.ruleIndex) {
             DtoParser.RULE_dto -> DtoPsiRootImpl(node)
+            DtoParser.RULE_packageStatement -> DtoPsiPackageStatementImpl(node)
+            DtoParser.RULE_dtoFragment -> DtoPsiDtoFragmentImpl(node)
             DtoParser.RULE_exportStatement -> DtoPsiExportStatementImpl(node)
             DtoParser.RULE_typeParts -> DtoPsiTypePartsImpl(node)
             DtoParser.RULE_packageParts -> DtoPsiPackagePartsImpl(node)
@@ -94,6 +96,7 @@ class DtoParserDefinition : ParserDefinition {
             DtoParser.RULE_typeRef -> DtoPsiTypeRefImpl(node)
             DtoParser.RULE_genericArgument -> DtoPsiGenericArgumentImpl(node)
             DtoParser.RULE_dtoBody -> DtoPsiDtoBodyImpl(node)
+            DtoParser.RULE_include -> DtoPsiIncludeImpl(node)
             DtoParser.RULE_macro -> DtoPsiMacroImpl(node)
             DtoParser.RULE_explicitProp -> DtoPsiExplicitPropImpl(node)
             DtoParser.RULE_foldProp -> DtoPsiFoldPropImpl(node)

@@ -24,6 +24,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiMacroImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiMacro {
     override val name: DtoPsiName?
         get() = findChild<DtoPsiName>("/macro/name")

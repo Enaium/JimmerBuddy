@@ -18,6 +18,9 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 import com.intellij.navigation.NavigationItem
 
+/**
+ * @author Enaium
+ */
 interface DtoPsiDtoType : DtoPsiElement, NavigationItem {
     val modifiers: List<DtoPsiModifier>
     val name: DtoPsiName?

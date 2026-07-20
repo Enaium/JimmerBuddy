@@ -22,6 +22,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedNameParts
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiPackagePartsImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiPackageParts {
     override val qualifiedNameParts: DtoPsiQualifiedNameParts?
         get() = findChild<DtoPsiQualifiedNameParts>("/packageParts/qualifiedNameParts")

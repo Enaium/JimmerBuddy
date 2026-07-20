@@ -20,6 +20,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiIdentifier
 import com.intellij.psi.tree.IElementType
 import org.antlr.intellij.adaptor.psi.ANTLRPsiLeafNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiIdentifierImpl(type: IElementType, text: CharSequence) : ANTLRPsiLeafNode(type, text), DtoPsiIdentifier {
     override val id: String
         get() = text

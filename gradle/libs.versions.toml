@@ -2,7 +2,7 @@
 kotlin = "2.4.0"
 ksp = "2.3.9"
 intellij = "2.13.1"
-jimmer = "0.11.0"
+jimmer = "0.11.2"
 byteBuddy = "1.18.8"
 kotlinpoet = "2.2.0"
 javapoet = "1.13.0"

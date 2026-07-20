@@ -96,7 +96,7 @@ class DtoHighlightAnnotator : Annotator {
                     element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
                 }
 
-                TOKEN[TYPES], TOKEN[EXHAUSTIVE] -> {
+                TOKEN[TYPES], TOKEN[EXHAUSTIVE], TOKEN[INCLUDE] -> {
                     macro
                 }
 

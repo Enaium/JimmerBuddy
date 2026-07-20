@@ -32,6 +32,9 @@ import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
+/**
+ * @author Enaium
+ */
 class DtoPsiNameImpl(node: ASTNode) : DtoPsiNamedElement(node), DtoPsiName {
     override val value: String
         get() = this.text

@@ -88,6 +88,8 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
             DtoLexer.CONFIG_BATCH,
             DtoLexer.CONFIG_DEPTH,
             DtoLexer.TRUE,
+            DtoLexer.FRAGMENT,
+            DtoLexer.FOR,
             DtoLexer.FALSE -> keyword
 
             DtoLexer.StringLiteral,

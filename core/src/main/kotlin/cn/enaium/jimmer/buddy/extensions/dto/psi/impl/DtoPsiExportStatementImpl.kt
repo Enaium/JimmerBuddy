@@ -23,6 +23,9 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeParts
 import com.intellij.lang.ASTNode
 import org.antlr.intellij.adaptor.psi.ANTLRPsiNode
 
+/**
+ * @author Enaium
+ */
 class DtoPsiExportStatementImpl(node: ASTNode) : ANTLRPsiNode(node), DtoPsiExportStatement {
     override val typeParts: DtoPsiTypeParts?
         get() = findChild<DtoPsiTypeParts>("/exportStatement/typeParts")
