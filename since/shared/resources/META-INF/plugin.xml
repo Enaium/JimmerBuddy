@@ -207,6 +207,8 @@
                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>
         <consoleFilterProvider implementation="cn.enaium.jimmer.buddy.extensions.console.ExecuteSqlFilter"
                                order="first"/>
+        <debugger.nodeRenderer implementation="cn.enaium.jimmer.buddy.extensions.debugger.JimmerImmutableRenderer"
+                               order="first"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
