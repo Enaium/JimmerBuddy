@@ -62,7 +62,7 @@
     CONFIG_DEPTH        = "!depth"
     INCLUDE             = "#include"
     TYPES               = "#types"
-    EXHAUSTIVE    = "#exhaustive"
+    MACRO_EXHAUSTIVE    = "#exhaustive"
     MACRO_ALL_SCALARS   = "#allScalars"
     MACRO_ALL_REFERENCES = "#allReferences"
 
@@ -123,6 +123,11 @@ dtoType ::= DOC_COMMENT? annotation*
             (FOR qualifiedName)?
             (IMPLEMENTS typeRef (COMMA typeRef)*)?
             dtoBody
+{
+    mixin = "cn.enaium.jimmer.buddy.dto.psi.impl.DtoPsiDtoTypeMixin"
+    stubClass = "cn.enaium.jimmer.buddy.dto.stub.DtoTypeStub"
+    elementTypeFactory = "cn.enaium.jimmer.buddy.dto.psi.DtoElementTypeFactoryKt.factory"
+}
 
 dtoBody ::= LBRACE ((includeMacro | macro | typesBlock | explicitProp) (COMMA | SEMI)?)* RBRACE
 
@@ -132,9 +137,7 @@ explicitProp ::= aliasGroup | foldProp | positiveProp | negativeProp | userProp
 
 typesBlock ::= TYPES LBRACE typesElement* RBRACE
 
-typesElement ::= exhaustiveMacro | defaultBranch | typeBranch
-
-exhaustiveMacro ::= EXHAUSTIVE
+typesElement ::= MACRO_EXHAUSTIVE | defaultBranch | typeBranch
 
 defaultBranch ::= DOC_COMMENT? annotation*
                   DEFAULT (CLASS IDENTIFIER)?

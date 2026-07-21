@@ -3,7 +3,7 @@ package cn.enaium.jimmer.buddy.dto
 import cn.enaium.jimmer.buddy.dto.parser.DtoParser
 import cn.enaium.jimmer.buddy.dto.psi.DtoTokenType
 import cn.enaium.jimmer.buddy.dto.psi.DtoTypes
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
+import cn.enaium.jimmer.buddy.dto.stubs.DtoFileElementType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
@@ -14,6 +14,7 @@ import com.intellij.psi.FileViewProvider
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.tree.IFileElementType
+import com.intellij.psi.tree.IStubFileElementType
 import com.intellij.psi.tree.TokenSet
 
 /**
@@ -50,7 +51,7 @@ class DtoParserDefinition : ParserDefinition {
     }
 }
 
-val FILE: IFileElementType = IFileElementType(DtoLanguage)
+val FILE: IStubFileElementType<*> = DtoFileElementType()
 
 val BLOCK_COMMENT = DtoTokenType("BLOCK_COMMENT")
 val LINE_COMMENT = DtoTokenType("LINE_COMMENT")

@@ -54,7 +54,7 @@ STRING_LITERAL      = \" ( [^\"\\] | {ESCAPE_SEQUENCE} )* \"
 "!depth"            { return CONFIG_DEPTH; }
 "#include"          { return INCLUDE; }
 "#types"            { return TYPES; }
-"#exhaustive"       { return EXHAUSTIVE_MACRO; }
+"#exhaustive"       { return MACRO_EXHAUSTIVE; }
 "#allScalars"       { return MACRO_ALL_SCALARS; }
 "#allReferences"    { return MACRO_ALL_REFERENCES; }
 

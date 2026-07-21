@@ -159,6 +159,7 @@
                                implementationClass="cn.enaium.jimmer.buddy.dto.DtoParserDefinition"/>
         <lang.syntaxHighlighter language="JimmerBuddy.DTO"
                                 implementationClass="cn.enaium.jimmer.buddy.dto.lang.highlight.DtoSyntaxHighlighter"/>
+        <stubIndex implementation="cn.enaium.jimmer.buddy.dto.index.DtoTypeIndex"/>
 <!--        <lang.documentationProvider language="JimmerBuddy.DTO"-->
 <!--                                    implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoDocumentProvider"/>-->
 <!--        <localInspection-->
