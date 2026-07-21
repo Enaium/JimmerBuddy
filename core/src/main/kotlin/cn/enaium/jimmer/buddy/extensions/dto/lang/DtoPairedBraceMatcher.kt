@@ -16,8 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.lang
 
-import cn.enaium.jimmer.buddy.dto.DtoParser.*
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.lang.BracePair
 import com.intellij.lang.PairedBraceMatcher
 import com.intellij.psi.PsiFile
@@ -29,9 +28,9 @@ import com.intellij.psi.tree.IElementType
 class DtoPairedBraceMatcher : PairedBraceMatcher {
     override fun getPairs(): Array<BracePair> {
         return arrayOf(
-            BracePair(TOKEN[LEFT_PARENTHESIS], TOKEN[RIGHT_PARENTHESIS], true),
-            BracePair(TOKEN[LEFT_BRACE], TOKEN[RIGHT_BRACE], true),
-            BracePair(TOKEN[LEFT_BRACKET], TOKEN[RIGHT_BRACKET], true),
+            BracePair(DtoTypes.LPAREN, DtoTypes.RPAREN, true),
+            BracePair(DtoTypes.LBRACE, DtoTypes.RBRACE, true),
+            BracePair(DtoTypes.LBRACK, DtoTypes.RBRACK, true),
         )
     }
 

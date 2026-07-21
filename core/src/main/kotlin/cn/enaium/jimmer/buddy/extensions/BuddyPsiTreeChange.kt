@@ -83,7 +83,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                                 path,
                                 GenerateProject.SourceRootType.DTO
                             ),
-                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.name?.text }
+                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.identifier?.text }
                         )
                     }
                 } else if (it.isKotlinProject) {
@@ -105,7 +105,7 @@ class BuddyPsiTreeChange(val project: Project) : PsiTreeChangeAdapter() {
                                 path,
                                 GenerateProject.SourceRootType.DTO
                             ),
-                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.name?.text }
+                            runReadOnly { parent?.findParentOfType<DtoPsiDtoType>()?.identifier?.text }
                         )
                     }
                 }

@@ -18,6 +18,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.inspection
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
 import cn.enaium.jimmer.buddy.utility.I18n
+import cn.enaium.jimmer.buddy.utility.name
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.JavaPsiFacade
@@ -34,13 +35,11 @@ class ExportInspection : LocalInspectionTool() {
         return object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 if (element is DtoPsiExportStatement) {
-                    element.typeParts?.also { typeParts ->
-                        typeParts.qualifiedName()?.also {
-                            if ((JavaPsiFacade.getInstance(element.project).findClass(it, element.project.allScope())
-                                    ?: KotlinFullClassNameIndex[it, element.project, element.project.allScope()].firstOrNull()) == null
-                            ) {
-                                holder.registerProblem(typeParts, I18n.message("inspection.dto.export.classNotFound"))
-                            }
+                    element.qualifiedName.name().also {
+                        if ((JavaPsiFacade.getInstance(element.project).findClass(it, element.project.allScope())
+                                ?: KotlinFullClassNameIndex[it, element.project, element.project.allScope()].firstOrNull()) == null
+                        ) {
+                            holder.registerProblem(element, I18n.message("inspection.dto.export.classNotFound"))
                         }
                     }
                 }

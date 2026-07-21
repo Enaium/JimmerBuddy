@@ -16,33 +16,34 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.manipulator
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.utility.createDtoProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
+import cn.enaium.jimmer.buddy.utility.createDtoFile
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.AbstractElementManipulator
-import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 
 
 /**
  * @author Enaium
  */
-class DtoPsiPropManipulator : AbstractElementManipulator<DtoPsiProp>() {
+class DtoPsiPropManipulator : AbstractElementManipulator<DtoPsiPositiveProp>() {
     override fun handleContentChange(
-        element: DtoPsiProp,
+        element: DtoPsiPositiveProp,
         range: TextRange,
         newContent: String
-    ): DtoPsiProp? {
+    ): DtoPsiPositiveProp? {
         val oldText = element.text
         val newText = oldText.take(range.startOffset) + newContent + oldText.substring(range.endOffset)
-        val newElement: PsiElement? = element.project.createDtoProp(newText)
-        if (newElement != null) {
-            element.replace(newElement)
-            return newElement as DtoPsiProp
+        val newElement = element.project.createDtoFile("Dummy { $newText }")
+        val positiveProp = PsiTreeUtil.findChildOfType(newElement, DtoPsiPositiveProp::class.java)
+        if (positiveProp != null) {
+            element.replace(positiveProp)
+            return positiveProp
         }
         return null
     }
 
-    override fun getRangeInElement(element: DtoPsiProp): TextRange {
+    override fun getRangeInElement(element: DtoPsiPositiveProp): TextRange {
         return TextRange(0, element.textLength)
     }
 }

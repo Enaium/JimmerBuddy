@@ -20,6 +20,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import javax.swing.Icon
@@ -31,39 +32,38 @@ class DtoItemPresentation(val element: PsiElement) : ItemPresentation {
     override fun getPresentableText(): String {
         return when (element) {
             is DtoPsiFile -> element.name
-            is DtoPsiDtoType -> element.name?.value ?: "Unknown Name"
+            is DtoPsiDtoType -> element.identifier.text.ifEmpty { "Unknown Name" }
             is DtoPsiExplicitProp -> element.positiveProp?.let { positiveProp ->
-                positiveProp.prop?.value?.let { name ->
-                    positiveProp.alias?.value?.let { alias ->
-                        "$name as $alias"
-                    } ?: name
+                val propName = positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
+                val alias = positiveProp.children.dropWhile { it.node.elementType != DtoTypes.AS }.drop(1).firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
+                if (propName != null) {
+                    alias?.let { "$propName as $it" } ?: propName
+                } else {
+                    null
                 }
             } ?: element.negativeProp?.let { negativeProp ->
-                negativeProp.prop?.value?.let {
-                    "$it (Negative)"
-                }
+                negativeProp.identifier.text.let { "$it (Negative)" }
             } ?: element.userProp?.let { userProp ->
-                userProp.prop?.value?.let { name ->
-                    userProp.typeRef?.let { typeRef ->
-                        fun typeRefName(typeRef: DtoPsiTypeRef): String {
-                            return "${typeRef.qualifiedName?.qualifiedNameParts?.qualifiedName?.substringAfterLast(".")}".let {
-                                if (typeRef.genericArguments.isEmpty()) {
-                                    it
-                                } else {
-                                    it + typeRef.genericArguments.joinToString(
-                                        ", ",
-                                        "<",
-                                        ">"
-                                    ) { genericArgument ->
-                                        genericArgument.typeRef?.let { typeRef -> typeRefName(typeRef) } ?: ""
-                                    }
+                val name = userProp.identifier.text
+                userProp.typeRef?.let { typeRef ->
+                    fun typeRefName(typeRef: DtoPsiTypeRef): String {
+                        return "${typeRef.qualifiedName.text.substringAfterLast(".")}".let {
+                            if (typeRef.genericArgumentList.isEmpty()) {
+                                it
+                            } else {
+                                it + typeRef.genericArgumentList.joinToString(
+                                    ", ",
+                                    "<",
+                                    ">"
+                                ) { genericArgument ->
+                                    genericArgument.typeRef?.let { typeRef -> typeRefName(typeRef) } ?: ""
                                 }
                             }
                         }
+                    }
 
-                        "$name: ${typeRefName(typeRef)}"
-                    } ?: name
-                }
+                    "$name: ${typeRefName(typeRef)}"
+                } ?: name
             } ?: "Unknow Name"
 
             else -> "Unknow Name"

@@ -17,13 +17,12 @@
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiModifier
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.endOffset
 import cn.enaium.jimmer.buddy.utility.startOffset
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
+import com.intellij.psi.PsiElement
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.Align
@@ -37,8 +36,8 @@ import javax.swing.JPanel
  */
 class DtoModifierEditor(
     private val modifiersProperty: ObservableMutableProperty<MutableSet<String>>,
-    private val modifiers: () -> List<DtoPsiModifier>,
-    private val psiName: DtoPsiElement,
+    private val modifiers: () -> List<PsiElement>,
+    private val psiName: PsiElement,
     private val single: Boolean = false
 ) : DtoBaseEditor() {
 
@@ -55,7 +54,7 @@ class DtoModifierEditor(
                 cell(JBScrollPane(JPanel(FlowLayout(FlowLayout.LEFT)).apply flow@{
                     DtoModifier.entries.map { it.name.lowercase() }.forEach { modifier ->
                         add(JBCheckBox(modifier).apply {
-                            isSelected = modifier in modifiers().map { it.value }
+                            isSelected = modifier in modifiers().map { it.text }
                             if (isSelected) {
                                 modifiersProperty.get().add(modifier)
                             }

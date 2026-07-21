@@ -16,8 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.lang
 
-import cn.enaium.jimmer.buddy.dto.DtoParser
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.codeInsight.editorActions.SimpleTokenSetQuoteHandler
 import com.intellij.psi.tree.TokenSet
 
@@ -26,7 +25,7 @@ import com.intellij.psi.tree.TokenSet
  */
 class DtoQuoteHandler : SimpleTokenSetQuoteHandler(
     TokenSet.create(
-        DtoLanguage.TOKEN[DtoParser.StringLiteral],
-        DtoLanguage.TOKEN[DtoParser.SqlStringLiteral]
+        DtoTypes.STRING_LITERAL,
+        DtoTypes.SQL_STRING_LITERAL
     )
 )

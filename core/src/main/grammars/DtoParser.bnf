@@ -1,16 +1,16 @@
 {
-  parserClass="cn.enaium.jimmer.buddy.dto.parser.DtoParser"
+  parserClass="cn.enaium.jimmer.buddy.extensions.dto.parser.DtoParser"
 
   extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
 
   psiClassPrefix="DtoPsi"
   psiImplClassSuffix="Impl"
-  psiPackage="cn.enaium.jimmer.buddy.dto.psi"
-  psiImplPackage="cn.enaium.jimmer.buddy.dto.psi.impl"
+  psiPackage="cn.enaium.jimmer.buddy.extensions.dto.psi"
+  psiImplPackage="cn.enaium.jimmer.buddy.extensions.dto.psi.impl"
 
-  elementTypeHolderClass="cn.enaium.jimmer.buddy.dto.psi.DtoTypes"
-  elementTypeClass="cn.enaium.jimmer.buddy.dto.psi.DtoElementType"
-  tokenTypeClass="cn.enaium.jimmer.buddy.dto.psi.DtoTokenType"
+  elementTypeHolderClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes"
+  elementTypeClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoElementType"
+  tokenTypeClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTokenType"
 
   tokens = [
     BOOLEAN_LITERAL
@@ -103,8 +103,9 @@ packageStatement ::= PACKAGE IDENTIFIER (DOT IDENTIFIER)*
 
 dtoFragment ::= FRAGMENT IDENTIFIER (FOR qualifiedName)? dtoBody
 
-exportStatement ::= EXPORT IDENTIFIER (DOT IDENTIFIER)*
-                    (ARROW PACKAGE IDENTIFIER (DOT IDENTIFIER)*)?
+exportStatement ::= EXPORT qualifiedName exportPackage?
+
+exportPackage ::= ARROW PACKAGE qualifiedName
 
 importStatement ::= IMPORT IDENTIFIER (DOT IDENTIFIER)*
                     (
@@ -115,7 +116,7 @@ importStatement ::= IMPORT IDENTIFIER (DOT IDENTIFIER)*
 
 importedType ::= IDENTIFIER (AS IDENTIFIER)?
 
-private modifier ::= INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY | SEALED
+modifier ::= INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY | SEALED
 
 dtoType ::= DOC_COMMENT? annotation*
             modifier*
@@ -124,9 +125,10 @@ dtoType ::= DOC_COMMENT? annotation*
             (IMPLEMENTS typeRef (COMMA typeRef)*)?
             dtoBody
 {
-    mixin = "cn.enaium.jimmer.buddy.dto.psi.impl.DtoPsiDtoTypeMixin"
-    stubClass = "cn.enaium.jimmer.buddy.dto.stub.DtoTypeStub"
-    elementTypeFactory = "cn.enaium.jimmer.buddy.dto.psi.DtoElementTypeFactoryKt.factory"
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiDtoTypeMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+    stubClass = "cn.enaium.jimmer.buddy.extensions.dto.stub.DtoTypeStub"
+    elementTypeFactory = "cn.enaium.jimmer.buddy.extensions.dto.psi.DtoElementTypeFactoryKt.factory"
 }
 
 dtoBody ::= LBRACE ((includeMacro | macro | typesBlock | explicitProp) (COMMA | SEMI)?)* RBRACE

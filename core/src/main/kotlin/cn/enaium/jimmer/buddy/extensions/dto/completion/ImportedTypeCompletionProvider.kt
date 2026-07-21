@@ -17,12 +17,14 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.util.elementType
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 
@@ -36,9 +38,10 @@ object ImportedTypeCompletionProvider : CompletionProvider<CompletionParameters>
         result: CompletionResultSet
     ) {
         val project = parameters.position.project
-        val packageName =
-            parameters.position.findParentOfType<DtoPsiImportStatement>(true)?.qualifiedNameParts?.parts?.joinToString(".") { it.text }
-                ?: return
+        val importStatement = parameters.position.findParentOfType<DtoPsiImportStatement>(true) ?: return
+        val packageName = importStatement.children
+            .filter { it.elementType == DtoTypes.IDENTIFIER }
+            .joinToString(".") { it.text }
         val classes =
             JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes ?: emptyArray<PsiClass>()
         result.addAllElements(classes.map {
