@@ -18,7 +18,8 @@ package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
@@ -26,6 +27,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.util.findParentOfType
+import com.intellij.psi.util.PsiTreeUtil
 import org.babyfish.jimmer.apt.MetaException
 import org.babyfish.jimmer.apt.createContext
 import org.babyfish.jimmer.apt.immutable.meta.ImmutableProp
@@ -250,7 +252,8 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val project = element.project
     val trace = element.parent?.let { getTrace(it) } ?: emptyList()
     val typeName =
-        element.findParentOfType<DtoPsiRoot>()?.qualifiedName() ?: return null
+        PsiTreeUtil.findChildOfType(element.containingFile, DtoPsiExportStatement::class.java)
+            ?.let { PsiTreeUtil.findChildOfType(it, DtoPsiQualifiedName::class.java) }?.text ?: return null
     try {
         val commonImmutable = if (project.workspace().isJavaProject) {
             JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope())?.toImmutable()

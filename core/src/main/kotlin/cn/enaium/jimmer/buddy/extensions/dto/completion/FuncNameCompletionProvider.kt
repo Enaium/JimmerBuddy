@@ -37,8 +37,14 @@ object FuncNameCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet
     ) {
         val functions = mutableListOf<String>()
-        if (parameters.position.findParentOfType<DtoPsiDtoType>()?.modifiers?.map { it.value }
-                ?.contains(DtoModifier.SPECIFICATION.name.lowercase()) == true) {
+        val dtoType = parameters.position.findParentOfType<DtoPsiDtoType>()
+        val isSpecification = dtoType?.let { type ->
+            val textBeforeIdentifier = type.text.substringBefore(type.identifier.text)
+            DtoModifier.entries.any { modifier ->
+                modifier == DtoModifier.SPECIFICATION && textBeforeIdentifier.contains(modifier.name.lowercase())
+            }
+        } ?: false
+        if (isSpecification) {
             functions.addAll(Constants.QBE_FUNC_NAMES)
         } else {
             functions.add("id")

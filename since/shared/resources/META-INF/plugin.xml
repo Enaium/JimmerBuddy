@@ -156,73 +156,73 @@
         <fileType name="Jimmer DTO" implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoFileType"
                   language="JimmerBuddy.DTO" extensions="dto" fieldName="INSTANCE"/>
         <lang.parserDefinition language="JimmerBuddy.DTO"
-                               implementationClass="cn.enaium.jimmer.buddy.dto.DtoParserDefinition"/>
+                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoParserDefinition"/>
         <lang.syntaxHighlighter language="JimmerBuddy.DTO"
-                                implementationClass="cn.enaium.jimmer.buddy.dto.lang.highlight.DtoSyntaxHighlighter"/>
-        <stubIndex implementation="cn.enaium.jimmer.buddy.dto.index.DtoTypeIndex"/>
-<!--        <lang.documentationProvider language="JimmerBuddy.DTO"-->
-<!--                                    implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoDocumentProvider"/>-->
-<!--        <localInspection-->
-<!--                displayName="DtoInspection"-->
-<!--                shortName="DtoInspection"-->
-<!--                groupName="Jimmer"-->
-<!--                language="JimmerBuddy.DTO"-->
-<!--                enabledByDefault="true"-->
-<!--                level="ERROR"-->
-<!--                hasStaticDescription="true"-->
-<!--                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.DtoInspection"-->
-<!--        />-->
-<!--        <localInspection-->
-<!--                displayName="ExportInspection"-->
-<!--                shortName="ExportInspection"-->
-<!--                groupName="Jimmer"-->
-<!--                language="JimmerBuddy.DTO"-->
-<!--                enabledByDefault="true"-->
-<!--                level="ERROR"-->
-<!--                hasStaticDescription="true"-->
-<!--                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.ExportInspection"-->
-<!--        />-->
-<!--        <annotator language="JimmerBuddy.DTO"-->
-<!--                   implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoHighlightAnnotator"/>-->
-<!--        <completion.contributor language="JimmerBuddy.DTO"-->
-<!--                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.completion.DtoCompletionContributor"/>-->
-<!--        <lang.psiStructureViewFactory language="JimmerBuddy.DTO"-->
-<!--                                      implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.structure.DtoStructureViewFactory"/>-->
-<!--        <lang.commenter language="JimmerBuddy.DTO"-->
-<!--                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.commenter.DtoCommenter"/>-->
-<!--        <lang.foldingBuilder language="JimmerBuddy.DTO"-->
-<!--                             implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoFoldingBuilder"/>-->
+                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoSyntaxHighlighter"/>
+        <stubIndex implementation="cn.enaium.jimmer.buddy.extensions.dto.index.DtoTypeIndex"/>
+        <psi.referenceContributor language="JimmerBuddy.DTO"
+                                  implementation="cn.enaium.jimmer.buddy.extensions.dto.reference.DtoReferenceContributor"/>
+        <lang.documentationProvider language="JimmerBuddy.DTO"
+                                    implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoDocumentProvider"/>
+        <localInspection
+                displayName="DtoInspection"
+                shortName="DtoInspection"
+                groupName="Jimmer"
+                language="JimmerBuddy.DTO"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.DtoInspection"
+        />
+        <localInspection
+                displayName="ExportInspection"
+                shortName="ExportInspection"
+                groupName="Jimmer"
+                language="JimmerBuddy.DTO"
+                enabledByDefault="true"
+                level="ERROR"
+                hasStaticDescription="true"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.inspection.ExportInspection"
+        />
+        <annotator language="JimmerBuddy.DTO"
+                   implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoHighlightAnnotator"/>
+        <completion.contributor language="JimmerBuddy.DTO"
+                                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.completion.DtoCompletionContributor"/>
+        <lang.psiStructureViewFactory language="JimmerBuddy.DTO"
+                                      implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.structure.DtoStructureViewFactory"/>
+        <lang.commenter language="JimmerBuddy.DTO"
+                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.commenter.DtoCommenter"/>
+        <lang.foldingBuilder language="JimmerBuddy.DTO"
+                             implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoFoldingBuilder"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.EnumClassIndex"/>
         <fileBasedIndex implementation="cn.enaium.jimmer.buddy.extensions.index.FullClassIndex"/>
-<!--        <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"-->
-<!--                                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoLineMarkerProvider"/>-->
-<!--        <lang.formatter language="JimmerBuddy.DTO"-->
-<!--                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.formatter.DtoFormattingModelBuilder"/>-->
-<!--        <lang.braceMatcher language="JimmerBuddy.DTO"-->
-<!--                           implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoPairedBraceMatcher"/>-->
-<!--        <lang.quoteHandler language="JimmerBuddy.DTO"-->
-<!--                           implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>-->
-<!--        <spellchecker.support language="JimmerBuddy.DTO"-->
-<!--                              implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>-->
-<!--        <consoleFilterProvider implementation="cn.enaium.jimmer.buddy.extensions.console.ExecuteSqlFilter"-->
-<!--                               order="first"/>-->
+        <codeInsight.lineMarkerProvider language="JimmerBuddy.DTO" id="JimmerBuddy.JavaLineMark"
+                                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoLineMarkerProvider"/>
+        <lang.formatter language="JimmerBuddy.DTO"
+                        implementationClass="cn.enaium.jimmer.buddy.extensions.dto.formatter.DtoFormattingModelBuilder"/>
+        <lang.braceMatcher language="JimmerBuddy.DTO"
+                           implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoPairedBraceMatcher"/>
+        <lang.quoteHandler language="JimmerBuddy.DTO"
+                           implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>
+        <spellchecker.support language="JimmerBuddy.DTO"
+                              implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.ImmutableInheritorCodeVisionProvider"/>
-<!--        <vcs.codeVisionLanguageContext language="JimmerBuddy.DTO"-->
-<!--                                       implementationClass="cn.enaium.jimmer.buddy.extensions.dto.vcs.DtoVcsCodeVisionLanguageContext"/>-->
-<!--        <codeInsight.daemonBoundCodeVisionProvider-->
-<!--                implementation="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoReferencesCodeVisionProvider"/>-->
-<!--        <codeInsight.declarativeInlayProvider-->
-<!--                language="JimmerBuddy.DTO"-->
-<!--                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoPropTypeInlayHintsProvider"-->
-<!--                bundle="messages.BuddyBundles"-->
-<!--                group="OTHER_GROUP"-->
-<!--                isEnabledByDefault="true"-->
-<!--                nameKey="inlay.dto.type" providerId="JimmerBuddy.inlay.dto.type"/>-->
+        <vcs.codeVisionLanguageContext language="JimmerBuddy.DTO"
+                                       implementationClass="cn.enaium.jimmer.buddy.extensions.dto.vcs.DtoVcsCodeVisionLanguageContext"/>
+        <codeInsight.daemonBoundCodeVisionProvider
+                implementation="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoReferencesCodeVisionProvider"/>
+        <codeInsight.declarativeInlayProvider
+                language="JimmerBuddy.DTO"
+                implementationClass="cn.enaium.jimmer.buddy.extensions.dto.insight.DtoPropTypeInlayHintsProvider"
+                bundle="messages.BuddyBundles"
+                group="OTHER_GROUP"
+                isEnabledByDefault="true"
+                nameKey="inlay.dto.type" providerId="JimmerBuddy.inlay.dto.type"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-core" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql" kind="java"/>
         <dependencySupport coordinate="org.babyfish.jimmer:jimmer-sql-kotlin" kind="kotlin"/>
@@ -233,11 +233,11 @@
         <codeInsight.template.postfixTemplateProvider language="kotlin"
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyKotlinPostfixTemplateProvider"/>
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.editor.ImmutableEditorProvider"/>
-<!--        <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>-->
-<!--        <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"-->
-<!--                                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>-->
-<!--        <gotoSymbolContributor-->
-<!--                implementation="cn.enaium.jimmer.buddy.extensions.dto.search.DtoChooseByNameContributor"/>-->
+        <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
+        <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp"
+                                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
+        <gotoSymbolContributor
+                implementation="cn.enaium.jimmer.buddy.extensions.dto.search.DtoChooseByNameContributor"/>
         <codeInsight.declarativeInlayProvider
                 language="UAST"
                 implementationClass="cn.enaium.jimmer.buddy.extensions.insight.TupleNameInlayHintsProvider"

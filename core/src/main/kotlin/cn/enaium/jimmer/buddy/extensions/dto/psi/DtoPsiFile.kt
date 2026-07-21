@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 Enaium
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package cn.enaium.jimmer.buddy.extensions.dto.psi
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
@@ -23,12 +7,18 @@ import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import com.intellij.extapi.psi.PsiFileBase
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.psi.FileViewProvider
+import com.intellij.psi.util.PsiTreeUtil
 import javax.swing.Icon
 
 /**
  * @author Enaium
  */
-class DtoPsiFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, DtoLanguage), DtoPsiElement {
+class DtoPsiFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, DtoLanguage) {
+
+    val exportStatement: DtoPsiExportStatement?
+        get() = PsiTreeUtil.getChildOfType(this, DtoPsiExportStatement::class.java)
+
+
     override fun getFileType(): FileType {
         return DtoFileType
     }

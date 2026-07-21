@@ -39,7 +39,7 @@ object IncludeCompletionProvider : CompletionProvider<CompletionParameters>() {
         val file = element.containingFile ?: return
         val fragments = PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoFragment::class.java)
         fragments.forEach { fragment ->
-            fragment.name?.value?.let { name ->
+            fragment.identifier.text.let { name ->
                 result.addElement(
                     LookupElementBuilder.create(name).withIcon(JimmerBuddy.Icons.DTO_FILE)
                 )

@@ -17,6 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.findModifierTokens
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -36,13 +37,13 @@ class DtoTypeEditor(val node: DtoTree.DtoTypeNode) : JPanel(BorderLayout()) {
     val model = TypeModel()
 
     init {
-        node.target.name?.also { name ->
+        node.target.identifier.also { name ->
 
             val nameEditor = DtoNameEditor(model.nameProperty, name)
 
             val modifierEditor = DtoModifierEditor(
                 model.modifiersProperty,
-                { node.target.modifiers },
+                { findModifierTokens(node.target) },
                 name
             )
 
@@ -73,7 +74,7 @@ class DtoTypeEditor(val node: DtoTree.DtoTypeNode) : JPanel(BorderLayout()) {
 
     inner class TypeModel : BaseState() {
         private val graph: PropertyGraph = PropertyGraph()
-        val nameProperty = graph.property(node.target.name?.value ?: "")
-        val modifiersProperty = graph.property(node.target.modifiers.map { it.value }.toMutableSet())
+        val nameProperty = graph.property(node.target.identifier.text)
+        val modifiersProperty = graph.property(findModifierTokens(node.target).map { it.text }.toMutableSet())
     }
 }

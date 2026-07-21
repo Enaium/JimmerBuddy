@@ -19,7 +19,6 @@ package cn.enaium.jimmer.buddy.extensions.window.panel
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -41,8 +40,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.core.util.toVirtualFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -144,14 +143,15 @@ class DTOList(val project: Project) : JPanel() {
                 ).forEach { (_, sourceFiles, _) ->
                     ReadAction.run<Throwable> {
                         sourceFiles.mapNotNullTo(results) { sourceFile ->
-                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<DtoPsiRoot>()
-                                ?.let { root ->
-                                    DtoFile(root).apply {
-                                        root.dtoTypes.forEach {
-                                            add(DtoType(it))
-                                        }
+                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.let { file ->
+                                val dtoTypes = PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoType::class.java)
+                                if (dtoTypes.isEmpty()) null
+                                else DtoFile(file).apply {
+                                    dtoTypes.forEach {
+                                        add(DtoType(it))
                                     }
                                 }
+                            }
                         }
                     }
                 }
@@ -216,7 +216,7 @@ class DTOList(val project: Project) : JPanel() {
 
         override fun toString(): String {
             return if (target is DtoPsiDtoType) {
-                target.name?.text ?: "Unknown Name"
+                target.identifier.text
             } else {
                 target.text
             }

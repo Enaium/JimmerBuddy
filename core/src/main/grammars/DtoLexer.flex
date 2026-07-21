@@ -1,11 +1,11 @@
-package cn.enaium.jimmer.buddy.dto.lexer;
+package cn.enaium.jimmer.buddy.extensions.dto.lexer;
 
-import cn.enaium.jimmer.buddy.dto.DtoParserDefinitionKt;
+import cn.enaium.jimmer.buddy.extensions.dto.DtoParserDefinitionKt;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
-import static cn.enaium.jimmer.buddy.dto.psi.DtoTypes.*;
+import static cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes.*;
 
 %%
 

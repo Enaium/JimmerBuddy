@@ -16,7 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -25,7 +27,8 @@ import com.intellij.icons.AllIcons
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiPackage
-import com.intellij.psi.util.findParentOfType
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import com.intellij.util.ProcessingContext
 import com.intellij.util.indexing.FileBasedIndex
 import com.intellij.util.indexing.ID
@@ -50,12 +53,13 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
                 .mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.allScope()) }
             result.addAllElements(classes.map {
                 LookupElementBuilder.create(it.name ?: "Unknown Name").withInsertHandler { context, item ->
-                    val root =
-                        parameters.position.findParentOfType<DtoPsiRoot>() ?: return@withInsertHandler
+                    val file = parameters.position.containingFile ?: return@withInsertHandler
 
-                    if (!root.hasImport(it.qualifiedName!!)) {
+                    if (!hasImport(file, it.qualifiedName!!)) {
+                        val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java)
+                        val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java)
                         parameters.editor.document.insertString(
-                            root.importStatements.lastOrNull()?.endOffset ?: root.exportStatement?.endOffset ?: 0,
+                            importStatements?.lastOrNull()?.endOffset ?: exportStatement?.endOffset ?: 0,
                             "\nimport ${it.qualifiedName}"
                         )
                     }
@@ -78,6 +82,17 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
             result.addAllElements(classes.map {
                 LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
             })
+        }
+    }
+
+    private fun hasImport(file: com.intellij.psi.PsiFile, qualifiedName: String): Boolean {
+        val importStatements =
+            PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java) ?: return false
+        return importStatements.any { stmt ->
+            val qname = stmt.children
+                .filter { it.elementType == DtoTypes.IDENTIFIER }
+                .joinToString(".") { it.text }
+            qname == qualifiedName
         }
     }
 }

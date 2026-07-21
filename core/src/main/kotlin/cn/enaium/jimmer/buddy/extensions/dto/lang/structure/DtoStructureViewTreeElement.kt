@@ -19,7 +19,6 @@ package cn.enaium.jimmer.buddy.extensions.dto.lang.structure
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.util.treeView.smartTree.TreeElement
 import com.intellij.navigation.ItemPresentation
@@ -42,9 +41,9 @@ class DtoStructureViewTreeElement(val element: PsiElement) : StructureViewTreeEl
 
     override fun getChildren(): Array<TreeElement> {
         return when (element) {
-            is DtoPsiFile -> element.childrenOfType<DtoPsiRoot>().firstOrNull()?.childrenOfType<DtoPsiDtoType>()
-            is DtoPsiDtoType -> element.body?.explicitProps?.filter { explicitProps -> explicitProps.aliasGroup == null }
-            is DtoPsiExplicitProp -> element.positiveProp?.body?.explicitProps
+            is DtoPsiFile -> element.childrenOfType<DtoPsiDtoType>()
+            is DtoPsiDtoType -> element.dtoBody.explicitPropList.filter { explicitProps -> explicitProps.aliasGroup == null }
+            is DtoPsiExplicitProp -> element.positiveProp?.dtoBody?.explicitPropList
             else -> emptyList<PsiElement>()
         }?.map { DtoStructureViewTreeElement(it) }?.toTypedArray() ?: emptyArray()
     }

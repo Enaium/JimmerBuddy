@@ -16,10 +16,10 @@
 
 package cn.enaium.jimmer.buddy.action
 
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.classLiteral
 import cn.enaium.jimmer.buddy.utility.findProjectDir
 import cn.enaium.jimmer.buddy.utility.firstCharLowercase
@@ -32,6 +32,8 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMember
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import com.intellij.psi.util.findParentOfType
 import org.babyfish.jimmer.internal.GeneratedBy
 import org.jetbrains.kotlin.idea.base.util.allScope
@@ -93,11 +95,11 @@ class GoToGeneratedByFile : AnAction() {
 
                     if (psiFile is DtoPsiFile) {
                         val dtoType =
-                            psiFile.findChild<DtoPsiRoot>("/dto")?.dtoTypes?.find { it.name?.text == uClass.name }
+                            PsiTreeUtil.findChildrenOfType(psiFile, DtoPsiDtoType::class.java).find { it.identifier.text == uClass.name }
 
                         when (psiElement) {
                             is PsiClass, is KtClass -> {
-                                (dtoType?.name as? Navigatable)?.navigate(true)
+                                (dtoType?.identifier as? Navigatable)?.navigate(true)
                             }
 
                             is PsiMember -> {
@@ -163,14 +165,21 @@ class GoToGeneratedByFile : AnAction() {
 
     fun DtoPsiDtoType.navigate(trace: List<String>) {
         val trace = ArrayDeque(trace)
-        var body = body
+        var body: DtoPsiDtoBody? = dtoBody
         while (body != null) {
             trace.poll().also { poll ->
-                val find = body.explicitProps.find {
-                    body = it.positiveProp?.body
-                    it.positiveProp?.prop?.text == poll
+                val find = body.explicitPropList.find { explicitProp ->
+                    val positiveProp = explicitProp.positiveProp
+                    body = positiveProp?.dtoBody
+                    positiveProp?.children?.firstOrNull { child ->
+                        child.elementType == DtoTypes.IDENTIFIER
+                    }?.text == poll
                 }
-                (find?.positiveProp?.prop as? Navigatable)?.navigate(true)
+                val positiveProp = find?.positiveProp
+                if (positiveProp != null) {
+                    val identifier = positiveProp.children.firstOrNull { it.elementType == DtoTypes.IDENTIFIER }
+                    (identifier as? Navigatable)?.navigate(true)
+                }
             } ?: break
         }
     }

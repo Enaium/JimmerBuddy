@@ -1,33 +1,22 @@
-/*
- * Copyright 2025 Enaium
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package cn.enaium.jimmer.buddy.extensions.dto.lang.highlight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dto.DtoLexer
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLexerAdaptor
+import cn.enaium.jimmer.buddy.extensions.dto.BLOCK_COMMENT
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLexerAdapter
+import cn.enaium.jimmer.buddy.extensions.dto.LINE_COMMENT
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.lexer.Lexer
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey
-import com.intellij.openapi.fileTypes.SyntaxHighlighterBase
+import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.psi.tree.IElementType
-import org.antlr.intellij.adaptor.lexer.TokenIElementType
 
-class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
+/**
+ * @author Enaium
+ */
+class DtoSyntaxHighlighter : SyntaxHighlighter {
+
     val identifier = createTextAttributesKey(
         "${JimmerBuddy.DTO_LANGUAGE_ID}.IDENTIFIER",
         DefaultLanguageHighlighterColors.IDENTIFIER
@@ -57,50 +46,50 @@ class DtoSyntaxHighlighter : SyntaxHighlighterBase() {
         DefaultLanguageHighlighterColors.BLOCK_COMMENT
     )
 
+
     override fun getHighlightingLexer(): Lexer {
-        return DtoLexerAdaptor()
+        return DtoLexerAdapter()
     }
 
-    override fun getTokenHighlights(tokenType: IElementType?): Array<TextAttributesKey> {
-        if (tokenType !is TokenIElementType) return emptyArray()
-        return when (tokenType.antlrTokenType) {
-            DtoLexer.Identifier -> identifier
-            DtoLexer.EXPORT,
-            DtoLexer.PACKAGE,
-            DtoLexer.IMPORT,
-            DtoLexer.AS,
-            DtoLexer.FIXED,
-            DtoLexer.STATIC,
-            DtoLexer.DYNAMIC,
-            DtoLexer.FUZZY,
-            DtoLexer.IMPLEMENTS,
-            DtoLexer.NULL,
-            DtoLexer.CONFIG_WHERE,
-            DtoLexer.OR,
-            DtoLexer.AND,
-            DtoLexer.IS,
-            DtoLexer.NOT,
-            DtoLexer.CONFIG_ORDER_BY,
-            DtoLexer.CONFIG_FILTER,
-            DtoLexer.CONFIG_RECURSION,
-            DtoLexer.CONFIG_FETCH_TYPE,
-            DtoLexer.CONFIG_LIMIT,
-            DtoLexer.CONFIG_BATCH,
-            DtoLexer.CONFIG_DEPTH,
-            DtoLexer.TRUE,
-            DtoLexer.FRAGMENT,
-            DtoLexer.FOR,
-            DtoLexer.FALSE -> keyword
+    override fun getTokenHighlights(tokenType: IElementType): Array<out TextAttributesKey> {
+        return when (tokenType) {
+            DtoTypes.IDENTIFIER -> identifier
+            DtoTypes.EXPORT,
+            DtoTypes.PACKAGE,
+            DtoTypes.IMPORT,
+            DtoTypes.AS,
+            DtoTypes.FIXED,
+            DtoTypes.STATIC,
+            DtoTypes.DYNAMIC,
+            DtoTypes.FUZZY,
+            DtoTypes.IMPLEMENTS,
+            DtoTypes.NULL,
+            DtoTypes.CONFIG_WHERE,
+            DtoTypes.OR,
+            DtoTypes.AND,
+            DtoTypes.IS,
+            DtoTypes.NOT,
+            DtoTypes.CONFIG_ORDER_BY,
+            DtoTypes.CONFIG_FILTER,
+            DtoTypes.CONFIG_RECURSION,
+            DtoTypes.CONFIG_FETCH_TYPE,
+            DtoTypes.CONFIG_LIMIT,
+            DtoTypes.CONFIG_BATCH,
+            DtoTypes.CONFIG_DEPTH,
+            DtoTypes.TRUE,
+            DtoTypes.FRAGMENT,
+            DtoTypes.FOR,
+            DtoTypes.FALSE -> keyword
 
-            DtoLexer.StringLiteral,
-            DtoLexer.SqlStringLiteral,
-            DtoLexer.CharacterLiteral -> string
+            DtoTypes.STRING_LITERAL,
+            DtoTypes.SQL_STRING_LITERAL,
+            DtoTypes.CHARACTER_LITERAL -> string
 
-            DtoLexer.IntegerLiteral,
-            DtoLexer.FloatingPointLiteral -> number
+            DtoTypes.INTEGER_LITERAL,
+            DtoTypes.FLOATING_POINT_LITERAL -> number
 
-            DtoLexer.LineComment -> lineComment
-            DtoLexer.BlockComment, DtoLexer.DocComment -> blockComment
+            LINE_COMMENT -> lineComment
+            BLOCK_COMMENT, DtoTypes.DOC_COMMENT -> blockComment
             else -> null
         }?.let { arrayOf(it) } ?: emptyArray()
     }

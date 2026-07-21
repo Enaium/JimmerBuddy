@@ -27,7 +27,6 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.jackson)
     implementation(libs.jspecify)
-    implementation(project(":common"))
     implementation(project(":gradle-tooling-extension"))
 }
 
@@ -40,15 +39,15 @@ sourceSets {
 tasks {
     generateLexer {
         sourceFile.set(file("src/main/grammars/DtoLexer.flex"))
-        targetOutputDir.set(file("src/main/gen/cn/enaium/jimmer/buddy/dto/lexer"))
+        targetOutputDir.set(file("src/main/gen/cn/enaium/jimmer/buddy/extensions/dto/lexer"))
         purgeOldFiles.set(true)
     }
 
     generateParser {
         sourceFile.set(file("src/main/grammars/DtoParser.bnf"))
         targetRootOutputDir.set(file("src/main/gen"))
-        pathToParser.set("cn/enaium/jimmer/buddy/dto/parser/DtoParser.java")
-        pathToPsiRoot.set("cn/enaium/jimmer/buddy/dto/psi")
+        pathToParser.set("cn/enaium/jimmer/buddy/extensions/dto/parser/DtoParser.java")
+        pathToPsiRoot.set("cn/enaium/jimmer/buddy/extensions/dto/psi")
         purgeOldFiles.set(true)
     }
 

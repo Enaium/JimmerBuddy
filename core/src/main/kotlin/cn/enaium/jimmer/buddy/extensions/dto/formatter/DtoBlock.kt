@@ -16,9 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.formatter
 
-import cn.enaium.jimmer.buddy.dto.DtoParser.*
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.RULE
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes.*
 import com.intellij.formatting.*
 import com.intellij.lang.ASTNode
 import com.intellij.psi.TokenType
@@ -47,10 +45,10 @@ class DtoBlock(
     }
 
     val body = TokenSet.create(
-        RULE[RULE_dtoBody],
-        RULE[RULE_aliasGroupBody],
-        RULE[RULE_enumBody],
-        RULE[RULE_typesBlock]
+        DTO_BODY,
+        ALIAS_GROUP,
+        ENUM_BODY,
+        TYPES_BLOCK
     )
 
     override fun getChildIndent(): Indent? {
@@ -64,14 +62,14 @@ class DtoBlock(
 
     override fun getIndent(): Indent? {
         if (node.elementType !in TokenSet.create(
-                TOKEN[LEFT_BRACE],
-                TOKEN[RIGHT_BRACE],
-                RULE[RULE_implements]
+                LBRACE,
+                RBRACE,
+                IMPLEMENTS
             ) && node.treeParent?.elementType in body
         ) {
             return Indent.getNormalIndent()
         }
-        if (node.elementType == TOKEN[RIGHT_ARROW] && node.treeParent?.elementType == RULE[RULE_exportStatement]) {
+        if (node.elementType == ARROW && node.treeParent?.elementType == EXPORT_STATEMENT) {
             return Indent.getNormalIndent()
         }
 
