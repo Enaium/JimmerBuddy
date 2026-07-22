@@ -17,12 +17,8 @@ object DtoTypeNameReferenceProvider : PsiReferenceProvider() {
         return arrayOf(DtoTypeReference(element as? DtoPsiDtoType ?: return emptyArray()))
     }
 
-    class DtoTypeReference(
-        val dtoType: DtoPsiDtoType
-    ) : PsiReferenceBase<DtoPsiDtoType>(
-        dtoType,
-        dtoType.identifier.textRangeInParent
-    ) {
+    class DtoTypeReference(val dtoType: DtoPsiDtoType) :
+        PsiReferenceBase<DtoPsiDtoType>(dtoType, dtoType.identifier.textRangeInParent) {
 
         override fun resolve(): PsiElement? {
             return JavaPsiFacade.getInstance(dtoType.project)

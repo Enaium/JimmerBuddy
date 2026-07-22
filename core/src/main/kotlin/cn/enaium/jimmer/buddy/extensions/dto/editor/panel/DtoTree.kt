@@ -130,7 +130,7 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
 
             fun addExplicitProp(explicitProp: DtoPsiExplicitProp, parent: DefaultMutableTreeNode) {
                 val newChild = DtoPropNode(explicitProp)
-                explicitProp.positiveProp?.dtoBody?.explicitPropList?.forEach {
+                explicitProp.positiveProp?.propDtoBody?.dtoBody?.explicitPropList?.forEach {
                     addExplicitProp(it, newChild)
                 }
                 parent.add(newChild)
@@ -195,7 +195,7 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
     class DtoPropNode(override val target: DtoPsiExplicitProp) : DtoNode(target) {
         override fun toString(): String {
             return target.positiveProp?.let { findPropIdentifier(it)?.text }
-                ?: target.negativeProp?.identifier?.text
+                ?: target.negativeProp?.propName?.identifier?.text
                 ?: target.userProp?.identifier?.text
                 ?: target.aliasGroup?.aliasPattern?.text
                 ?: "Unknown Name"
@@ -216,20 +216,15 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
         }
 
         fun findPropIdentifier(positiveProp: DtoPsiPositiveProp): PsiElement? {
-            return positiveProp.children.find { it.elementType == DtoTypes.IDENTIFIER }
+            return positiveProp.propName?.identifier
         }
 
         fun findAliasElement(positiveProp: DtoPsiPositiveProp): PsiElement? {
-            val asKeyword = positiveProp.children.find { it.elementType == DtoTypes.AS } ?: return null
-            val aliasIdentifier = positiveProp.children.find {
-                it.elementType == DtoTypes.IDENTIFIER && it.textRange.startOffset > asKeyword.textRange.startOffset
-            }
-            return aliasIdentifier
+            return positiveProp.alias?.identifier
         }
 
         fun findAliasRange(positiveProp: DtoPsiPositiveProp): PsiElement? {
-            val asKeyword = positiveProp.children.find { it.elementType == DtoTypes.AS } ?: return null
-            return asKeyword
+            return positiveProp.alias?.firstChild
         }
     }
 }

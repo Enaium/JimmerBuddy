@@ -1,13 +1,11 @@
 [versions]
-kotlin = "2.4.0"
-ksp = "2.3.9"
+kotlin = "2.4.10"
+ksp = "2.3.10"
 intellij = "2.13.1"
-jimmer = "0.11.2"
+jimmer = "0.11.3"
 byteBuddy = "1.18.8"
 kotlinpoet = "2.2.0"
 javapoet = "1.13.0"
-antlr4IntellijAdaptor = "0.2.2"
-antlr = "4.13.2"
 changelog = "2.5.0"
 h2 = "2.4.240"
 gradleToolingExtension = "231.9423.9"
@@ -26,8 +24,6 @@ symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-ap
 byte-buddy = { module = "net.bytebuddy:byte-buddy", version.ref = "byteBuddy" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
-antlr4-intellij-adaptor = { module = "dev.karmakrafts.antlr4:antlr4-intellij-adaptor", version.ref = "antlr4IntellijAdaptor" }
-antlr = { module = "org.antlr:antlr4", version.ref = "antlr" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 gradle-tooling-extension = { module = "com.jetbrains.intellij.gradle:gradle-tooling-extension", version.ref = "gradleToolingExtension" }
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }

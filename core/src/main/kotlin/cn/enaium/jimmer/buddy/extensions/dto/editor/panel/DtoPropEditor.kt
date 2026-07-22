@@ -21,13 +21,13 @@ import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.find
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.findPropIdentifier
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.I18n
-import com.intellij.psi.util.elementType
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.util.elementType
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import java.awt.BorderLayout
@@ -52,7 +52,7 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
 
 
         (node.target.positiveProp?.let { findPropIdentifier(it) }
-            ?: node.target.negativeProp?.identifier
+            ?: node.target.negativeProp?.propName?.identifier
             ?: node.target.userProp?.identifier)?.also { prop ->
 
             nameEditor = DtoNameEditor(model.nameProperty, prop, false)
@@ -119,16 +119,13 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
 
         private fun getAliasText(): String {
             val positiveProp = node.target.positiveProp ?: return ""
-            val asKeyword = positiveProp.children.find { it.elementType == DtoTypes.AS } ?: return ""
-            val aliasIdentifier = positiveProp.children.find {
-                it.elementType == DtoTypes.IDENTIFIER && it.textRange.startOffset > asKeyword.textRange.startOffset
-            }
-            return if (aliasIdentifier != null) "as ${aliasIdentifier.text}" else ""
+            val aliasIdentifier = positiveProp.alias?.identifier?.text ?: return ""
+            return "as $aliasIdentifier"
         }
 
         val nameProperty = graph.property(
             node.target.positiveProp?.let { findPropIdentifier(it) }?.text
-                ?: node.target.negativeProp?.identifier?.text
+                ?: node.target.negativeProp?.propName?.identifier?.text
                 ?: node.target.userProp?.identifier?.text
                 ?: ""
         )

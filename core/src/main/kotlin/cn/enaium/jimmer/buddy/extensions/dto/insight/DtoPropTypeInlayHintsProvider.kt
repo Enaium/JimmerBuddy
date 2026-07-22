@@ -88,8 +88,8 @@ class DtoPropTypeInlayHintsProvider : InlayHintsProvider {
                     parent !is DtoPsiUserProp && parent !is DtoPsiFoldProp) return
 
                 val propName = when (parent) {
-                    is DtoPsiPositiveProp -> parent.children.firstOrNull { it.elementType == DtoTypes.IDENTIFIER }?.text
-                    is DtoPsiNegativeProp -> parent.identifier.text
+                    is DtoPsiPositiveProp -> parent.propName?.identifier?.text
+                    is DtoPsiNegativeProp -> parent.propName.identifier.text
                     is DtoPsiUserProp -> parent.identifier.text
                     is DtoPsiFoldProp -> parent.identifier.text
                     else -> null
@@ -167,7 +167,7 @@ private fun resolvePropReference(element: PsiElement, propName: String, project:
     while (current != null) {
         when (current) {
             is DtoPsiPositiveProp -> {
-                current.children.firstOrNull { it.elementType == DtoTypes.IDENTIFIER }?.text?.also { trace.add(it) }
+                current.propName?.identifier?.text?.also { trace.add(it) }
             }
             is DtoPsiTypeBranch -> {
                 current.qualifiedName.text.split(".").lastOrNull()?.also { trace.add(it) }

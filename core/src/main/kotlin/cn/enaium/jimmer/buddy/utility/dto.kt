@@ -31,16 +31,6 @@ fun Project.createDtoFile(content: String): DtoPsiFile {
     return PsiFileFactory.getInstance(this).createFileFromText("dummy.dto", DtoLanguage, content) as DtoPsiFile
 }
 
-fun Project.createDtoProp(name: String): String? {
-    val file = createDtoFile("Dummy { $name }")
-    val dtoType = PsiTreeUtil.findChildOfType(file, DtoPsiDtoType::class.java) ?: return null
-    val dtoBody = dtoType.dtoBody
-    return dtoBody.explicitPropList.firstOrNull()
-        ?.positiveProp?.let { positiveProp ->
-            positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
-        }
-}
-
 fun Project.createDtoTypeName(name: String): PsiElement {
     val file = PsiFileFactory.getInstance(this).createFileFromText(
         "dummy.dto",
@@ -54,16 +44,39 @@ fun Project.createDtoTypeName(name: String): PsiElement {
     return dtoType.identifier
 }
 
+fun Project.createPropName(name: String): PsiElement {
+    val file = PsiFileFactory.getInstance(this).createFileFromText(
+        "dummy.dto",
+        DtoLanguage,
+        "Dummy { $name }"
+    ) as DtoPsiFile
+    val prop = PsiTreeUtil.findChildOfType(file, DtoPsiPropName::class.java)
+        ?: error("Cannot create dto type")
+    return prop.identifier
+}
+
+fun Project.createQualifiedNamePart(name: String): PsiElement {
+    val file = PsiFileFactory.getInstance(this).createFileFromText(
+        "dummy.dto",
+        DtoLanguage,
+        "export $name; $name {}"
+    ) as DtoPsiFile
+    val qualifiedNamePart = PsiTreeUtil.findChildOfType(file, DtoPsiQualifiedNamePart::class.java)
+        ?: error("Cannot create qualified name part")
+    return qualifiedNamePart.identifier
+}
+
 fun DtoPsiDtoType.generatedName(): String? {
     val name = identifier.text ?: return null
     val file = containingFile ?: return null
     val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java) ?: return null
     val exportType = exportStatement.qualifiedName.name()
-    val exportPackage = exportStatement.exportPackage?.qualifiedName?.name()
-        ?: "${exportType.substringBeforeLast(".")}.dto"
+    val exportPackage = exportStatement.exportPackage?.packageStatement?.let { stmt ->
+        stmt.qualifiedName.qualifiedNamePartList.joinToString(".") { it.identifier.text }
+    } ?: "${exportType.substringBeforeLast(".")}.dto"
     return "$exportPackage.$name"
 }
 
 fun DtoPsiQualifiedName.name(): String {
-    return node.children().joinToString("") { it.text }
+    return qualifiedNamePartList.joinToString(".") { it.identifier.text }
 }

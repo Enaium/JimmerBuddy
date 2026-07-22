@@ -21,6 +21,7 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationArguments
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationNamedArgument
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
+import cn.enaium.jimmer.buddy.utility.name
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -105,9 +106,7 @@ object AnnotationParametersCompletionProvider : CompletionProvider<CompletionPar
         val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java) ?: return null
 
         for (importStatement in importStatements) {
-            val importQName = importStatement.children
-                .filter { it.elementType == DtoTypes.IDENTIFIER }
-                .joinToString(".") { it.text }
+            val importQName = importStatement.qualifiedName.name()
 
             if (importStatement.importedTypeList.isEmpty()) {
                 // Direct import: `import com.example.AnnotationName`
@@ -117,7 +116,7 @@ object AnnotationParametersCompletionProvider : CompletionProvider<CompletionPar
             } else {
                 // Package import: `import com.example { AnnotationName, Other }`
                 if (importStatement.importedTypeList.any {
-                        it.children.firstOrNull { c -> c.elementType == DtoTypes.IDENTIFIER }?.text == shortName
+                        it.identifier.text == shortName
                     }) {
                     return "$importQName.$shortName"
                 }

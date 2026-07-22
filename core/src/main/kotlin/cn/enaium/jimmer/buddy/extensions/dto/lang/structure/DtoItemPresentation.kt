@@ -34,15 +34,15 @@ class DtoItemPresentation(val element: PsiElement) : ItemPresentation {
             is DtoPsiFile -> element.name
             is DtoPsiDtoType -> element.identifier.text.ifEmpty { "Unknown Name" }
             is DtoPsiExplicitProp -> element.positiveProp?.let { positiveProp ->
-                val propName = positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
-                val alias = positiveProp.children.dropWhile { it.node.elementType != DtoTypes.AS }.drop(1).firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
+                val propName = positiveProp.propName?.identifier?.text
+                val alias = positiveProp.alias?.identifier?.text
                 if (propName != null) {
                     alias?.let { "$propName as $it" } ?: propName
                 } else {
                     null
                 }
             } ?: element.negativeProp?.let { negativeProp ->
-                negativeProp.identifier.text.let { "$it (Negative)" }
+                negativeProp.propName.identifier.text.let { "$it (Negative)" }
             } ?: element.userProp?.let { userProp ->
                 val name = userProp.identifier.text
                 userProp.typeRef?.let { typeRef ->

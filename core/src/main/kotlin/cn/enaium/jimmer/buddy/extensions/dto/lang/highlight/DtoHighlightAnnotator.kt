@@ -77,16 +77,20 @@ class DtoHighlightAnnotator : Annotator {
                     when {
                         element.parent is DtoPsiAliasPattern -> variable
                         element.parent is DtoPsiEnumMapping -> constant
-                        element.parent is DtoPsiQualifiedName -> {
+                        element.parent is DtoPsiQualifiedNamePart -> {
                             when (element.parent?.parent) {
                                 is DtoPsiMacro -> {
                                     if (element.text == "this") keyword else typeRef
                                 }
+
                                 is DtoPsiAnnotation -> annotation
                                 is DtoPsiTypeRef -> typeRef
                                 else -> null
                             }
                         }
+
+                        element.parent is DtoPsiDirective -> macro
+
                         else -> null
                     }
                 }
@@ -95,8 +99,7 @@ class DtoHighlightAnnotator : Annotator {
                     element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
                 }
 
-                DtoTypes.INCLUDE, DtoTypes.TYPES, DtoTypes.MACRO_EXHAUSTIVE,
-                DtoTypes.MACRO_ALL_SCALARS, DtoTypes.MACRO_ALL_REFERENCES -> macro
+                DtoTypes.HASH -> macro
 
                 else -> null
             }

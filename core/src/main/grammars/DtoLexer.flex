@@ -52,11 +52,6 @@ STRING_LITERAL      = \" ( [^\"\\] | {ESCAPE_SEQUENCE} )* \"
 "!limit"            { return CONFIG_LIMIT; }
 "!batch"            { return CONFIG_BATCH; }
 "!depth"            { return CONFIG_DEPTH; }
-"#include"          { return INCLUDE; }
-"#types"            { return TYPES; }
-"#exhaustive"       { return MACRO_EXHAUSTIVE; }
-"#allScalars"       { return MACRO_ALL_SCALARS; }
-"#allReferences"    { return MACRO_ALL_REFERENCES; }
 
 "->"                { return ARROW; }
 "::"                { return COLON2; }
@@ -87,6 +82,7 @@ STRING_LITERAL      = \" ( [^\"\\] | {ESCAPE_SEQUENCE} )* \"
 "]"                 { return RBRACK; }
 ","                 { return COMMA; }
 ";"                 { return SEMI; }
+"#"                 { return HASH; }
 
 "package"           { return PACKAGE; }
 "export"            { return EXPORT; }

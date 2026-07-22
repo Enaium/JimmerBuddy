@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
+import cn.enaium.jimmer.buddy.utility.name
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
@@ -89,9 +90,7 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
         val importStatements =
             PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java) ?: return false
         return importStatements.any { stmt ->
-            val qname = stmt.children
-                .filter { it.elementType == DtoTypes.IDENTIFIER }
-                .joinToString(".") { it.text }
+            val qname = stmt.qualifiedName.name()
             qname == qualifiedName
         }
     }

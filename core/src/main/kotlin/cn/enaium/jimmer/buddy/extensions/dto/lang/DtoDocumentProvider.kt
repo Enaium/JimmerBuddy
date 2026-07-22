@@ -25,16 +25,31 @@ import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Co
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.toHtml
 import com.intellij.lang.documentation.AbstractDocumentationProvider
+import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.findParentOfType
 
 /**
  * @author Enaium
  */
 class DtoDocumentProvider : AbstractDocumentationProvider() {
+
+    override fun getCustomDocumentationElement(
+        editor: Editor,
+        file: PsiFile,
+        contextElement: PsiElement?,
+        targetOffset: Int
+    ): PsiElement? {
+        contextElement?.takeIf { it.findParentOfType<DtoPsiMacro>() != null }?.also { return it }
+        contextElement?.takeIf { it.findParentOfType<DtoPsiAliasGroup>() != null }?.also { return it }
+
+        return super.getCustomDocumentationElement(editor, file, contextElement, targetOffset)
+    }
+
     override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
         element.findParentOfType<DtoPsiMacro>()?.also { macro ->
-            val name = macro.firstChild.text ?: return null
+            val name = macro.directive.identifier.text
             val currentImmutable = findCurrentImmutableType(macro) ?: return null
 
             val props = when (name) {
@@ -87,7 +102,7 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
             if (parent is DtoPsiAliasPattern) {
                 var content = "## Alias Group"
                 positiveProps.forEach { positiveProp ->
-                    val propName = positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text ?: ""
+                    val propName = positiveProp.propName?.identifier?.text ?: ""
                     content += "\n\n`${propName}` as ${pattern(propName, parent)}"
                 }
                 return content.toHtml()

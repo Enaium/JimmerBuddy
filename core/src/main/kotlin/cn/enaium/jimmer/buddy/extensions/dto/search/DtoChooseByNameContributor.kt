@@ -50,7 +50,7 @@ class DtoChooseByNameContributor : ChooseByNameContributor {
                     names.add(dtoType.identifier.text)
                     dtoType.dtoBody.explicitPropList.forEach { prop ->
                         prop.positiveProp?.let { positiveProp ->
-                            positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text?.also { name -> names.add(name) }
+                            positiveProp.propName?.identifier?.text?.also { name -> names.add(name) }
                         }
                     }
                 }
@@ -79,11 +79,11 @@ class DtoChooseByNameContributor : ChooseByNameContributor {
                     }
                     dtoType.dtoBody.explicitPropList.forEach { prop ->
                         prop.positiveProp?.also { positiveProp ->
-                            val propName = positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.text
+                            val propName = positiveProp.propName?.identifier?.text
                             if (propName?.contains(name) == true
                                 || propName?.matches(pattern.toRegex()) == true
                             ) {
-                                positiveProp.children.firstOrNull { it.node.elementType == DtoTypes.IDENTIFIER }?.also {
+                                positiveProp.propName?.identifier?.also {
                                     items.add(it as NavigationItem)
                                 }
                             }
