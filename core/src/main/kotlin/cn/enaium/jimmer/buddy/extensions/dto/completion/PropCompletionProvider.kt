@@ -92,7 +92,7 @@ fun getTrace(position: PsiElement?): List<String> {
     var parent: PsiElement? = position?.parent
     while (parent != null) {
         if (parent is DtoPsiPositiveProp) {
-            parent.children.firstOrNull { it.elementType == DtoTypes.IDENTIFIER }?.text?.also { trace.add(it) }
+            parent.propName?.identifier?.text?.also { trace.add(it) }
         } else if (parent is DtoPsiTypeBranch) {
             parent.qualifiedName.text.split(".").lastOrNull()?.also { trace.add(it) }
         }

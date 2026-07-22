@@ -21,7 +21,10 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.codeInsight.template.Template
+import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 import org.babyfish.jimmer.dto.compiler.Constants
@@ -52,7 +55,19 @@ object FuncNameCompletionProvider : CompletionProvider<CompletionParameters>() {
         functions.add("flat")
         functions.forEach {
             result.addElement(
-                LookupElementBuilder.create("$it()").withIcon(AllIcons.Nodes.Function)
+                LookupElementBuilder.create(it).withInsertHandler { context, _ ->
+                    val project = context.project
+                    val editor = context.editor
+                    WriteCommandAction.runWriteCommandAction(project) {
+                        val tm = TemplateManager.getInstance(project)
+                        val template: Template = tm.createTemplate("", "")
+                        template.isToReformat = true
+                        template.addTextSegment("(")
+                        template.addEndVariable()
+                        template.addTextSegment(")")
+                        tm.startTemplate(editor, template)
+                    }
+                }.withIcon(AllIcons.Nodes.Function)
                     .withTypeText("Function")
             )
         }

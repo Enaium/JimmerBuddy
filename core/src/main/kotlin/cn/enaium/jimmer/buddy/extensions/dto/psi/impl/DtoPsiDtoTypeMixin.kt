@@ -39,13 +39,4 @@ abstract class DtoPsiDtoTypeMixin : StubBasedPsiElementBase<DtoTypeStub>, DtoPsi
     override fun getReferences(): Array<PsiReference> {
         return ReferenceProvidersRegistry.getReferencesFromProviders(this)
     }
-
-//    override fun getReference(): PsiReference {
-//        return object : PsiReferenceBase<DtoPsiDtoType>(this, firstChild.textRangeInParent) {
-//            override fun resolve(): PsiElement? {
-//                return JavaPsiFacade.getInstance(project)
-//                    .findClass(generatedName() ?: return null, project.allScope())
-//            }
-//        }
-//    }
 }

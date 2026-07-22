@@ -22,9 +22,7 @@ import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.patterns.StandardPatterns
-import com.intellij.psi.PsiElement
-import com.intellij.psi.util.elementType
-import com.intellij.psi.util.siblings
+import com.intellij.psi.util.PsiTreeUtil
 
 /**
  * @author Enaium
@@ -36,30 +34,45 @@ class DtoCompletionContributor : CompletionContributor() {
     init {
         extend(
             basic,
-            DtoPsiPatterns.psiElement(),
+            DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiFile::class.java),
             ExportKeywordCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .withParent(DtoPsiExportStatement::class.java),
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiExportStatement::class.java
+                ),
             ExportTypeCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .withParent(DtoPsiExportStatement::class.java),
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiPackageStatement::class.java,
+                    DtoPsiExportPackage::class.java
+                ),
             ExportPackageCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement(),
+            DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiFile::class.java),
             ImportKeywordCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .withParent(DtoPsiImportStatement::class.java),
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiImportStatement::class.java
+                ),
             ImportPartsCompletionProvider
         )
         extend(
@@ -71,14 +84,22 @@ class DtoCompletionContributor : CompletionContributor() {
         extend(
             basic,
             StandardPatterns.or(
-                DtoPsiPatterns.psiElement().withParent(DtoPsiPositiveProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiNegativeProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiUserProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiFoldProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java)
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiPropName::class.java,
+                    DtoPsiPositiveProp::class.java,
+                    DtoPsiExplicitProp::class.java,
+                    DtoPsiDtoBody::class.java
+                ),
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiPropName::class.java,
+                    DtoPsiNegativeProp::class.java,
+                    DtoPsiExplicitProp::class.java,
+                    DtoPsiDtoBody::class.java
+                ),
+                DtoPsiPatterns.psiElement()
+                    .withParents(DtoPsiUserProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java),
+                DtoPsiPatterns.psiElement()
+                    .withParents(DtoPsiFoldProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java)
             ),
             PropCompletionProvider
         )
@@ -86,6 +107,7 @@ class DtoCompletionContributor : CompletionContributor() {
             basic,
             DtoPsiPatterns.psiElement()
                 .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
                     DtoPsiQualifiedName::class.java,
                     DtoPsiAnnotation::class.java
                 ),
@@ -94,109 +116,112 @@ class DtoCompletionContributor : CompletionContributor() {
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .withParent(DtoPsiMacro::class.java)
-                .inside(DtoPsiDtoBody::class.java),
+                .withParents(DtoPsiDirective::class.java, DtoPsiMacro::class.java, DtoPsiDtoBody::class.java),
             MacroNameCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .inside(DtoPsiDtoBody::class.java),
+                .withParent(DtoPsiPropPrefix::class.java),
             ConfigNameCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement(),
+            DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiFile::class.java),
             ModifierCompletionProvider
         )
         extend(
             basic,
-            StandardPatterns.or(
-                DtoPsiPatterns.psiElement().withParent(DtoPsiPositiveProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiNegativeProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiUserProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement().withParent(DtoPsiFoldProp::class.java)
-                    .inside(DtoPsiDtoBody::class.java)
-            ),
+            DtoPsiPatterns.psiElement()
+                .inside(DtoPsiDtoBody::class.java),
             FuncNameCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiQualifiedName::class.java,
-                DtoPsiTypeRef::class.java,
-                DtoPsiDtoType::class.java
-            ),
+            DtoPsiPatterns.psiElement()
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiDtoType::class.java
+                ),
             InterfaceQNameCompletionProvider
         )
 
         extend(
             basic,
-            StandardPatterns.or(
-                DtoPsiPatterns.psiElement().withParent(DtoPsiPositiveProp::class.java)
-                    .afterLeaf(DtoPsiPatterns.psiElement().withParent(DtoPsiPositiveProp::class.java)),
-                DtoPsiPatterns.psiElement().inside(DtoPsiDtoType::class.java)
-                    .afterLeaf(DtoPsiPatterns.psiElement())
-            ),
+            DtoPsiPatterns.psiElement()
+                .withParent(DtoPsiFile::class.java),
             ImplementsKeywordCompletion
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiQualifiedName::class.java,
-                DtoPsiTypeRef::class.java,
-                DtoPsiUserProp::class.java
-            ),
+            DtoPsiPatterns.psiElement()
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiTypeRef::class.java,
+                    DtoPsiUserProp::class.java
+                ),
             TypeRefQNameCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .withParent(DtoPsiEnumMapping::class.java)
-                .inside(DtoPsiEnumBody::class.java),
+                .withParents(DtoPsiEnumMapping::class.java, DtoPsiEnumBody::class.java),
             EnumEntryCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiQualifiedName::class.java,
-                DtoPsiMacro::class.java
-            ),
+            DtoPsiPatterns.psiElement()
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiScalarMacro::class.java
+                ),
             MacroArgCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiQualifiedName::class.java,
-                DtoPsiIncludeMacro::class.java
+            StandardPatterns.or(
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiQualifiedNamePart::class.java, DtoPsiQualifiedName::class.java,
+                    DtoPsiAnnotationValue::class.java, DtoPsiAnnotationArgument::class.java
+                ),
+                DtoPsiPatterns.psiElement().withParent(DtoPsiAnnotationArgumentsClause::class.java),
+                DtoPsiPatterns.psiElement().withParent(DtoPsiAnnotationArguments::class.java),
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiAnnotationNamedArgument::class.java,
+                    DtoPsiAnnotationArgument::class.java,
+                    DtoPsiAnnotationArguments::class.java,
+                    DtoPsiAnnotationArgumentsClause::class.java
+                )
             ),
-            IncludeCompletionProvider
-        )
-        extend(
-            basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiAnnotationNamedArgument::class.java,
-            ).inside(DtoPsiAnnotationArguments::class.java),
             AnnotationParametersCompletionProvider
         )
         extend(
             basic,
-            DtoPsiPatterns.psiElement().withParents(
-                DtoPsiQualifiedName::class.java,
-                DtoPsiTypeBranch::class.java
-            ).inside(DtoPsiTypesBlock::class.java),
+            DtoPsiPatterns.psiElement()
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiTypeBranch::class.java,
+                    DtoPsiTypesElement::class.java,
+                    DtoPsiTypesBlock::class.java
+                ),
             TypesBranchCompletionProvider
         )
     }
 }
 
 fun CompletionParameters.getParts(): List<String> {
-    return this.position.parent?.siblings(forward = false, withSelf = false)
-        ?.filter { it.elementType == DtoTypes.IDENTIFIER }
-        ?.map(PsiElement::getText)
-        ?.toList()
-        ?.asReversed() ?: emptyList()
+    val qualifiedName = PsiTreeUtil.getParentOfType(position, DtoPsiQualifiedName::class.java) ?: return emptyList()
+    val allParts = qualifiedName.qualifiedNamePartList
+    val currentPart = PsiTreeUtil.getParentOfType(position, DtoPsiQualifiedNamePart::class.java)
+    val parts = if (currentPart != null) {
+        allParts.takeWhile { it != currentPart }
+    } else {
+        allParts
+    }
+    return parts.map { it.identifier.text }
 }

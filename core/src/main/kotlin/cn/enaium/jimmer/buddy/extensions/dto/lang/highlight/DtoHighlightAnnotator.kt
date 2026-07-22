@@ -67,7 +67,7 @@ class DtoHighlightAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val elementType = element.elementType
         val textAttr = when (element) {
-            is DtoPsiPositiveProp, is DtoPsiUserProp, is DtoPsiNegativeProp, is DtoPsiFoldProp -> property
+            is DtoPsiPropName -> property
             else -> when (elementType) {
                 DtoTypes.INPUT, DtoTypes.SPECIFICATION, DtoTypes.UNSAFE,
                 DtoTypes.FIXED, DtoTypes.STATIC, DtoTypes.DYNAMIC, DtoTypes.FUZZY,
@@ -77,16 +77,17 @@ class DtoHighlightAnnotator : Annotator {
                     when {
                         element.parent is DtoPsiAliasPattern -> variable
                         element.parent is DtoPsiEnumMapping -> constant
-                        element.parent is DtoPsiQualifiedName -> {
-                            when (element.parent?.parent) {
-                                is DtoPsiMacro -> {
-                                    if (element.text == "this") keyword else typeRef
-                                }
+                        element.parent is DtoPsiQualifiedNamePart -> {
+                            when (element.parent?.parent?.parent) {
                                 is DtoPsiAnnotation -> annotation
                                 is DtoPsiTypeRef -> typeRef
+                                is DtoPsiMacro -> if (element.parent.text == "this") keyword else typeRef
                                 else -> null
                             }
                         }
+
+                        element.parent is DtoPsiDirective -> macro
+
                         else -> null
                     }
                 }
@@ -95,8 +96,7 @@ class DtoHighlightAnnotator : Annotator {
                     element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
                 }
 
-                DtoTypes.INCLUDE, DtoTypes.TYPES, DtoTypes.MACRO_EXHAUSTIVE,
-                DtoTypes.MACRO_ALL_SCALARS, DtoTypes.MACRO_ALL_REFERENCES -> macro
+                DtoTypes.HASH -> macro
 
                 else -> null
             }
