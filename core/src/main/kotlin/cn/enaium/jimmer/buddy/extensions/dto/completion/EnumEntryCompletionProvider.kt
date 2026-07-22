@@ -49,7 +49,7 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
     ) {
         val project = parameters.position.project
         val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
-        val propName = prop.children.firstOrNull { it.elementType == DtoTypes.IDENTIFIER }?.text ?: return
+        val propName = prop.propName?.identifier?.text ?: return
         val enumName =
             findCurrentImmutableType(prop)?.props()?.find { it.name() == propName }?.typeName() ?: return
 

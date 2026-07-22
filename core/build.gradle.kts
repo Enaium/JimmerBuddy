@@ -23,7 +23,6 @@ dependencies {
     implementation(libs.byte.buddy)
     implementation(libs.kotlinpoet)
     implementation(libs.javapoet)
-    implementation(libs.antlr4.intellij.adaptor)
     implementation(libs.h2)
     implementation(libs.jackson)
     implementation(libs.jspecify)

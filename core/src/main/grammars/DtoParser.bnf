@@ -49,8 +49,10 @@
     OR          = "or"
     IS          = "is"
     NOT         = "not"
-    TRUE         = "true"
-    FALSE         = "false"
+    TRUE        = "true"
+    FALSE       = "false"
+    IN          = "in"
+    OUT         = "out"
 
     CONFIG_WHERE        = "!where"
     CONFIG_ORDER_BY     = "!orderBy"
@@ -60,11 +62,6 @@
     CONFIG_LIMIT        = "!limit"
     CONFIG_BATCH        = "!batch"
     CONFIG_DEPTH        = "!depth"
-    INCLUDE             = "#include"
-    TYPES               = "#types"
-    MACRO_EXHAUSTIVE    = "#exhaustive"
-    MACRO_ALL_SCALARS   = "#allScalars"
-    MACRO_ALL_REFERENCES = "#allReferences"
 
     ARROW   = "->"
     LBRACE  = "{"
@@ -94,27 +91,28 @@
     CARET   = "^"
     DOLLAR  = "$"
     SLASH   = "/"
+    HASH    = "#"
   ]
 }
 
 dto ::= packageStatement? exportStatement? importStatement* (dtoType | dtoFragment)*
 
-packageStatement ::= PACKAGE IDENTIFIER (DOT IDENTIFIER)*
+packageStatement ::= PACKAGE qualifiedName
 
 dtoFragment ::= FRAGMENT IDENTIFIER (FOR qualifiedName)? dtoBody
 
 exportStatement ::= EXPORT qualifiedName exportPackage?
 
-exportPackage ::= ARROW PACKAGE qualifiedName
+exportPackage ::= ARROW packageStatement
 
-importStatement ::= IMPORT IDENTIFIER (DOT IDENTIFIER)*
+importStatement ::= IMPORT qualifiedName
                     (
                         DOT STAR
                         | DOT LBRACE importedType (COMMA importedType)* RBRACE
-                        | AS IDENTIFIER
+                        | alias
                     )?
 
-importedType ::= IDENTIFIER (AS IDENTIFIER)?
+importedType ::= IDENTIFIER (alias)?
 
 modifier ::= INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY | SEALED
 
@@ -122,7 +120,7 @@ dtoType ::= DOC_COMMENT? annotation*
             modifier*
             IDENTIFIER
             (FOR qualifiedName)?
-            (IMPLEMENTS typeRef (COMMA typeRef)*)?
+            (impl)?
             dtoBody
 {
     mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiDtoTypeMixin"
@@ -131,64 +129,88 @@ dtoType ::= DOC_COMMENT? annotation*
     elementTypeFactory = "cn.enaium.jimmer.buddy.extensions.dto.psi.DtoElementTypeFactoryKt.factory"
 }
 
-dtoBody ::= LBRACE ((includeMacro | macro | typesBlock | explicitProp) (COMMA | SEMI)?)* RBRACE
+dtoBody ::= LBRACE ((macro | explicitProp) (COMMA | SEMI)?)* RBRACE
 
-includeMacro ::= INCLUDE LPAREN qualifiedName RPAREN
+explicitProp ::= aliasGroup | foldProp | userProp | positiveProp | negativeProp
 
-explicitProp ::= aliasGroup | foldProp | positiveProp | negativeProp | userProp
+directive ::= HASH IDENTIFIER
 
-typesBlock ::= TYPES LBRACE typesElement* RBRACE
+macro ::= directive (typesBlock | scalarMacro)?
 
-typesElement ::= MACRO_EXHAUSTIVE | defaultBranch | typeBranch
+scalarMacro ::= (LPAREN qualifiedName (COMMA qualifiedName)* RPAREN)
+                (QUES | EXCLAM)?
+
+typesBlock ::= LBRACE typesElement* RBRACE
+
+typesElement ::= exhaustive | defaultBranch | typeBranch
+
+exhaustive ::= directive
 
 defaultBranch ::= DOC_COMMENT? annotation*
                   DEFAULT (CLASS IDENTIFIER)?
-                  (IMPLEMENTS typeRef (COMMA typeRef)*)?
+                  (impl)?
                   dtoBody
 
 typeBranch ::= DOC_COMMENT? annotation*
                qualifiedName (CLASS IDENTIFIER)?
-               (IMPLEMENTS typeRef (COMMA typeRef)*)?
+               (impl)?
                dtoBody
 
 foldProp ::= DOC_COMMENT? annotation*
              FOLD LPAREN IDENTIFIER RPAREN QUES?
              DOC_COMMENT? annotation*
-             (IMPLEMENTS typeRef (COMMA typeRef)*)?
+             (impl)?
              dtoBody
-
-macro ::= (MACRO_ALL_SCALARS | MACRO_ALL_REFERENCES)
-          (LPAREN qualifiedName (COMMA qualifiedName)* RPAREN)?
-          (QUES | EXCLAM)?
 
 aliasGroup ::= aliasPattern LBRACE macro* positiveProp* RBRACE
 
 aliasPattern ::= AS LPAREN CARET? IDENTIFIER? DOLLAR? ARROW IDENTIFIER? RPAREN
 
-positiveProp ::= DOC_COMMENT? (configuration | annotation)*
-                 PLUS?
-                 modifier?
-                 (
-                     (IDENTIFIER | NULL)
-                     (SLASH IDENTIFIER? CARET? DOLLAR?)?
-                     LPAREN IDENTIFIER (COMMA IDENTIFIER)* COMMA? RPAREN
-                     |
-                     IDENTIFIER
-                 )
-                 (QUES | EXCLAM | STAR)?
-                 (AS IDENTIFIER)?
-                 (
-                     DOC_COMMENT? annotation*
-                     (IMPLEMENTS typeRef (COMMA typeRef)*)?
-                     dtoBody
-                     |
-                     ARROW (enumBody | qualifiedName)
-                 )?
+positiveProp ::= propPrefix
+                 (func | propName)
+                 propSuffix?
+                 alias?
+                 (propDtoBody | propEnumBody)?
 
-negativeProp ::= MINUS IDENTIFIER
+propPrefix ::= DOC_COMMENT?
+               (configuration | annotation)*
+               PLUS?
+               modifier?
+
+propSuffix ::= QUES | EXCLAM | STAR
+
+func ::= funcTarget
+         funcProjection?
+         funcArguments
+
+funcTarget ::= IDENTIFIER
+             | NULL
+
+funcProjection ::= SLASH IDENTIFIER? CARET? DOLLAR?
+
+funcArguments ::= LPAREN propName (COMMA propName)* COMMA? RPAREN
+
+alias ::= AS IDENTIFIER
+
+propDtoBody ::= DOC_COMMENT?
+                annotation*
+                impl?
+                dtoBody
+
+propEnumBody ::= ARROW (enumBody | qualifiedName)
+
+impl ::= IMPLEMENTS typeRef (COMMA typeRef)*
+
+negativeProp ::= MINUS propName
+
+propName ::= IDENTIFIER
+{
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiPropNameMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+}
 
 userProp ::= DOC_COMMENT? annotation*
-             IDENTIFIER COLON typeRef
+             propName COLON typeRef
              (
                  EQ
                  MINUS?
@@ -197,9 +219,15 @@ userProp ::= DOC_COMMENT? annotation*
 
 typeRef ::= qualifiedName (LT genericArgument (COMMA genericArgument)? GT)? QUES?
 
-genericArgument ::= STAR | IDENTIFIER? typeRef
+genericArgument ::= STAR | (IN | OUT)? typeRef
 
-qualifiedName ::= IDENTIFIER (DOT IDENTIFIER)*
+qualifiedName ::= qualifiedNamePart (DOT qualifiedNamePart)*
+
+qualifiedNamePart ::= IDENTIFIER
+{
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiQualifiedNamePartMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+}
 
 configuration ::= where
                 | orderBy

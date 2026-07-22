@@ -69,7 +69,10 @@ class DtoBlock(
         ) {
             return Indent.getNormalIndent()
         }
-        if (node.elementType == ARROW && node.treeParent?.elementType == EXPORT_STATEMENT) {
+        if (node.elementType == ARROW && node.treeParent?.elementType == EXPORT_PACKAGE) {
+            return Indent.getNormalIndent()
+        }
+        if (node.elementType == ANNOTATION_VALUE && node.treeParent?.elementType == ANNOTATION_ARRAY_VALUE) {
             return Indent.getNormalIndent()
         }
 

@@ -170,7 +170,7 @@ class GoToGeneratedByFile : AnAction() {
             trace.poll().also { poll ->
                 val find = body.explicitPropList.find { explicitProp ->
                     val positiveProp = explicitProp.positiveProp
-                    body = positiveProp?.dtoBody
+                    body = positiveProp?.propDtoBody?.dtoBody
                     positiveProp?.children?.firstOrNull { child ->
                         child.elementType == DtoTypes.IDENTIFIER
                     }?.text == poll

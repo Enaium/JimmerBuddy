@@ -14,8 +14,4 @@ open class DtoPsiPattern<T : PsiElement, Self : PsiElementPattern<T, Self>>(klas
     }
 
     class Capture<T : PsiElement>(klass: Class<T>) : DtoPsiPattern<T, Capture<T>>(klass)
-
-    override fun accepts(o: Any?, context: ProcessingContext?): Boolean {
-        return super.accepts(o, context)
-    }
 }

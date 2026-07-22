@@ -57,6 +57,7 @@ class DtoSyntaxHighlighter : SyntaxHighlighter {
             DtoTypes.EXPORT,
             DtoTypes.PACKAGE,
             DtoTypes.IMPORT,
+            DtoTypes.CLASS,
             DtoTypes.AS,
             DtoTypes.FIXED,
             DtoTypes.STATIC,
