@@ -19,14 +19,17 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotation
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationArguments
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAnnotationNamedArgument
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
+import cn.enaium.jimmer.buddy.utility.name
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 import org.jetbrains.kotlin.idea.base.util.allScope
@@ -52,7 +55,7 @@ object AnnotationParametersCompletionProvider : CompletionProvider<CompletionPar
         val annotation = element.findParentOfType<DtoPsiAnnotation>() ?: return
 
         // 2. Get the qualified name of the annotation as written in the DTO file
-        val qualifiedName = annotation.qualifiedName?.qualifiedName() ?: return
+        val qualifiedName = annotation.qualifiedName.text ?: return
 
         // 3. Resolve the annotation qualified name (handle short names via imports)
         val resolvedName = resolveAnnotationQualifiedName(annotation, qualifiedName) ?: return
@@ -97,20 +100,24 @@ object AnnotationParametersCompletionProvider : CompletionProvider<CompletionPar
         }
 
         // For short names, resolve via imports in the DTO file
-        val root = annotation.findParentOfType<DtoPsiRoot>() ?: return null
+        val file = annotation.containingFile ?: return null
         val shortName = qualifiedName.substringAfterLast(".")
 
-        for (importStatement in root.importStatements) {
-            val importQName = importStatement.qualifiedNameParts?.qualifiedName ?: continue
+        val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java) ?: return null
 
-            if (importStatement.importTypes.isEmpty()) {
+        for (importStatement in importStatements) {
+            val importQName = importStatement.qualifiedName.name()
+
+            if (importStatement.importedTypeList.isEmpty()) {
                 // Direct import: `import com.example.AnnotationName`
                 if (importQName.substringAfterLast(".") == shortName) {
                     return importQName
                 }
             } else {
                 // Package import: `import com.example { AnnotationName, Other }`
-                if (importStatement.importTypes.any { it.name?.value == shortName }) {
+                if (importStatement.importedTypeList.any {
+                        it.identifier.text == shortName
+                    }) {
                     return "$importQName.$shortName"
                 }
             }
@@ -132,14 +139,11 @@ object AnnotationParametersCompletionProvider : CompletionProvider<CompletionPar
         return annotation.children
             .asSequence()
             .filterIsInstance<DtoPsiAnnotationArguments>()
-            .flatMap { it.children.toList() }
-            .filterIsInstance<DtoPsiAnnotationNamedArgument>()
+            .flatMap { it.annotationArgumentList.toList() }
+            .mapNotNull { it.annotationNamedArgument }
             .filter { it != currentNamedArg }
             .mapNotNull { namedArg ->
-                namedArg.children
-                    .filterIsInstance<DtoPsiName>()
-                    .firstOrNull()
-                    ?.value
+                namedArg.identifier.text
             }
             .toSet()
     }

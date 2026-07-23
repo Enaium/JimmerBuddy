@@ -16,11 +16,11 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.replaceString
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
+import com.intellij.psi.PsiElement
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
@@ -31,7 +31,7 @@ import javax.swing.JPanel
  */
 class DtoNameEditor(
     private val nameProperty: ObservableMutableProperty<String>,
-    private val psiName: DtoPsiElement,
+    private val psiName: PsiElement,
     private val enable: Boolean = true
 ) : DtoBaseEditor() {
     val project = psiName.project

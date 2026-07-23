@@ -17,16 +17,18 @@
 package cn.enaium.jimmer.buddy.extensions.dto.search
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoFileType
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.search.FileTypeIndex
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.base.util.projectScope
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 
 /**
  * @author Enaium
@@ -43,10 +45,14 @@ class DtoChooseByNameContributor : ChooseByNameContributor {
             DtoFileType,
             if (includeNonProjectItems) project.allScope() else project.projectScope()
         ).forEach {
-            (it.toPsiFile(project) as? DtoPsiFile)?.getChildOfType<DtoPsiRoot>()?.dtoTypes?.forEach { dtoType ->
-                dtoType.name?.value?.also { name -> names.add(name) }
-                dtoType.body?.explicitProps?.forEach { prop ->
-                    prop.positiveProp?.prop?.value?.also { name -> names.add(name) }
+            (it.toPsiFile(project) as? DtoPsiFile)?.let { file ->
+                PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoType::class.java).forEach { dtoType ->
+                    names.add(dtoType.identifier.text)
+                    dtoType.dtoBody.explicitPropList.forEach { prop ->
+                        prop.positiveProp?.let { positiveProp ->
+                            positiveProp.propName?.identifier?.text?.also { name -> names.add(name) }
+                        }
+                    }
                 }
             }
         }
@@ -64,25 +70,27 @@ class DtoChooseByNameContributor : ChooseByNameContributor {
             DtoFileType,
             if (includeNonProjectItems) project.allScope() else project.projectScope()
         ).forEach { dtoFile ->
-            (dtoFile.toPsiFile(project) as? DtoPsiFile)?.getChildOfType<DtoPsiRoot>()?.dtoTypes
-                ?.forEach { dtoType ->
-                    if (dtoType.name?.value?.contains(name) == true
-                        || dtoType.name?.value?.matches(pattern.toRegex()) == true
+            (dtoFile.toPsiFile(project) as? DtoPsiFile)?.let { file ->
+                PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoType::class.java).forEach { dtoType ->
+                    if (dtoType.identifier.text.contains(name) == true
+                        || dtoType.identifier.text.matches(pattern.toRegex()) == true
                     ) {
-                        items.add(dtoType)
+                        items.add(dtoType as NavigationItem)
                     }
-                    dtoType.body?.explicitProps?.forEach { prop ->
+                    dtoType.dtoBody.explicitPropList.forEach { prop ->
                         prop.positiveProp?.also { positiveProp ->
-                            if (positiveProp.prop?.value?.contains(name) == true
-                                || positiveProp.prop?.value?.matches(pattern.toRegex()) == true
+                            val propName = positiveProp.propName?.identifier?.text
+                            if (propName?.contains(name) == true
+                                || propName?.matches(pattern.toRegex()) == true
                             ) {
-                                positiveProp.prop?.also {
-                                    items.add(it)
+                                positiveProp.propName?.identifier?.also {
+                                    items.add(it as NavigationItem)
                                 }
                             }
                         }
                     }
                 }
+            }
         }
         return items.toTypedArray()
     }

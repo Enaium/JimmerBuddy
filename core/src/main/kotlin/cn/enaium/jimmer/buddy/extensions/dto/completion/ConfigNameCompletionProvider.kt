@@ -24,6 +24,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.icons.AllIcons
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
+import org.babyfish.jimmer.dto.compiler.DtoModifier
 
 /**
  * @author Enaium
@@ -34,7 +35,14 @@ object ConfigNameCompletionProvider : CompletionProvider<CompletionParameters>()
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
-        if (parameters.position.findParentOfType<DtoPsiDtoType>()?.modifiers?.isNotEmpty() == true) return
+        val dtoType = parameters.position.findParentOfType<DtoPsiDtoType>()
+        if (dtoType != null && dtoType.identifier != null) {
+            val textBeforeIdentifier = dtoType.text.substringBefore(dtoType.identifier.text)
+            val hasModifier = DtoModifier.entries.any { modifier ->
+                textBeforeIdentifier.contains(modifier.name.lowercase())
+            }
+            if (hasModifier) return
+        }
         listOf(
             "where",
             "orderBy",

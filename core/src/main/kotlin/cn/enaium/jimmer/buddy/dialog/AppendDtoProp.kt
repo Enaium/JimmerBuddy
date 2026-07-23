@@ -94,8 +94,8 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
                     }
 
                     is DtoTree.DtoTypeNode -> {
-                        node.target.body?.explicitProps?.lastOrNull()?.endOffset
-                            ?: node.target.body?.firstChild?.endOffset
+                        node.target.dtoBody.explicitPropList.lastOrNull()?.endOffset
+                            ?: node.target.dtoBody.firstChild?.endOffset
                     }
 
                     else -> {

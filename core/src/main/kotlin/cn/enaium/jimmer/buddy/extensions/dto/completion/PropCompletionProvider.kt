@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeBranch
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
@@ -30,6 +31,7 @@ import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.elementType
 import com.intellij.util.ProcessingContext
 
 /**
@@ -90,9 +92,9 @@ fun getTrace(position: PsiElement?): List<String> {
     var parent: PsiElement? = position?.parent
     while (parent != null) {
         if (parent is DtoPsiPositiveProp) {
-            parent.prop?.value?.also { trace.add(it) }
+            parent.propName?.identifier?.text?.also { trace.add(it) }
         } else if (parent is DtoPsiTypeBranch) {
-            parent.qualifiedName?.qualifiedNameParts?.parts?.lastOrNull()?.also { trace.add(it.text) }
+            parent.qualifiedName.text.split(".").lastOrNull()?.also { trace.add(it) }
         }
         parent = parent.parent
     }

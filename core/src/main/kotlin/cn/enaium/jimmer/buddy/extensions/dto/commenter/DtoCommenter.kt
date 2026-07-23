@@ -16,8 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.commenter
 
-import cn.enaium.jimmer.buddy.dto.DtoParser
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
+import cn.enaium.jimmer.buddy.extensions.dto.BLOCK_COMMENT
+import cn.enaium.jimmer.buddy.extensions.dto.LINE_COMMENT
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.lang.CodeDocumentationAwareCommenter
 import com.intellij.psi.PsiComment
 import com.intellij.psi.tree.IElementType
@@ -27,15 +28,15 @@ import com.intellij.psi.tree.IElementType
  */
 class DtoCommenter : CodeDocumentationAwareCommenter {
     override fun getLineCommentTokenType(): IElementType {
-        return DtoLanguage.TOKEN[DtoParser.LineComment]
+        return LINE_COMMENT
     }
 
     override fun getBlockCommentTokenType(): IElementType {
-        return DtoLanguage.TOKEN[DtoParser.BlockComment]
+        return BLOCK_COMMENT
     }
 
     override fun getDocumentationCommentTokenType(): IElementType {
-        return DtoLanguage.TOKEN[DtoParser.DocComment]
+        return DtoTypes.DOC_COMMENT
     }
 
     override fun getDocumentationCommentPrefix(): String {
@@ -51,7 +52,7 @@ class DtoCommenter : CodeDocumentationAwareCommenter {
     }
 
     override fun isDocumentationComment(element: PsiComment): Boolean {
-        return element.tokenType == DtoLanguage.TOKEN[DtoParser.DocComment]
+        return element.tokenType == DtoTypes.DOC_COMMENT
     }
 
     override fun getLineCommentPrefix(): String {

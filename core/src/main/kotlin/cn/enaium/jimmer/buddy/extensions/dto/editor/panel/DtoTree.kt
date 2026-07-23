@@ -20,10 +20,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.AppendDtoProp
 import cn.enaium.jimmer.buddy.dialog.AppendDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NeedRefreshNotifier
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiElement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -32,11 +29,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.messages.Topic
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.event.MouseAdapter
@@ -55,10 +54,6 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
     private val tree = Tree(root)
 
     private val connection = project.messageBus.connect()
-
-    companion object {
-        val NEED_REFRESH_TOPIC = Topic.create("Need Refresh", NeedRefreshNotifier::class.java)
-    }
 
     init {
         connection.subscribe(NEED_REFRESH_TOPIC, object : NeedRefreshNotifier {
@@ -129,20 +124,19 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
     fun refresh() {
         project.isDisposed && return
         val psiFile = file.toPsiFile(project) ?: return
-        val psiRoot = psiFile.getChildOfType<DtoPsiRoot>() ?: return
         root.removeAllChildren()
-        psiRoot.dtoTypes.forEach { dtoType ->
+        PsiTreeUtil.getChildrenOfType(psiFile, DtoPsiDtoType::class.java)?.forEach { dtoType ->
             val dtoTypeNode = DtoTypeNode(dtoType)
 
             fun addExplicitProp(explicitProp: DtoPsiExplicitProp, parent: DefaultMutableTreeNode) {
                 val newChild = DtoPropNode(explicitProp)
-                explicitProp.positiveProp?.body?.explicitProps?.forEach {
+                explicitProp.positiveProp?.propDtoBody?.dtoBody?.explicitPropList?.forEach {
                     addExplicitProp(it, newChild)
                 }
                 parent.add(newChild)
             }
 
-            dtoType.body?.explicitProps?.forEach {
+            dtoType.dtoBody.explicitPropList.forEach {
                 addExplicitProp(it, dtoTypeNode)
             }
             root.add(dtoTypeNode)
@@ -183,13 +177,14 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
         }
     }
 
-    open class DtoNode(open val target: DtoPsiElement) : DefaultMutableTreeNode()
+    open class DtoNode(open val target: PsiElement) : DefaultMutableTreeNode()
 
     class DtoTypeNode(override val target: DtoPsiDtoType) : DtoNode(target) {
         override fun toString(): String {
-            return (target.name?.text ?: "Unknown Name").let {
-                if (target.modifiers.isNotEmpty()) {
-                    "$it ${target.modifiers.joinToString(" ", "(", ")") { it.value }} "
+            return (target.identifier.text).let {
+                val modifiers = findModifierTokens(target)
+                if (modifiers.isNotEmpty()) {
+                    "$it ${modifiers.joinToString(" ", "(", ")") { it.text }} "
                 } else {
                     it
                 }
@@ -199,11 +194,37 @@ class DtoTree(val project: Project, private val file: VirtualFile) : JPanel() {
 
     class DtoPropNode(override val target: DtoPsiExplicitProp) : DtoNode(target) {
         override fun toString(): String {
-            return target.positiveProp?.prop?.text
-                ?: target.negativeProp?.text
-                ?: target.userProp?.text
-                ?: target.aliasGroup?.pattern?.text
+            return target.positiveProp?.let { findPropIdentifier(it)?.text }
+                ?: target.negativeProp?.propName?.identifier?.text
+                ?: target.userProp?.identifier?.text
+                ?: target.aliasGroup?.aliasPattern?.text
                 ?: "Unknown Name"
+        }
+    }
+
+    companion object {
+        val NEED_REFRESH_TOPIC = Topic.create("Need Refresh", NeedRefreshNotifier::class.java)
+
+        private val MODIFIER_TOKEN_TYPES = setOf(
+            DtoTypes.INPUT, DtoTypes.SPECIFICATION, DtoTypes.UNSAFE,
+            DtoTypes.FIXED, DtoTypes.STATIC, DtoTypes.DYNAMIC,
+            DtoTypes.FUZZY, DtoTypes.SEALED
+        )
+
+        fun findModifierTokens(element: PsiElement): List<PsiElement> {
+            return element.children.filter { it.elementType in MODIFIER_TOKEN_TYPES }
+        }
+
+        fun findPropIdentifier(positiveProp: DtoPsiPositiveProp): PsiElement? {
+            return positiveProp.propName?.identifier
+        }
+
+        fun findAliasElement(positiveProp: DtoPsiPositiveProp): PsiElement? {
+            return positiveProp.alias?.identifier
+        }
+
+        fun findAliasRange(positiveProp: DtoPsiPositiveProp): PsiElement? {
+            return positiveProp.alias?.firstChild
         }
     }
 }

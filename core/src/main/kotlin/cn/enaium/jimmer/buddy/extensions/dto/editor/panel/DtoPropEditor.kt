@@ -16,6 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.editor.panel
 
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.findAliasElement
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.findModifierTokens
+import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.findPropIdentifier
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.I18n
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.BaseState
@@ -23,6 +27,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.util.elementType
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import java.awt.BorderLayout
@@ -46,16 +51,16 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
         var aliasPatternEditor: DtoAliasPatternEditor? = null
 
 
-        (node.target.positiveProp?.prop
-            ?: node.target.negativeProp?.prop
-            ?: node.target.userProp?.prop)?.also { prop ->
+        (node.target.positiveProp?.let { findPropIdentifier(it) }
+            ?: node.target.negativeProp?.propName?.identifier
+            ?: node.target.userProp?.identifier)?.also { prop ->
 
             nameEditor = DtoNameEditor(model.nameProperty, prop, false)
 
             modifierEditor = node.target.positiveProp?.let {
                 DtoModifierEditor(
                     model.modifiersProperty,
-                    { it.modifier?.let { modifier -> listOf(modifier) } ?: listOf() },
+                    { findModifierTokens(it) },
                     prop,
                     true
                 )
@@ -64,13 +69,13 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
             aliasEditor = node.target.positiveProp?.let {
                 DtoAliasEditor(
                     model.aliasProperty,
-                    { it.alias },
+                    { findAliasElement(it) },
                     prop
                 )
             }
         }
 
-        node.target.aliasGroup?.pattern?.also {
+        node.target.aliasGroup?.aliasPattern?.also {
             aliasPatternEditor = DtoAliasPatternEditor(model.originProperty, model.replacementProperty, it)
         }
 
@@ -111,24 +116,53 @@ class DtoPropEditor(val node: DtoTree.DtoPropNode) : JPanel(BorderLayout()) {
 
     inner class PropModel() : BaseState() {
         private val graph: PropertyGraph = PropertyGraph()
+
+        private fun getAliasText(): String {
+            val positiveProp = node.target.positiveProp ?: return ""
+            val aliasIdentifier = positiveProp.alias?.identifier?.text ?: return ""
+            return "as $aliasIdentifier"
+        }
+
         val nameProperty = graph.property(
-            node.target.positiveProp?.prop?.value
-                ?: node.target.negativeProp?.prop?.value
-                ?: node.target.userProp?.prop?.value
+            node.target.positiveProp?.let { findPropIdentifier(it) }?.text
+                ?: node.target.negativeProp?.propName?.identifier?.text
+                ?: node.target.userProp?.identifier?.text
                 ?: ""
         )
         val modifiersProperty =
-            graph.property(node.target.positiveProp?.modifier?.value?.let { mutableSetOf(it) } ?: mutableSetOf())
+            graph.property(
+                node.target.positiveProp?.let { findModifierTokens(it).map { it.text }.toMutableSet() }
+                    ?: mutableSetOf()
+            )
 
-        val aliasProperty = graph.property(node.target.positiveProp?.alias?.value ?: "")
+        val aliasProperty = graph.property(getAliasText())
 
-        val originProperty = graph.property(
-            node.target.aliasGroup?.pattern?.original?.value
-                ?: if (node.target.aliasGroup?.pattern?.prefix == true) "^" else ""
-        )
-        val replacementProperty = graph.property(
-            node.target.aliasGroup?.pattern?.replacement?.value
-                ?: if (node.target.aliasGroup?.pattern?.suffix == true) "$" else ""
-        )
+        private fun getOriginText(): String {
+            val aliasPattern = node.target.aliasGroup?.aliasPattern ?: return ""
+            val children = aliasPattern.children
+            val caret = children.find { it.elementType == DtoTypes.CARET }
+            val originIdentifier = children.find {
+                it.elementType == DtoTypes.IDENTIFIER && caret?.textRange?.endOffset?.let { end ->
+                    it.textRange.startOffset < end
+                } != true && it.textRange.startOffset < (children.find { it.elementType == DtoTypes.ARROW }
+                    ?.textRange?.startOffset ?: Int.MAX_VALUE)
+            }
+            return if (caret != null) "^" else (originIdentifier?.text ?: "")
+        }
+
+        private fun getReplacementText(): String {
+            val aliasPattern = node.target.aliasGroup?.aliasPattern ?: return ""
+            val children = aliasPattern.children
+            val dollar = children.find { it.elementType == DtoTypes.DOLLAR }
+            val arrow = children.find { it.elementType == DtoTypes.ARROW }
+            val replacementIdentifier = children.find {
+                it.elementType == DtoTypes.IDENTIFIER && (arrow?.textRange?.startOffset
+                    ?: 0) < it.textRange.startOffset
+            }
+            return if (dollar != null) "$" else (replacementIdentifier?.text ?: "")
+        }
+
+        val originProperty = graph.property(getOriginText())
+        val replacementProperty = graph.property(getReplacementText())
     }
 }

@@ -17,8 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.dto.lang.highlight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.dto.DtoParser.*
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
 import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
@@ -68,43 +66,45 @@ class DtoHighlightAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val elementType = element.elementType
-        when (element) {
-            is DtoPsiModifier -> keyword
-            is DtoPsiProp -> property
-            is DtoPsiAlias -> variable
-            is DtoPsiName -> element.findParentOfType<DtoPsiMacro>()?.let { macro }
-                ?: element.findParentOfType<DtoPsiEnumMapping>()?.let { constant }
+        val textAttr = when (element) {
+            is DtoPsiPositiveProp, is DtoPsiUserProp, is DtoPsiNegativeProp, is DtoPsiFoldProp -> property
+            else -> when (elementType) {
+                DtoTypes.INPUT, DtoTypes.SPECIFICATION, DtoTypes.UNSAFE,
+                DtoTypes.FIXED, DtoTypes.STATIC, DtoTypes.DYNAMIC, DtoTypes.FUZZY,
+                DtoTypes.SEALED -> keyword
 
-            is DtoPsiPart -> element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
-                ?: element.findParentOfType<DtoPsiMacro>()?.let {
-                    if (element.text == "this") {
-                        keyword
-                    } else {
-                        typeRef
+                DtoTypes.IDENTIFIER -> {
+                    when {
+                        element.parent is DtoPsiAliasPattern -> variable
+                        element.parent is DtoPsiEnumMapping -> constant
+                        element.parent is DtoPsiQualifiedNamePart -> {
+                            when (element.parent?.parent) {
+                                is DtoPsiMacro -> {
+                                    if (element.text == "this") keyword else typeRef
+                                }
+
+                                is DtoPsiAnnotation -> annotation
+                                is DtoPsiTypeRef -> typeRef
+                                else -> null
+                            }
+                        }
+
+                        element.parent is DtoPsiDirective -> macro
+
+                        else -> null
                     }
                 }
-                ?: element.findParentOfType<DtoPsiTypeRef>()?.let {
-                    typeRef
-                }
 
-            else -> when (elementType) {
-                TOKEN[HASH] -> {
-                    element.findParentOfType<DtoPsiMacro>()?.let { macro }
-                }
-
-                TOKEN[AT] -> {
+                DtoTypes.AT -> {
                     element.findParentOfType<DtoPsiAnnotation>()?.let { annotation }
                 }
 
-                TOKEN[TYPES], TOKEN[EXHAUSTIVE], TOKEN[INCLUDE] -> {
-                    macro
-                }
+                DtoTypes.HASH -> macro
 
-                else -> {
-                    null
-                }
+                else -> null
             }
-        }?.also {
+        }
+        textAttr?.also {
             holder.newSilentAnnotation(HighlightSeverity.INFORMATION).textAttributes(it).create()
         }
     }

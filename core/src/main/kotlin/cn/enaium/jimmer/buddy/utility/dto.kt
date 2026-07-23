@@ -17,14 +17,12 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.findChild
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.util.findParentOfType
+import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.psi.psiUtil.children
 
 /**
  * @author Enaium
@@ -33,17 +31,52 @@ fun Project.createDtoFile(content: String): DtoPsiFile {
     return PsiFileFactory.getInstance(this).createFileFromText("dummy.dto", DtoLanguage, content) as DtoPsiFile
 }
 
-fun Project.createDtoProp(name: String): DtoPsiProp? {
-    return createDtoFile("Dummy { $name }").findChild("/dto/dtoType/dtoBody/explicitProp/*/prop")
+fun Project.createDtoTypeName(name: String): PsiElement {
+    val file = PsiFileFactory.getInstance(this).createFileFromText(
+        "dummy.dto",
+        DtoLanguage,
+        "$name {}"
+    ) as DtoPsiFile
+
+    val dtoType = PsiTreeUtil.findChildOfType(file, DtoPsiDtoType::class.java)
+        ?: error("Cannot create dto type")
+
+    return dtoType.identifier
+}
+
+fun Project.createPropName(name: String): PsiElement {
+    val file = PsiFileFactory.getInstance(this).createFileFromText(
+        "dummy.dto",
+        DtoLanguage,
+        "Dummy { $name }"
+    ) as DtoPsiFile
+    val prop = PsiTreeUtil.findChildOfType(file, DtoPsiPropName::class.java)
+        ?: error("Cannot create dto type")
+    return prop.identifier
+}
+
+fun Project.createQualifiedNamePart(name: String): PsiElement {
+    val file = PsiFileFactory.getInstance(this).createFileFromText(
+        "dummy.dto",
+        DtoLanguage,
+        "export $name; $name {}"
+    ) as DtoPsiFile
+    val qualifiedNamePart = PsiTreeUtil.findChildOfType(file, DtoPsiQualifiedNamePart::class.java)
+        ?: error("Cannot create qualified name part")
+    return qualifiedNamePart.identifier
 }
 
 fun DtoPsiDtoType.generatedName(): String? {
-    val name = name?.value ?: return null
-    val dtoPsiRoot = findParentOfType<DtoPsiRoot>() ?: return null
-    val exportType = dtoPsiRoot.qualifiedName() ?: return null
-    val exportPackage =
-        dtoPsiRoot.exportStatement?.packageParts?.qualifiedName()
-            ?: "${exportType.substringBeforeLast(".")}.dto"
-
+    val name = identifier.text ?: return null
+    val file = containingFile ?: return null
+    val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java) ?: return null
+    val exportType = exportStatement.qualifiedName.name()
+    val exportPackage = exportStatement.exportPackage?.packageStatement?.let { stmt ->
+        stmt.qualifiedName.qualifiedNamePartList.joinToString(".") { it.identifier.text }
+    } ?: "${exportType.substringBeforeLast(".")}.dto"
     return "$exportPackage.$name"
+}
+
+fun DtoPsiQualifiedName.name(): String {
+    return qualifiedNamePartList.joinToString(".") { it.identifier.text }
 }

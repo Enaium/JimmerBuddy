@@ -1,0 +1,322 @@
+{
+  parserClass="cn.enaium.jimmer.buddy.extensions.dto.parser.DtoParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="DtoPsi"
+  psiImplClassSuffix="Impl"
+  psiPackage="cn.enaium.jimmer.buddy.extensions.dto.psi"
+  psiImplPackage="cn.enaium.jimmer.buddy.extensions.dto.psi.impl"
+
+  elementTypeHolderClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes"
+  elementTypeClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoElementType"
+  tokenTypeClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTokenType"
+
+  tokens = [
+    BOOLEAN_LITERAL
+    SQL_STRING_LITERAL
+    CHARACTER_LITERAL
+    STRING_LITERAL
+    INTEGER_LITERAL
+    FLOATING_POINT_LITERAL
+    IDENTIFIER
+
+    DOC_COMMENT
+    BLOCK_COMMENT
+    LINE_COMMENT
+    WHITE_SPACE
+
+    PACKAGE     = "package"
+    EXPORT      = "export"
+    IMPORT      = "import"
+    FRAGMENT    = "fragment"
+    FOR         = "for"
+    AS          = "as"
+    IMPLEMENTS  = "implements"
+    INPUT       = "input"
+    SPECIFICATION = "specification"
+    UNSAFE = "unsafe"
+    SEALED      = "sealed"
+    FIXED       = "fixed"
+    STATIC      = "static"
+    DYNAMIC     = "dynamic"
+    FUZZY       = "fuzzy"
+    CLASS       = "class"
+    DEFAULT     = "default"
+    NULL        = "null"
+    FOLD        = "fold"
+    AND         = "and"
+    OR          = "or"
+    IS          = "is"
+    NOT         = "not"
+    TRUE         = "true"
+    FALSE         = "false"
+
+    CONFIG_WHERE        = "!where"
+    CONFIG_ORDER_BY     = "!orderBy"
+    CONFIG_FILTER       = "!filter"
+    CONFIG_RECURSION    = "!recursion"
+    CONFIG_FETCH_TYPE   = "!fetchType"
+    CONFIG_LIMIT        = "!limit"
+    CONFIG_BATCH        = "!batch"
+    CONFIG_DEPTH        = "!depth"
+
+    ARROW   = "->"
+    LBRACE  = "{"
+    RBRACE  = "}"
+    LPAREN  = "("
+    RPAREN  = ")"
+    LBRACK  = "["
+    RBRACK  = "]"
+    COMMA   = ","
+    SEMI    = ";"
+    DOT     = "."
+    COLON   = ":"
+    COLON2  = "::"
+    QUES    = "?"
+    STAR    = "*"
+    PLUS    = "+"
+    MINUS   = "-"
+    EXCLAM  = "!"
+    EQ      = "="
+    NE1     = "<>"
+    NE2     = "!="
+    LT      = "<"
+    LE      = "<="
+    GT      = ">"
+    GE      = ">="
+    AT      = "@"
+    CARET   = "^"
+    DOLLAR  = "$"
+    SLASH   = "/"
+    HASH    = "#"
+  ]
+}
+
+dto ::= packageStatement? exportStatement? importStatement* (dtoType | dtoFragment)*
+
+packageStatement ::= PACKAGE qualifiedName
+
+dtoFragment ::= FRAGMENT IDENTIFIER (FOR qualifiedName)? dtoBody
+
+exportStatement ::= EXPORT qualifiedName exportPackage?
+
+exportPackage ::= ARROW packageStatement
+
+importStatement ::= IMPORT qualifiedName
+                    (
+                        DOT STAR
+                        | DOT LBRACE importedType (COMMA importedType)* RBRACE
+                        | alias
+                    )?
+
+importedType ::= IDENTIFIER (alias)?
+
+modifier ::= INPUT | SPECIFICATION | UNSAFE | FIXED | STATIC | DYNAMIC | FUZZY | SEALED
+
+dtoType ::= DOC_COMMENT? annotation*
+            modifier*
+            IDENTIFIER
+            (FOR qualifiedName)?
+            (impl)?
+            dtoBody
+{
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiDtoTypeMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+    stubClass = "cn.enaium.jimmer.buddy.extensions.dto.stub.DtoTypeStub"
+    elementTypeFactory = "cn.enaium.jimmer.buddy.extensions.dto.psi.DtoElementTypeFactoryKt.factory"
+}
+
+dtoBody ::= LBRACE ((includeMacro | macro | typesBlock | explicitProp) (COMMA | SEMI)?)* RBRACE
+
+includeMacro ::= directive LPAREN qualifiedName RPAREN
+
+explicitProp ::= aliasGroup | foldProp | positiveProp | negativeProp | userProp
+
+typesBlock ::= directive LBRACE typesElement* RBRACE
+
+typesElement ::= exhaustive | defaultBranch | typeBranch
+
+exhaustive ::= directive
+
+defaultBranch ::= DOC_COMMENT? annotation*
+                  DEFAULT (CLASS IDENTIFIER)?
+                  (impl)?
+                  dtoBody
+
+typeBranch ::= DOC_COMMENT? annotation*
+               qualifiedName (CLASS IDENTIFIER)?
+               (impl)?
+               dtoBody
+
+foldProp ::= DOC_COMMENT? annotation*
+             FOLD LPAREN IDENTIFIER RPAREN QUES?
+             DOC_COMMENT? annotation*
+             (impl)?
+             dtoBody
+
+directive ::= HASH IDENTIFIER
+
+macro ::= directive
+          (LPAREN qualifiedName (COMMA qualifiedName)* RPAREN)?
+          (QUES | EXCLAM)?
+
+aliasGroup ::= aliasPattern LBRACE macro* positiveProp* RBRACE
+
+aliasPattern ::= AS LPAREN CARET? IDENTIFIER? DOLLAR? ARROW IDENTIFIER? RPAREN
+
+positiveProp ::= propPrefix
+                 (func | propName)
+                 propSuffix?
+                 alias?
+                 (propDtoBody | propEnumBody)?
+
+propPrefix ::= DOC_COMMENT?
+               (configuration | annotation)*
+               PLUS?
+               modifier?
+
+propSuffix ::= QUES | EXCLAM | STAR
+
+func ::= funcTarget
+         funcProjection?
+         funcArguments
+
+funcTarget ::= IDENTIFIER
+             | NULL
+
+funcProjection ::= SLASH IDENTIFIER? CARET? DOLLAR?
+
+funcArguments ::= LPAREN propName (COMMA propName)* COMMA? RPAREN
+
+alias ::= AS IDENTIFIER
+
+propDtoBody ::= DOC_COMMENT?
+                annotation*
+                impl?
+                dtoBody
+
+propEnumBody ::= ARROW (enumBody | qualifiedName)
+
+impl ::= IMPLEMENTS typeRef (COMMA typeRef)*
+
+negativeProp ::= MINUS propName
+
+propName ::= IDENTIFIER
+{
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiPropNameMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+userProp ::= DOC_COMMENT? annotation*
+             IDENTIFIER COLON typeRef
+             (
+                 EQ
+                 MINUS?
+                 (BOOLEAN_LITERAL | INTEGER_LITERAL | STRING_LITERAL | FLOATING_POINT_LITERAL | NULL)
+             )?
+
+typeRef ::= qualifiedName (LT genericArgument (COMMA genericArgument)? GT)? QUES?
+
+genericArgument ::= STAR | IDENTIFIER? typeRef
+
+qualifiedName ::= qualifiedNamePart (DOT qualifiedNamePart)*
+
+qualifiedNamePart ::= IDENTIFIER
+{
+    mixin = "cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiQualifiedNamePartMixin"
+    implements = "com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+configuration ::= where
+                | orderBy
+                | filter
+                | recursion
+                | fetchType
+                | limit
+                | batch
+                | recursionDepth
+
+where ::= CONFIG_WHERE LPAREN predicate RPAREN
+
+predicate ::= andPredicate (OR andPredicate)*
+
+andPredicate ::= atomPredicate (AND atomPredicate)*
+
+atomPredicate ::= LPAREN predicate RPAREN
+                | cmpPredicate
+                | nullityPredicate
+
+cmpPredicate ::= propPath
+                 (
+                     EQ propValue
+                     | NE1 propValue
+                     | NE2 propValue
+                     | LT propValue
+                     | LE propValue
+                     | GT propValue
+                     | GE propValue
+                     | IDENTIFIER propValue
+                 )
+
+nullityPredicate ::= propPath IS NOT? NULL
+
+propPath ::= IDENTIFIER (DOT IDENTIFIER)*
+
+propValue ::= BOOLEAN_LITERAL
+            | CHARACTER_LITERAL
+            | SQL_STRING_LITERAL
+            | MINUS? INTEGER_LITERAL
+            | MINUS? FLOATING_POINT_LITERAL
+
+orderBy ::= CONFIG_ORDER_BY LPAREN orderByItem (COMMA orderByItem)* RPAREN
+
+orderByItem ::= propPath IDENTIFIER?
+
+filter ::= CONFIG_FILTER LPAREN qualifiedName RPAREN
+
+recursion ::= CONFIG_RECURSION LPAREN qualifiedName RPAREN
+
+fetchType ::= CONFIG_FETCH_TYPE LPAREN IDENTIFIER RPAREN
+
+limit ::= CONFIG_LIMIT LPAREN INTEGER_LITERAL (COMMA INTEGER_LITERAL)? RPAREN
+
+batch ::= CONFIG_BATCH LPAREN INTEGER_LITERAL RPAREN
+
+recursionDepth ::= CONFIG_DEPTH LPAREN INTEGER_LITERAL RPAREN
+
+annotation ::= AT qualifiedName annotationArgumentsClause?
+
+annotationArgumentsClause ::= LPAREN annotationArguments? RPAREN
+
+annotationArguments ::= annotationArgument (COMMA annotationArgument)*
+
+annotationArgument ::= annotationNamedArgument
+                     | annotationValue
+
+annotationNamedArgument ::= IDENTIFIER EQ annotationValue
+
+annotationValue ::= annotationLiteral
+                  | classLiteral
+                  | nestedAnnotation
+                  | qualifiedName
+                  | annotationArrayValue
+
+annotationLiteral ::= BOOLEAN_LITERAL
+                    | CHARACTER_LITERAL
+                    | STRING_LITERAL (PLUS STRING_LITERAL)*
+                    | MINUS? INTEGER_LITERAL
+                    | MINUS? FLOATING_POINT_LITERAL
+
+classLiteral ::= qualifiedName classSuffix
+
+nestedAnnotation ::= qualifiedName annotationArgumentsClause
+
+annotationArrayValue ::= LBRACE annotationValue (COMMA annotationValue)* RBRACE
+                       | LBRACK annotationValue (COMMA annotationValue)* RBRACK
+
+enumBody ::= LBRACE enumMapping ((COMMA | SEMI) enumMapping)* (COMMA | SEMI)? RBRACE
+
+enumMapping ::= IDENTIFIER COLON (STRING_LITERAL | MINUS? INTEGER_LITERAL)
+
+classSuffix ::= QUES? (DOT | COLON2) CLASS

@@ -16,10 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.formatter
 
-import cn.enaium.jimmer.buddy.dto.DtoParser.*
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.RULE
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.TOKEN
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes.*
 import cn.enaium.jimmer.buddy.utility.around
 import cn.enaium.jimmer.buddy.utility.emptyLine
 import com.intellij.formatting.*
@@ -31,35 +29,39 @@ class DtoFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val styleSettings = formattingContext.codeStyleSettings
         val spacingBuilder = SpacingBuilder(styleSettings, DtoLanguage)
-            .around(TOKEN[DOT]).spaces(0)//[.]
-            .around(TOKEN[COMMA], 0, 1)//[, ]
-            .around(TOKEN[COLON], 0, 1)//[: ]
-            .around(TOKEN[SEMICOLON], 0, 1)//[; ]
-            .around(TOKEN[RIGHT_ARROW]).spaces(1)//[ -> ]
-            .around(TOKEN[EQUAL]).spaces(1)//[ = ]
-            .between(TOKEN[AS], TOKEN[LEFT_PARENTHESIS]).spaces(0)//[as(]
-            .around(TOKEN[AS]).spaces(1)//[ as ]
-            .around(RULE[RULE_modifier]).spaces(1)//[ modifier ]
-            .around(RULE[RULE_implements]).spaces(1)//[ implements ]
-            .around(TOKEN[LEFT_PARENTHESIS]).spaces(0)//[(]
-            .before(TOKEN[RIGHT_PARENTHESIS]).spaces(0)//[)]
-            .after(TOKEN[AT]).spaces(0)//[@]
-            .after(TOKEN[HASH]).spaces(0)//[#]
-            .after(RULE[RULE_exportStatement]).emptyLine(1)//[export \n]
-            .before(TOKEN[EXPORT]).spaceIf(false)//[export]
-            .between(TOKEN[EXPORT], RULE[RULE_typeParts]).spaces(1)//[export a.b.c]
-            .between(TOKEN[RIGHT_ARROW], TOKEN[PACKAGE]).spaces(1)//[-> package]
-            .between(TOKEN[PACKAGE], RULE[RULE_qualifiedName]).spaces(1)//[package a.b.c]
-            .before(RULE[RULE_importStatement]).spaceIf(false)//[import]
-            .between(TOKEN[IMPORT], RULE[RULE_qualifiedName])
-            .spaces(1)//[import a.b.c]
-            .between(TOKEN[LEFT_BRACE], RULE[RULE_importedType]).spaces(1)//[{ Type]
-            .between(RULE[RULE_importedType], TOKEN[RIGHT_BRACE]).spaces(1)//[Type }]
-            .before(RULE[RULE_dtoType]).spaceIf(false)//[dtoType]
-            .between(RULE[RULE_prop], RULE[RULE_dtoBody]).spaces(1)//[Abc {]
-            .between(RULE[RULE_name], RULE[RULE_dtoBody]).spaces(1)//[abc {]
-            .between(TOKEN[RIGHT_PARENTHESIS], RULE[RULE_dtoBody]).spaces(1)//[) {]
-            .between(TOKEN[IMPLEMENTS], RULE[RULE_typeRef]).spaces(1)//[implements a.b.c]
+            .around(DOT).spaces(0)
+            .around(COMMA, 0, 1)
+            .around(COLON, 0, 1)
+            .around(SEMI, 0, 1)
+            .around(ARROW).spaces(1)
+            .around(EQ).spaces(1)
+            .between(AS, LPAREN).spaces(0)
+            .around(AS).spaces(1)
+            .around(INPUT).spaces(1)
+            .around(SPECIFICATION).spaces(1)
+            .around(UNSAFE).spaces(1)
+            .around(FIXED).spaces(1)
+            .around(STATIC).spaces(1)
+            .around(DYNAMIC).spaces(1)
+            .around(FUZZY).spaces(1)
+            .around(SEALED).spaces(1)
+            .around(IMPLEMENTS).spaces(1)
+            .around(LPAREN).spaces(0)
+            .before(RPAREN).spaces(0)
+            .after(AT).spaces(0)
+            .after(EXPORT_STATEMENT).emptyLine(1)
+            .before(EXPORT).spaceIf(false)
+            .between(EXPORT, IDENTIFIER).spaces(1)
+            .between(ARROW, PACKAGE).spaces(1)
+            .between(PACKAGE, IDENTIFIER).spaces(1)
+            .before(IMPORT_STATEMENT).spaceIf(false)
+            .between(IMPORT, IDENTIFIER).spaces(1)
+            .between(LBRACE, IMPORTED_TYPE).spaces(1)
+            .between(IMPORTED_TYPE, RBRACE).spaces(1)
+            .before(DTO_TYPE).spaceIf(false)
+            .between(IDENTIFIER, DTO_BODY).spaces(1)
+            .between(RPAREN, DTO_BODY).spaces(1)
+            .between(IMPLEMENTS, TYPE_REF).spaces(1)
         return FormattingModelProvider.createFormattingModelForPsiFile(
             formattingContext.containingFile,
             DtoBlock(

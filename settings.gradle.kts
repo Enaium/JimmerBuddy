@@ -4,7 +4,6 @@ plugins {
 
 rootProject.name = "JimmerBuddy"
 
-include("common")
 include("core")
 include("gradle-tooling-extension")
 include("since")

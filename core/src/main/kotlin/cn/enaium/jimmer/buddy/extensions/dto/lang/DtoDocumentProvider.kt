@@ -19,77 +19,91 @@ package cn.enaium.jimmer.buddy.extensions.dto.lang
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiName
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType
 import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isAutoScalar
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.toHtml
 import com.intellij.lang.documentation.AbstractDocumentationProvider
+import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.findParentOfType
 
 /**
  * @author Enaium
  */
 class DtoDocumentProvider : AbstractDocumentationProvider() {
-    override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
-        if (element is DtoPsiName) {
-            element.findParentOfType<DtoPsiMacro>()?.also { macro ->
-                val name = macro.name?.value ?: return null
-                val currentImmutable = findCurrentImmutableType(macro) ?: return null
 
-                val props = when (name) {
-                    "allScalars" -> {
-                        val commonImmutableProps = mutableListOf<CommonImmutableType.CommonImmutableProp>()
-                        if (macro.args.isEmpty()) {
-                            commonImmutableProps.addAll(currentImmutable.props())
-                        } else {
-                            macro.args.forEach { arg ->
-                                when (arg.qualifiedName()) {
-                                    "this", currentImmutable.name() -> commonImmutableProps.addAll(currentImmutable.declaredProps())
-                                    else -> commonImmutableProps.addAll(
-                                        currentImmutable.superTypes().find { it.qualifiedName() == it.qualifiedName() }
-                                            ?.declaredProps() ?: emptyList()
-                                    )
-                                }
+    override fun getCustomDocumentationElement(
+        editor: Editor,
+        file: PsiFile,
+        contextElement: PsiElement?,
+        targetOffset: Int
+    ): PsiElement? {
+        contextElement?.takeIf { it.findParentOfType<DtoPsiMacro>() != null }?.also { return it }
+        contextElement?.takeIf { it.findParentOfType<DtoPsiAliasGroup>() != null }?.also { return it }
+
+        return super.getCustomDocumentationElement(editor, file, contextElement, targetOffset)
+    }
+
+    override fun generateDoc(element: PsiElement, originalElement: PsiElement?): String? {
+        element.findParentOfType<DtoPsiMacro>()?.also { macro ->
+            val name = macro.directive.identifier.text
+            val currentImmutable = findCurrentImmutableType(macro) ?: return null
+
+            val props = when (name) {
+                "allScalars" -> {
+                    val commonImmutableProps = mutableListOf<CommonImmutableType.CommonImmutableProp>()
+                    if (macro.qualifiedNameList.isEmpty()) {
+                        commonImmutableProps.addAll(currentImmutable.props())
+                    } else {
+                        macro.qualifiedNameList.forEach { arg ->
+                            when (arg.text) {
+                                "this", currentImmutable.name() -> commonImmutableProps.addAll(currentImmutable.declaredProps())
+                                else -> commonImmutableProps.addAll(
+                                    currentImmutable.superTypes().find { it.qualifiedName() == it.qualifiedName() }
+                                        ?.declaredProps() ?: emptyList()
+                                )
                             }
                         }
-                        commonImmutableProps.filter { it.isAutoScalar() }
                     }
-
-                    "allReferences" -> {
-                        currentImmutable.props().filter { isAutoReference(it) }
-                    }
-
-                    else -> {
-                        emptyList()
-                    }
+                    commonImmutableProps.filter { it.isAutoScalar() }
                 }
 
-                val content = buildString {
-                    append("## $name")
-
-                    val aliasGroup = element.findParentOfType<DtoPsiAliasGroup>()
-                    aliasGroup?.pattern?.also { aliasPattern ->
-                        props.forEach { prop ->
-                            append("\n\n`${prop.name()}` as ${pattern(prop.name(), aliasPattern)}")
-                        }
-                        return@buildString
-                    }
-
-                    append("\n\n${props.joinToString(", ") { "`${it.name()}`" }}")
+                "allReferences" -> {
+                    currentImmutable.props().filter { isAutoReference(it) }
                 }
-                return content.toHtml()
+
+                else -> {
+                    emptyList()
+                }
             }
+
+            val content = buildString {
+                append("## $name")
+
+                val aliasGroup = element.findParentOfType<DtoPsiAliasGroup>()
+                aliasGroup?.aliasPattern?.also { aliasPattern ->
+                    props.forEach { prop ->
+                        append("\n\n`${prop.name()}` as ${pattern(prop.name(), aliasPattern)}")
+                    }
+                    return@buildString
+                }
+
+                append("\n\n${props.joinToString(", ") { "`${it.name()}`" }}")
+            }
+            return content.toHtml()
         }
 
         element.findParentOfType<DtoPsiAliasGroup>()?.also { group ->
-            val positiveProps = group.body?.positiveProps?.takeIf { it.isNotEmpty() } ?: return null
+            val positiveProps = group.positivePropList.takeIf { it.isNotEmpty() } ?: return null
             val parent = element.parent
             if (parent is DtoPsiAliasPattern) {
                 var content = "## Alias Group"
-                positiveProps.forEach {
-                    content += "\n\n`${it.prop?.value}` as ${pattern(it.prop?.value ?: "", parent)}"
+                positiveProps.forEach { positiveProp ->
+                    val propName = positiveProp.propName?.identifier?.text ?: ""
+                    content += "\n\n`${propName}` as ${pattern(propName, parent)}"
                 }
                 return content.toHtml()
             }
@@ -99,29 +113,23 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
     }
 
     private fun pattern(name: String, pattern: DtoPsiAliasPattern): String {
-        val original = pattern.original
-        val replace = pattern.replacement?.value ?: ""
-        return if (pattern.prefix) {
+        val children = pattern.children.toList()
+        val hasCaret = children.any { it.node.elementType == DtoTypes.CARET }
+        val hasDollar = children.any { it.node.elementType == DtoTypes.DOLLAR }
+        val identifiers = children.filter { it.node.elementType == DtoTypes.IDENTIFIER }
+        val original = if (hasCaret && identifiers.isNotEmpty()) identifiers.first() else null
+        val replace = if (hasDollar) identifiers.lastOrNull()?.text ?: "" else identifiers.lastOrNull()?.text ?: ""
+        return if (hasCaret) {
             if (original == null) {
                 "`${replace}${name.replaceFirstChar { it.uppercase() }}`"
             } else {
-                "`${
-                    name.replaceFirst(
-                        original.text,
-                        replace
-                    )
-                }`"
+                "`${name.replaceFirst(original.text, replace)}`"
             }
-        } else if (pattern.suffix) {
+        } else if (hasDollar) {
             if (original == null) {
                 "`${name}${replace}`"
             } else {
-                "`${
-                    name.replaceFirst(
-                        original.text,
-                        replace
-                    )
-                }`"
+                "`${name.replaceFirst(original.text, replace)}`"
             }
         } else {
             if (original != null) {

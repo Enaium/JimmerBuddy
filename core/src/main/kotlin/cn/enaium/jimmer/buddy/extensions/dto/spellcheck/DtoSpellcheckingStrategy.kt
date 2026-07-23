@@ -16,10 +16,8 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.spellcheck
 
-import cn.enaium.jimmer.buddy.dto.DtoParser.RULE_name
-import cn.enaium.jimmer.buddy.dto.DtoParser.RULE_prop
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage.RULE
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.spellchecker.tokenizer.SpellcheckingStrategy
@@ -30,12 +28,12 @@ import com.intellij.spellchecker.tokenizer.Tokenizer
  */
 class DtoSpellcheckingStrategy : SpellcheckingStrategy(), DumbAware {
     override fun isMyContext(element: PsiElement): Boolean {
-        return DtoLanguage.`is`(element.language)
+        return element.language == DtoLanguage
     }
 
     override fun getTokenizer(element: PsiElement?): Tokenizer<*> {
         return when (element?.node?.elementType) {
-            RULE[RULE_name], RULE[RULE_prop] -> TEXT_TOKENIZER
+            DtoTypes.IDENTIFIER -> TEXT_TOKENIZER
             else -> super.getTokenizer(element)
         }
     }

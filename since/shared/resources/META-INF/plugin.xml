@@ -156,9 +156,12 @@
         <fileType name="Jimmer DTO" implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoFileType"
                   language="JimmerBuddy.DTO" extensions="dto" fieldName="INSTANCE"/>
         <lang.parserDefinition language="JimmerBuddy.DTO"
-                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoParserDefinition"/>
+                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.DtoParserDefinition"/>
         <lang.syntaxHighlighter language="JimmerBuddy.DTO"
                                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.highlight.DtoSyntaxHighlighter"/>
+        <stubIndex implementation="cn.enaium.jimmer.buddy.extensions.dto.index.DtoTypeIndex"/>
+        <psi.referenceContributor language="JimmerBuddy.DTO"
+                                  implementation="cn.enaium.jimmer.buddy.extensions.dto.reference.DtoReferenceContributor"/>
         <lang.documentationProvider language="JimmerBuddy.DTO"
                                     implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoDocumentProvider"/>
         <localInspection
@@ -205,8 +208,6 @@
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>
         <spellchecker.support language="JimmerBuddy.DTO"
                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>
-        <consoleFilterProvider implementation="cn.enaium.jimmer.buddy.extensions.console.ExecuteSqlFilter"
-                               order="first"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
@@ -233,8 +234,6 @@
                                                       implementationClass="cn.enaium.jimmer.buddy.extensions.insight.template.postfix.BuddyKotlinPostfixTemplateProvider"/>
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.editor.ImmutableEditorProvider"/>
         <fileEditorProvider implementation="cn.enaium.jimmer.buddy.extensions.dto.editor.DtoEditorProvider"/>
-        <lang.elementManipulator forClass="cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp"
-                                 implementationClass="cn.enaium.jimmer.buddy.extensions.dto.manipulator.DtoPsiPropManipulator"/>
         <gotoSymbolContributor
                 implementation="cn.enaium.jimmer.buddy.extensions.dto.search.DtoChooseByNameContributor"/>
         <codeInsight.declarativeInlayProvider
