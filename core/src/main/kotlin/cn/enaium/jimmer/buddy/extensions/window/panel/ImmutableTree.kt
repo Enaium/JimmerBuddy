@@ -21,7 +21,7 @@ import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
 import cn.enaium.jimmer.buddy.utility.*
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.type
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -108,13 +108,17 @@ class ImmutableTree(val project: Project) : JPanel() {
                                                         (selectionPath.lastPathComponent as? ImmutableType)?.target
                                                     when (val element = target?.element) {
                                                         is PsiClass -> {
-                                                            element.takeIf { it.isEntity() }?.toImmutable()
-                                                                ?.toCommonImmutableType()
+                                                            element.takeIf { it.isEntity() }?.qualifiedName?.let {
+                                                                CommonImmutableTypeCache.getInstance(
+                                                                    project
+                                                                ).get(it)
+                                                            }
                                                         }
 
                                                         is KtClass -> {
-                                                            element.takeIf { it.isEntity() }?.toImmutable()
-                                                                ?.toCommonImmutableType()
+                                                            element.takeIf { it.isEntity() }?.fqName?.asString()?.let {
+                                                                CommonImmutableTypeCache.getInstance(project).get(it)
+                                                            }
                                                         }
 
                                                         else -> {
@@ -198,8 +202,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                                     if (psiClass.isImmutable()) {
                                         try {
                                             ImmutableType(psiClass.createSmartPointer()).apply {
-                                                psiClass.toImmutable().toCommonImmutableType().props().forEach {
-                                                    psiClass.methods.find { method -> method.name == it.name() }
+                                                CommonImmutableTypeCache.getInstance(project)
+                                                    .get(psiClass.qualifiedName ?: return@apply)?.props?.forEach {
+                                                    psiClass.methods.find { method -> method.name == it.name }
                                                         ?.also { method ->
                                                             add(ImmutableProp(method.createSmartPointer(), it))
                                                         }
@@ -230,8 +235,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                                 if (ktClass.isImmutable()) {
                                     try {
                                         ImmutableType(ktClass.createSmartPointer()).apply {
-                                            ktClass.toImmutable().toCommonImmutableType().props().forEach {
-                                                ktClass.getProperties().find { property -> property.name == it.name() }
+                                            CommonImmutableTypeCache.getInstance(project)
+                                                .get(ktClass.fqName?.asString() ?: return@apply)?.props?.forEach {
+                                                ktClass.getProperties().find { property -> property.name == it.name }
                                                     ?.also { property ->
                                                         add(ImmutableProp(property.createSmartPointer(), it))
                                                     }
@@ -319,7 +325,7 @@ class ImmutableTree(val project: Project) : JPanel() {
 
     private open class ImmutableProp(
         target: SmartPsiElementPointer<PsiElement>,
-        val prop: CommonImmutableType.CommonImmutableProp
+        val prop: CommonImmutableProp
     ) :
         ImmutableNode(target) {
         val name = when (val element = target.element) {
@@ -335,8 +341,8 @@ class ImmutableTree(val project: Project) : JPanel() {
                 element?.text
             }
         }.let { name ->
-            "$name: ${prop.simpleTypeName()} (${prop.type().description})".let { typeName ->
-                prop.targetType()?.let { targetType -> "$typeName -> ${targetType.name()}" } ?: typeName
+            "$name: ${prop.simpleTypeName} (${prop.type().description})".let { typeName ->
+                prop.targetType?.let { targetType -> "$typeName -> ${targetType.name}" } ?: typeName
             }
         }
 

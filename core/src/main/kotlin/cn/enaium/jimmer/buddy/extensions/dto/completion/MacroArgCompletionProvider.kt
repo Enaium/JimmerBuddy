@@ -43,10 +43,10 @@ object MacroArgCompletionProvider : CompletionProvider<CompletionParameters>() {
         when (val name = element.findParentOfType<DtoPsiMacro>()?.directive?.identifier?.text) {
             "allScalars" -> {
                 result.addElement(LookupElementBuilder.create("this"))
-                findCurrentImmutableType(element)?.superTypes()?.forEach {
+                findCurrentImmutableType(element)?.superTypes?.forEach {
                     result.addElement(
-                        LookupElementBuilder.create(it.name())
-                            .withTailText(" (from ${it.qualifiedName().substringBeforeLast(".")})")
+                        LookupElementBuilder.create(it.name)
+                            .withTailText(" (from ${it.qualifiedName.substringBeforeLast(".")})")
                             .withIcon(JimmerBuddy.Icons.IMMUTABLE)
                     )
                 }

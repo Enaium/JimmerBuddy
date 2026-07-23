@@ -19,8 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeBranch
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
@@ -31,7 +30,6 @@ import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.elementType
 import com.intellij.util.ProcessingContext
 
 /**
@@ -44,11 +42,11 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet
     ) {
         val element = parameters.position
-        findCurrentImmutableType(element)?.props()?.forEach { prop ->
+        findCurrentImmutableType(element)?.props?.forEach { prop ->
             result.addElement(
-                LookupElementBuilder.create(prop.name()).withIcon(JimmerBuddy.Icons.PROP)
-                    .withTailText(" (from ${prop.name()})").withTypeText(prop.type().description).let {
-                        if (prop.isRecursive()) {
+                LookupElementBuilder.create(prop.name).withIcon(JimmerBuddy.Icons.PROP)
+                    .withTailText(" (from ${prop.name})").withTypeText(prop.type().description).let {
+                        if (prop.isRecursive) {
                             it.withInsertHandler { context, _ ->
                                 val project = context.project
                                 val editor = context.editor
@@ -62,7 +60,7 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
                                     tm.startTemplate(editor, template)
                                 }
                             }
-                        } else if (prop.isAssociation(true)) {
+                        } else if (prop.isAssociation) {
                             it.withInsertHandler { context, _ ->
                                 val project = context.project
                                 val editor = context.editor

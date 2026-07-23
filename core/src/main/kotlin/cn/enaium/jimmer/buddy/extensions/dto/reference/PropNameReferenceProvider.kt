@@ -43,20 +43,20 @@ object PropNameReferenceProvider : PsiReferenceProvider() {
         override fun resolve(): PsiElement? {
             val value = propNameElement.text
             val currentImmutable = findCurrentImmutableType(propNameElement) ?: return null
-            val prop = currentImmutable.props().find { it.name() == value } ?: return null
+            val prop = currentImmutable.props.find { it.name == value } ?: return null
 
             JavaPsiFacade.getInstance(propNameElement.project)
-                .findClass(currentImmutable.qualifiedName(), propNameElement.project.allScope())
+                .findClass(currentImmutable.qualifiedName, propNameElement.project.allScope())
                 ?.also { klass ->
-                    klass.allMethods.find { it.name == prop.name() }?.also { method ->
+                    klass.allMethods.find { it.name == prop.name }?.also { method ->
                         return method
                     }
                 }
 
-            KotlinFullClassNameIndex[currentImmutable.qualifiedName(), propNameElement.project, propNameElement.project.allScope()]
+            KotlinFullClassNameIndex[currentImmutable.qualifiedName, propNameElement.project, propNameElement.project.allScope()]
                 .firstOrNull()
                 ?.also { ktClass ->
-                    (ktClass as KtClass).findPropertyByName(prop.name(), true)?.also {
+                    (ktClass as KtClass).findPropertyByName(prop.name, true)?.also {
                         return it
                     }
                 }

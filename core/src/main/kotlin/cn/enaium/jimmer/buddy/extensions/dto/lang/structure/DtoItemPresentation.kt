@@ -20,7 +20,6 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeRef
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.navigation.ItemPresentation
 import com.intellij.psi.PsiElement
 import javax.swing.Icon

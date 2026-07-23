@@ -1,11 +1,11 @@
 package cn.enaium.jimmer.buddy.extensions.dto.stubs
 
+import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.index.DtoTypeIndex
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.impl.DtoPsiDtoTypeImpl
 import cn.enaium.jimmer.buddy.extensions.dto.stub.DtoTypeStub
 import cn.enaium.jimmer.buddy.extensions.dto.stub.impl.DtoTypeStubImpl
-import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import com.intellij.psi.PsiElement
 import com.intellij.psi.stubs.*
 import com.intellij.util.io.StringRef

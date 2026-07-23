@@ -20,8 +20,8 @@ import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasPattern
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isAutoScalar
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.isAutoScalar
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.toHtml
 import com.intellij.lang.documentation.AbstractDocumentationProvider
@@ -54,16 +54,16 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
 
             val props = when (name) {
                 "allScalars" -> {
-                    val commonImmutableProps = mutableListOf<CommonImmutableType.CommonImmutableProp>()
-                    if (macro.scalarMacro?.qualifiedNameList?.isEmpty() == true) {
-                        commonImmutableProps.addAll(currentImmutable.props())
+                    val commonImmutableProps = mutableListOf<CommonImmutableProp>()
+                    if (macro.scalarMacro?.qualifiedNameList.isNullOrEmpty()) {
+                        commonImmutableProps.addAll(currentImmutable.props)
                     } else {
                         macro.scalarMacro?.qualifiedNameList?.forEach { arg ->
                             when (arg.text) {
-                                "this", currentImmutable.name() -> commonImmutableProps.addAll(currentImmutable.declaredProps())
+                                "this", currentImmutable.name -> commonImmutableProps.addAll(currentImmutable.declaredProps)
                                 else -> commonImmutableProps.addAll(
-                                    currentImmutable.superTypes().find { it.qualifiedName() == it.qualifiedName() }
-                                        ?.declaredProps() ?: emptyList()
+                                    currentImmutable.superTypes.find { it.qualifiedName.endsWith(arg.text) }
+                                        ?.declaredProps ?: emptyList()
                                 )
                             }
                         }
@@ -72,7 +72,7 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
                 }
 
                 "allReferences" -> {
-                    currentImmutable.props().filter { isAutoReference(it) }
+                    currentImmutable.props.filter { isAutoReference(it) }
                 }
 
                 else -> {
@@ -86,12 +86,12 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
                 val aliasGroup = element.findParentOfType<DtoPsiAliasGroup>()
                 aliasGroup?.aliasPattern?.also { aliasPattern ->
                     props.forEach { prop ->
-                        append("\n\n`${prop.name()}` as ${pattern(prop.name(), aliasPattern)}")
+                        append("\n\n`${prop.name}` as ${pattern(prop.name, aliasPattern)}")
                     }
                     return@buildString
                 }
 
-                append("\n\n${props.joinToString(", ") { "`${it.name()}`" }}")
+                append("\n\n${props.joinToString(", ") { "`${it.name}`" }}")
             }
             return content.toHtml()
         }
@@ -140,7 +140,7 @@ class DtoDocumentProvider : AbstractDocumentationProvider() {
         }
     }
 
-    private fun isAutoReference(baseProp: CommonImmutableType.CommonImmutableProp): Boolean {
-        return baseProp.isAssociation(true) && !baseProp.isList() && !baseProp.isTransient()
+    private fun isAutoReference(baseProp: CommonImmutableProp): Boolean {
+        return baseProp.isAssociation && !baseProp.isList && !baseProp.isTransient
     }
 }

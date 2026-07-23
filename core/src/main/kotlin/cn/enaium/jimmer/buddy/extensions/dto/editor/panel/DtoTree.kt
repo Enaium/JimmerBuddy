@@ -20,7 +20,10 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.AppendDtoProp
 import cn.enaium.jimmer.buddy.dialog.AppendDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.editor.notifier.NeedRefreshNotifier
-import cn.enaium.jimmer.buddy.extensions.dto.psi.*
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExplicitProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener

@@ -29,16 +29,12 @@ import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtil
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.ManyToOne
-import org.babyfish.jimmer.sql.OneToMany
-import org.babyfish.jimmer.sql.OneToOne
+import org.babyfish.jimmer.sql.*
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.resolve.ImportPath
@@ -150,7 +146,10 @@ private fun KtProperty.hasManyToManyViewAnnotationBySyntax(): Boolean {
 }
 
 private fun KtProperty.isComputedBySyntax(): Boolean {
-    return hasAnnotationBySyntax(org.babyfish.jimmer.sql.Transient::class.simpleName!!, org.babyfish.jimmer.Formula::class.simpleName!!)
+    return hasAnnotationBySyntax(
+        org.babyfish.jimmer.sql.Transient::class.simpleName!!,
+        org.babyfish.jimmer.Formula::class.simpleName!!
+    )
 }
 
 private fun KtProperty.hasIdViewAnnotationBySyntax(): Boolean {
@@ -197,7 +196,9 @@ private fun KtProperty.findMappedByBySyntax(targetClass: KtClass? = null): Strin
     val resolvedTargetClass = targetClass ?: findTargetClassBySyntax() ?: return null
 
     return resolvedTargetClass.declarations.filterIsInstance<KtProperty>().firstOrNull { property ->
-        property.referencesClassBySyntax(sourceClass) && property.isOwningOppositeSideBySyntax(name ?: return@firstOrNull false)
+        property.referencesClassBySyntax(sourceClass) && property.isOwningOppositeSideBySyntax(
+            name ?: return@firstOrNull false
+        )
     }?.name
 }
 

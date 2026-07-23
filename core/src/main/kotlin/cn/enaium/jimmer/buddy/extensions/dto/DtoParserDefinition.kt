@@ -1,10 +1,10 @@
 package cn.enaium.jimmer.buddy.extensions.dto
 
 import cn.enaium.jimmer.buddy.extensions.dto.parser.DtoParser
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTokenType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.extensions.dto.stubs.DtoFileElementType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
 import com.intellij.lang.ASTNode
 import com.intellij.lang.ParserDefinition
 import com.intellij.lang.PsiParser

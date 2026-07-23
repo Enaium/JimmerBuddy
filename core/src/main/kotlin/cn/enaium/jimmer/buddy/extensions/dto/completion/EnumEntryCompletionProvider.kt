@@ -17,7 +17,6 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.workspace
 import com.intellij.codeInsight.completion.CompletionParameters
@@ -27,7 +26,6 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.icons.AllIcons
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiEnumConstant
-import com.intellij.psi.util.elementType
 import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 import org.jetbrains.kotlin.idea.base.util.allScope
@@ -51,7 +49,7 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
         val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
         val propName = prop.propName?.identifier?.text ?: return
         val enumName =
-            findCurrentImmutableType(prop)?.props()?.find { it.name() == propName }?.typeName() ?: return
+            findCurrentImmutableType(prop)?.props?.find { it.name == propName }?.typeName ?: return
 
         val entries = if (project.workspace().isJavaProject) {
             JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())

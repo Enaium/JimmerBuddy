@@ -29,16 +29,22 @@ import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.ControlFlowException
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.observable.properties.GraphProperty
 import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.modules
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.indexing.ID
 import kotlinx.coroutines.*
 import org.babyfish.jimmer.apt.client.DocMetadata
@@ -246,6 +252,7 @@ object JimmerBuddy {
                     }
                 }
                 log.info("Project ${project.name} is initialized")
+                CommonImmutableTypeCache.getInstance(project).initialize()
             }
         }
 
@@ -289,13 +296,32 @@ object JimmerBuddy {
         }
 
         fun asyncRefreshSources(sources: Iterable<Pair<Source, Path>>) {
-            asyncRefresh(files = sources.map { source ->
-                val path = source.second.resolve(source.first.packageName.replace(".", "/"))
-                    .resolve("${source.first.fileName}.${source.first.extensionName}")
-                path.createParentDirectories()
-                path.writeText(source.first.content)
-                path
-            })
+            val newFiles = mutableListOf<Path>()
+            sources.forEach { (source, basePath) ->
+                val path = basePath.resolve(source.packageName.replace(".", "/"))
+                    .resolve("${source.fileName}.${source.extensionName}")
+                if (path.toFile().exists()) {
+                    val document = ReadAction.compute<Document?, Throwable> {
+                        val virtualFile = LocalFileSystem.getInstance().findFileByPath(path.toString())
+                        if (virtualFile != null) {
+                            FileDocumentManager.getInstance().getDocument(virtualFile)
+                        } else {
+                            null
+                        }
+                    }
+                    if (document != null && document.text != source.content) {
+                        WriteCommandAction.runWriteCommandAction(project) {
+                            document.setText(source.content)
+                            PsiDocumentManager.getInstance(project).commitDocument(document)
+                        }
+                    }
+                } else {
+                    path.createParentDirectories()
+                    path.writeText(source.content)
+                    newFiles.add(path)
+                }
+            }
+            asyncRefresh(files = newFiles)
         }
 
         fun asyncRefresh(files: List<Path>) {
