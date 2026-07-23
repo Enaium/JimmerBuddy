@@ -1,7 +1,6 @@
 package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPropName
-import cn.enaium.jimmer.buddy.utility.createDtoTypeName
 import cn.enaium.jimmer.buddy.utility.createPropName
 import com.intellij.extapi.psi.ASTWrapperPsiElement
 import com.intellij.lang.ASTNode

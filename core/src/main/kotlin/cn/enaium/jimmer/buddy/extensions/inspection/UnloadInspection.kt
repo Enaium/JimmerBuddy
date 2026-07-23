@@ -17,7 +17,7 @@
 package cn.enaium.jimmer.buddy.extensions.inspection
 
 import cn.enaium.jimmer.buddy.utility.*
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isAutoScalar
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.isAutoScalar
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.*
 import org.babyfish.jimmer.sql.JSqlClient
@@ -54,8 +54,12 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                                 it.add("allScalarFields")
                             }.joinToString("."))
                         ) {
-                            if (resolveMethod.containingClass?.toImmutable()?.toCommonImmutableType()?.props()
-                                    ?.find { it.name() == resolveMethod.name }?.isAutoScalar() == true
+                            if (resolveMethod.containingClass?.qualifiedName?.let {
+                                    CommonImmutableTypeCache.getInstance(
+                                        resolveMethod.project
+                                    ).get(it)
+                                }?.props
+                                    ?.find { it.name == resolveMethod.name }?.isAutoScalar() == true
                             ) {
                                 allScalarFields = true
                             }
@@ -91,8 +95,9 @@ class UnloadInspection : AbstractLocalInspectionTool() {
                                 it.add("allScalarFields")
                             }.joinToString("."))
                         ) {
-                            if (property?.containingClass()?.toImmutable()?.toCommonImmutableType()?.props()
-                                    ?.find { it.name() == property.name }?.isAutoScalar() == true
+                            if (property?.containingClass()?.fqName?.asString()
+                                    ?.let { CommonImmutableTypeCache.getInstance(property.project).get(it) }?.props
+                                    ?.find { it.name == property.name }?.isAutoScalar() == true
                             ) {
                                 allScalarFields = true
                             }

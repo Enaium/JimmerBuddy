@@ -18,7 +18,7 @@ package cn.enaium.jimmer.buddy.dialog
 
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree
 import cn.enaium.jimmer.buddy.extensions.dto.editor.panel.DtoTree.Companion.NEED_REFRESH_TOPIC
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp
 import cn.enaium.jimmer.buddy.utility.I18n
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import cn.enaium.jimmer.buddy.utility.runReadActionSmart
@@ -53,7 +53,7 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
     override fun createCenterPanel(): JComponent {
         return panel {
             row(I18n.message("dialog.appendDtoProp.label.props")) {
-                cell(JComboBox<CommonImmutableType.CommonImmutableProp>().apply {
+                cell(JComboBox<CommonImmutableProp>().apply {
                     CoroutineScope(Dispatchers.IO).launch {
                         node.target.project.runReadActionSmart {
                             findCurrentImmutableType(
@@ -62,13 +62,13 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
                                 } else {
                                     node.target.lastChild
                                 }
-                            )?.props()?.forEach {
+                            )?.props?.forEach {
                                 addItem(it)
                             }
                         }
                     }
                     addActionListener {
-                        (selectedItem as? CommonImmutableType.CommonImmutableProp)?.also {
+                        (selectedItem as? CommonImmutableProp)?.also {
                             this@AppendDtoProp.model.propProperty.set(it)
                         }
                     }
@@ -79,10 +79,10 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
 
     override fun doOKAction() {
         model.prop?.also { prop ->
-            val text = if (prop.isAssociation(true)) {
-                "${prop.name()} {\n\t\n}"
+            val text = if (prop.isAssociation) {
+                "${prop.name} {\n\t\n}"
             } else {
-                prop.name()
+                prop.name
             }
 
             WriteCommandAction.writeCommandAction(project).run<Throwable> {
@@ -115,7 +115,7 @@ class AppendDtoProp(private val node: DtoTree.DtoNode) : DialogWrapper(false) {
 
     private class Model : BaseState() {
         private val graph = PropertyGraph()
-        val propProperty = graph.property<CommonImmutableType.CommonImmutableProp?>(null)
+        val propProperty = graph.property<CommonImmutableProp?>(null)
         val prop by propProperty
     }
 }

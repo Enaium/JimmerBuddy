@@ -3,17 +3,13 @@ package cn.enaium.jimmer.buddy.extensions.dto.psi.impl
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.stub.DtoTypeStub
 import cn.enaium.jimmer.buddy.utility.createDtoTypeName
-import cn.enaium.jimmer.buddy.utility.generatedName
 import com.intellij.extapi.psi.StubBasedPsiElementBase
 import com.intellij.lang.ASTNode
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.stubs.IStubElementType
-import org.jetbrains.kotlin.idea.base.util.allScope
 
 /**
  * @author Enaium

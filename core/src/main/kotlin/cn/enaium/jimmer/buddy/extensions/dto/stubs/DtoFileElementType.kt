@@ -1,14 +1,13 @@
 package cn.enaium.jimmer.buddy.extensions.dto.stubs
 
-import cn.enaium.jimmer.buddy.extensions.dto.stub.DtoFileStub
 import cn.enaium.jimmer.buddy.extensions.dto.DtoLanguage
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
+import cn.enaium.jimmer.buddy.extensions.dto.stub.DtoFileStub
 import com.intellij.psi.PsiFile
 import com.intellij.psi.StubBuilder
 import com.intellij.psi.stubs.DefaultStubBuilder
 import com.intellij.psi.stubs.StubElement
 import com.intellij.psi.tree.IStubFileElementType
-import org.jetbrains.annotations.NonNls
 
 /**
  * @author Enaium

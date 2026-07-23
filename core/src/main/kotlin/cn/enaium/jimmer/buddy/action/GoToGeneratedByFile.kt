@@ -95,7 +95,8 @@ class GoToGeneratedByFile : AnAction() {
 
                     if (psiFile is DtoPsiFile) {
                         val dtoType =
-                            PsiTreeUtil.findChildrenOfType(psiFile, DtoPsiDtoType::class.java).find { it.identifier.text == uClass.name }
+                            PsiTreeUtil.findChildrenOfType(psiFile, DtoPsiDtoType::class.java)
+                                .find { it.identifier.text == uClass.name }
 
                         when (psiElement) {
                             is PsiClass, is KtClass -> {

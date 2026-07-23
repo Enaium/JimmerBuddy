@@ -16,29 +16,13 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.insight
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFoldProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNegativeProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeBranch
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiUserProp
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
-import cn.enaium.jimmer.buddy.utility.endOffset
-import cn.enaium.jimmer.buddy.utility.generatedName
-import cn.enaium.jimmer.buddy.utility.resolveClass
-import cn.enaium.jimmer.buddy.utility.resolveGenericsClassInType
-import cn.enaium.jimmer.buddy.utility.type
-import cn.enaium.jimmer.buddy.utility.workspace
+import cn.enaium.jimmer.buddy.extensions.dto.psi.*
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.hints.declarative.*
 import com.intellij.openapi.editor.Editor
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiSubstitutor
-import com.intellij.psi.util.elementType
+import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
@@ -85,7 +69,8 @@ class DtoPropTypeInlayHintsProvider : InlayHintsProvider {
                 if (element.elementType != DtoTypes.IDENTIFIER) return
                 val parent = element.parent
                 if (parent !is DtoPsiPositiveProp && parent !is DtoPsiNegativeProp &&
-                    parent !is DtoPsiUserProp && parent !is DtoPsiFoldProp) return
+                    parent !is DtoPsiUserProp && parent !is DtoPsiFoldProp
+                ) return
 
                 val propName = when (parent) {
                     is DtoPsiPositiveProp -> parent.propName?.identifier?.text
@@ -160,7 +145,11 @@ class DtoPropTypeInlayHintsProvider : InlayHintsProvider {
     }
 }
 
-private fun resolvePropReference(element: PsiElement, propName: String, project: com.intellij.openapi.project.Project): PsiElement? {
+private fun resolvePropReference(
+    element: PsiElement,
+    propName: String,
+    project: com.intellij.openapi.project.Project
+): PsiElement? {
     // Build trace from the parent chain (excluding the current prop)
     val trace = mutableListOf<String>()
     var current: PsiElement? = element.parent?.parent
@@ -169,6 +158,7 @@ private fun resolvePropReference(element: PsiElement, propName: String, project:
             is DtoPsiPositiveProp -> {
                 current.propName?.identifier?.text?.also { trace.add(it) }
             }
+
             is DtoPsiTypeBranch -> {
                 current.qualifiedName.text.split(".").lastOrNull()?.also { trace.add(it) }
             }
@@ -201,7 +191,11 @@ private fun resolvePropReference(element: PsiElement, propName: String, project:
     return findPropertyInClass(currentType ?: return null, propName, project)
 }
 
-private fun findPropertyInClass(psiClass: PsiElement, name: String, project: com.intellij.openapi.project.Project): PsiElement? {
+private fun findPropertyInClass(
+    psiClass: PsiElement,
+    name: String,
+    project: com.intellij.openapi.project.Project
+): PsiElement? {
     return when (psiClass) {
         is PsiClass -> psiClass.allMethods.find { it.name == name }
         is KtClass -> psiClass.findPropertyByName(name)
@@ -226,6 +220,7 @@ private fun resolvePropertyTargetType(prop: PsiElement, project: com.intellij.op
                 }
             }
         }
+
         is KtProperty -> {
             prop.typeReference?.type()?.let {
                 if (it.arguments.isEmpty()) {
@@ -235,6 +230,7 @@ private fun resolvePropertyTargetType(prop: PsiElement, project: com.intellij.op
                 }
             }
         }
+
         else -> null
     }
 }

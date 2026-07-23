@@ -19,11 +19,9 @@ package cn.enaium.jimmer.buddy.extensions.dto.search
 import cn.enaium.jimmer.buddy.extensions.dto.DtoFileType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiFile
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoTypes
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.search.FileTypeIndex
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.base.util.allScope
