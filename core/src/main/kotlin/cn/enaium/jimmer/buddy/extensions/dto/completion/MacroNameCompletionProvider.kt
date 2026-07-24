@@ -35,26 +35,46 @@ object MacroNameCompletionProvider : CompletionProvider<CompletionParameters>() 
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
-        listOf("allScalars", "allReferences", "exhaustive", "types").forEach { macro ->
+        listOf("allScalars", "allReferences", "exhaustive", "types", "include").forEach { macro ->
             result.addElement(
                 LookupElementBuilder.create(macro).withIcon(AllIcons.Nodes.Template).withTypeText("Macro").let {
-                    if (macro == "types") {
-                        it.withInsertHandler { context, _ ->
-                            val project = context.project
-                            val editor = context.editor
-                            WriteCommandAction.runWriteCommandAction(project) {
-                                val tm = TemplateManager.getInstance(project)
-                                val template: Template = tm.createTemplate("", "")
-                                template.isToReformat = true
-                                template.addTextSegment(" {\n")
-                                template.addTextSegment("\t")
-                                template.addEndVariable()
-                                template.addTextSegment("\n}")
-                                tm.startTemplate(editor, template)
+                    when (macro) {
+                        "types" -> {
+                            it.withInsertHandler { context, _ ->
+                                val project = context.project
+                                val editor = context.editor
+                                WriteCommandAction.runWriteCommandAction(project) {
+                                    val tm = TemplateManager.getInstance(project)
+                                    val template: Template = tm.createTemplate("", "")
+                                    template.isToReformat = true
+                                    template.addTextSegment(" {\n")
+                                    template.addTextSegment("\t")
+                                    template.addEndVariable()
+                                    template.addTextSegment("\n}")
+                                    tm.startTemplate(editor, template)
+                                }
                             }
                         }
-                    } else {
-                        it
+
+                        "include" -> {
+                            it.withInsertHandler { context, _ ->
+                                val project = context.project
+                                val editor = context.editor
+                                WriteCommandAction.runWriteCommandAction(project) {
+                                    val tm = TemplateManager.getInstance(project)
+                                    val template: Template = tm.createTemplate("", "")
+                                    template.isToReformat = true
+                                    template.addTextSegment("(")
+                                    template.addEndVariable()
+                                    template.addTextSegment(")")
+                                    tm.startTemplate(editor, template)
+                                }
+                            }
+                        }
+
+                        else -> {
+                            it
+                        }
                     }
                 }
             )

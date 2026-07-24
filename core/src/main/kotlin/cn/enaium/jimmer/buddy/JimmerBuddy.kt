@@ -16,10 +16,7 @@
 
 package cn.enaium.jimmer.buddy
 
-import cn.enaium.jimmer.buddy.extensions.index.AnnotationClassIndex
-import cn.enaium.jimmer.buddy.extensions.index.EnumClassIndex
-import cn.enaium.jimmer.buddy.extensions.index.FullClassIndex
-import cn.enaium.jimmer.buddy.extensions.index.InterfaceClassIndex
+import cn.enaium.jimmer.buddy.extensions.index.*
 import cn.enaium.jimmer.buddy.extensions.wizard.JimmerProjectModel
 import cn.enaium.jimmer.buddy.service.NavigationService
 import cn.enaium.jimmer.buddy.service.PsiService
@@ -87,10 +84,7 @@ object JimmerBuddy {
     val PROJECT_MODEL_PROP_KEY = Key<GraphProperty<JimmerProjectModel>>("jimmer_project_model")
 
     object Indexes {
-        val ANNOTATION_CLASS = ID.create<String, Void>(AnnotationClassIndex::class.qualifiedName!!)
-        val INTERFACE_CLASS = ID.create<String, Void>(InterfaceClassIndex::class.qualifiedName!!)
-        val ENUM_CLASS = ID.create<String, Void>(EnumClassIndex::class.qualifiedName!!)
-        val FULL_CLASS = ID.create<String, Void>(FullClassIndex::class.qualifiedName!!)
+        val CLASS_KIND = ID.create<String, ClassKindIndex.Kind>(ClassKindIndex::class.qualifiedName!!)
     }
 
     object Icons {
