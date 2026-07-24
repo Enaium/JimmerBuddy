@@ -17,7 +17,9 @@
 package cn.enaium.jimmer.buddy.utility
 
 import cn.enaium.jimmer.buddy.extensions.dto.completion.getTrace
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoFragment
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.openapi.components.Service
@@ -335,9 +337,7 @@ fun org.babyfish.jimmer.ksp.immutable.meta.ImmutableProp.toCommonImmutableProp(
 fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
     val project = element.project
     val trace = element.parent?.let { getTrace(it) } ?: emptyList()
-    val typeName =
-        PsiTreeUtil.findChildOfType(element.containingFile, DtoPsiExportStatement::class.java)
-            ?.let { PsiTreeUtil.findChildOfType(it, DtoPsiQualifiedName::class.java) }?.text ?: return null
+    val typeName = resolveTypeName(element) ?: return null
 
     val cache = CommonImmutableTypeCache.getInstance(project)
     var currentImmutable = cache.get(typeName) ?: return null
@@ -371,6 +371,31 @@ fun findCurrentImmutableType(element: PsiElement): CommonImmutableType? {
         }
     }
     return currentImmutable
+}
+
+private fun resolveTypeName(element: PsiElement): String? {
+    val fragment = PsiTreeUtil.getParentOfType(element, DtoPsiDtoFragment::class.java)
+    if (fragment != null) {
+        val forQualifiedName = fragment.qualifiedName?.text ?: return PsiTreeUtil.findChildOfType(
+            element.containingFile, DtoPsiExportStatement::class.java
+        )?.let { PsiTreeUtil.findChildOfType(it, DtoPsiQualifiedName::class.java) }?.text
+        if (forQualifiedName.contains(".")) {
+            return forQualifiedName
+        }
+        val file = element.containingFile
+        val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java) ?: return null
+        for (importStatement in importStatements) {
+            val importQName = importStatement.qualifiedName.name()
+            if (importStatement.importedTypeList.isEmpty()) {
+                if (importQName.substringAfterLast(".") == forQualifiedName) {
+                    return importQName
+                }
+            }
+        }
+        return null
+    }
+    return PsiTreeUtil.findChildOfType(element.containingFile, DtoPsiExportStatement::class.java)
+        ?.let { PsiTreeUtil.findChildOfType(it, DtoPsiQualifiedName::class.java) }?.text
 }
 
 fun CommonImmutableType.psi(project: Project): PsiElement? {
