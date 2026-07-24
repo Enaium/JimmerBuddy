@@ -16,8 +16,10 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
+import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiImportStatement
+import cn.enaium.jimmer.buddy.extensions.index.ClassKindIndex
 import cn.enaium.jimmer.buddy.utility.name
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
@@ -30,14 +32,16 @@ import com.intellij.psi.PsiPackage
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import com.intellij.util.indexing.FileBasedIndex
-import com.intellij.util.indexing.ID
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 
 /**
  * @author Enaium
  */
-open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvider<CompletionParameters>() {
+open class QNameCompletionProvider(
+    val kind: ClassKindIndex.Kind,
+    val useImportHandler: Boolean = true
+) : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
@@ -47,23 +51,39 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
         val parts = parameters.getParts()
 
         if (parts.isEmpty()) {
-            val classes = FileBasedIndex.getInstance()
-                .getAllKeys(id, project)
+            val index = FileBasedIndex.getInstance()
+            val classes = index
+                .getAllKeys(JimmerBuddy.Indexes.CLASS_KIND, project)
+                .filter {
+                    index.getValues(JimmerBuddy.Indexes.CLASS_KIND, it, project.allScope()).contains(kind)
+                }
                 .mapNotNull { JavaPsiFacade.getInstance(project).findClass(it, project.allScope()) }
-            result.addAllElements(classes.map {
-                LookupElementBuilder.create(it.name ?: "Unknown Name").withInsertHandler { context, item ->
-                    val file = parameters.position.containingFile ?: return@withInsertHandler
-
-                    if (!hasImport(file, it.qualifiedName!!)) {
-                        val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java)
-                        val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java)
-                        parameters.editor.document.insertString(
-                            importStatements?.lastOrNull()?.endOffset ?: exportStatement?.endOffset ?: 0,
-                            "\nimport ${it.qualifiedName}"
+            result.addAllElements(classes.map { clazz ->
+                val lookupName = clazz.name ?: "Unknown Name"
+                val builder = LookupElementBuilder.create(lookupName)
+                    .withTailText(" (from ${clazz.qualifiedName?.substringBeforeLast(".") ?: ""})")
+                    .withIcon(clazz.getIcon(0))
+                if (useImportHandler) {
+                    builder.withInsertHandler { _, _ ->
+                        val file = parameters.position.containingFile ?: return@withInsertHandler
+                        if (!hasImport(file, clazz.qualifiedName!!)) {
+                            val importStatements = PsiTreeUtil.getChildrenOfType(file, DtoPsiImportStatement::class.java)
+                            val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java)
+                            parameters.editor.document.insertString(
+                                importStatements?.lastOrNull()?.endOffset ?: exportStatement?.endOffset ?: 0,
+                                "\nimport ${clazz.qualifiedName}"
+                            )
+                        }
+                    }
+                } else {
+                    builder.withInsertHandler { context, _ ->
+                        context.document.replaceString(
+                            context.startOffset,
+                            context.tailOffset,
+                            clazz.qualifiedName ?: lookupName
                         )
                     }
-
-                }.withTailText(" (from ${it.qualifiedName?.substringBeforeLast(".")})").withIcon(it.getIcon(0))
+                }
             })
         }
 
@@ -75,10 +95,13 @@ open class QNameCompletionProvider(val id: ID<String, Void>) : CompletionProvide
         })
 
         if (parts.size > 1) {
-            val classes =
-                JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.filter { it.isAnnotationType }
-                    ?: emptyList<PsiClass>()
-            result.addAllElements(classes.map {
+            val index = FileBasedIndex.getInstance()
+            val classes = JavaPsiFacade.getInstance(project).findPackage(packageName)?.classes?.toList() ?: emptyList()
+            val filteredClasses = classes.filter { clazz ->
+                val qualifiedName = clazz.qualifiedName ?: return@filter false
+                index.getValues(JimmerBuddy.Indexes.CLASS_KIND, qualifiedName, project.allScope()).contains(kind)
+            }
+            result.addAllElements(filteredClasses.map {
                 LookupElementBuilder.create(it.name ?: "Unknown Name").withIcon(it.getIcon(0))
             })
         }

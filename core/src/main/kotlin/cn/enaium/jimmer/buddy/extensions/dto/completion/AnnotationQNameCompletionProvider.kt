@@ -16,9 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
-import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.extensions.index.ClassKindIndex
 
 /**
  * @author Enaium
  */
-object AnnotationQNameCompletionProvider : QNameCompletionProvider(JimmerBuddy.Indexes.ANNOTATION_CLASS)
+object AnnotationQNameCompletionProvider : QNameCompletionProvider(ClassKindIndex.Kind.ANNOTATION)

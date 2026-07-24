@@ -147,6 +147,16 @@ class DtoCompletionContributor : CompletionContributor() {
                 ),
             InterfaceQNameCompletionProvider
         )
+        extend(
+            basic,
+            DtoPsiPatterns.psiElement()
+                .withParents(
+                    DtoPsiQualifiedNamePart::class.java,
+                    DtoPsiQualifiedName::class.java,
+                    DtoPsiDtoFragment::class.java
+                ),
+            ForTypeCompletionProvider
+        )
 
         extend(
             basic,

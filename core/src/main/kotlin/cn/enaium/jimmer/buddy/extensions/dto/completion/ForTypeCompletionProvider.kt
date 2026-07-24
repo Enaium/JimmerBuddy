@@ -21,4 +21,4 @@ import cn.enaium.jimmer.buddy.extensions.index.ClassKindIndex
 /**
  * @author Enaium
  */
-object ExportTypeCompletionProvider : QNameCompletionProvider(ClassKindIndex.Kind.IMMUTABLE, useImportHandler = false)
+object ForTypeCompletionProvider : QNameCompletionProvider(ClassKindIndex.Kind.IMMUTABLE)
