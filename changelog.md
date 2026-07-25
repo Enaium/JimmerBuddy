@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.13.x
+
+- Migrate from ANTLR to BNF-generated PSI
+- Add DTO type index infrastructure
+- Add immutable type cache with circular reference support
+- Support DTO fragment completion
+- Optimize qualified name completion with `ClassKindIndex`
+- Add `ForTypeCompletionProvider` for fragment `FOR` completion
+- Add `QualifiedNamePartReferenceProvider` for import resolution
+- Add `PropNameReferenceProvider` for prop reference
+- Optimize `ImmutableTree`, `DTOList`, `ErrorFamilyTree` with index-based loading
+- Remove ANTLR grammar, PSI classes, and related indices
+
 ## 1.12.x
 
 - Add `BaseEntity` switch for generate entity (#187)

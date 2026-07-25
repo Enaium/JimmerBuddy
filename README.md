@@ -24,6 +24,8 @@ A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jim
 - Structure view and navigation for DTOs and Immutables.
 - Syntax highlighting, checking, and native compiler checks for DTO files.
 - Format and organize DTO source code.
+- DTO fragment completion and type-ahead suggestions.
+- Immutable type cache for improved performance.
 
 ### Navigation & Productivity
 - Navigate to Immutables, DTOs, and properties (e.g., `@OneToOne`, `@ManyToMany`, `@IdView`, `@Formula`).
