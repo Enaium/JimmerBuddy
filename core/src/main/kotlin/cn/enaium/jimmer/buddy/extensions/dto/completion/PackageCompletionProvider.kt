@@ -28,7 +28,7 @@ import com.intellij.util.ProcessingContext
 /**
  * @author Enaium
  */
-object ExportPackageCompletionProvider : CompletionProvider<CompletionParameters>() {
+object PackageCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,

@@ -25,12 +25,13 @@ import com.intellij.util.ProcessingContext
 /**
  * @author Enaium
  */
-object ImportKeywordCompletionProvider : CompletionProvider<CompletionParameters>() {
+object TopLevelKeywordCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
         parameters: CompletionParameters,
         context: ProcessingContext,
         result: CompletionResultSet
     ) {
+        result.addElement(LookupElementBuilder.create("package"))
         result.addElement(LookupElementBuilder.create("import"))
     }
 }

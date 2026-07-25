@@ -36,6 +36,8 @@ class ClassKindIndex : FileBasedIndexExtension<String, ClassKindIndex.Kind>() {
 
     val immutableAnnotationRegex =
         Regex("^@(?:org\\.babyfish\\.jimmer\\.sql\\.)?(?:Entity|Immutable)\\b", setOf(RegexOption.MULTILINE))
+    val errorFamilyAnnotationRegex =
+        Regex("^@(?:org\\.babyfish\\.jimmer\\.errro\\.)?ErrorFamily\\b", setOf(RegexOption.MULTILINE))
 
     override fun getName(): ID<String, Kind> {
         return JimmerBuddy.Indexes.CLASS_KIND
@@ -57,14 +59,18 @@ class ClassKindIndex : FileBasedIndexExtension<String, ClassKindIndex.Kind>() {
                         .mapNotNull {
                             it.qualifiedName to when {
                                 it.isAnnotationType -> Kind.ANNOTATION
-                                it.isEnum -> Kind.ENUM
-                                it.isInterface -> {
+                                it.isEnum -> if (file.contentAsText.contains(errorFamilyAnnotationRegex)) {
+                                    Kind.ERROR_FAMILY
+                                } else {
+                                    Kind.ENUM
+                                }
+
+                                it.isInterface ->
                                     if (file.contentAsText.contains(immutableAnnotationRegex)) {
                                         Kind.IMMUTABLE
                                     } else {
                                         Kind.INTERFACE
                                     }
-                                }
 
                                 else -> return@mapNotNull null
                             }
@@ -76,7 +82,12 @@ class ClassKindIndex : FileBasedIndexExtension<String, ClassKindIndex.Kind>() {
                         .mapNotNull {
                             it.fqName!!.asString() to when {
                                 it.isAnnotation() -> Kind.ANNOTATION
-                                it.isEnum() -> Kind.ENUM
+                                it.isEnum() -> if (file.contentAsText.contains(errorFamilyAnnotationRegex)) {
+                                    Kind.ERROR_FAMILY
+                                } else {
+                                    Kind.ENUM
+                                }
+
                                 it.isInterface() -> {
                                     if (file.contentAsText.contains(immutableAnnotationRegex)) {
                                         Kind.IMMUTABLE
@@ -128,6 +139,7 @@ class ClassKindIndex : FileBasedIndexExtension<String, ClassKindIndex.Kind>() {
         ANNOTATION(0u),
         ENUM(1u),
         INTERFACE(2u),
-        IMMUTABLE(3u)
+        IMMUTABLE(3u),
+        ERROR_FAMILY(4u)
     }
 }
