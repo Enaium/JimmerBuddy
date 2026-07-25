@@ -20,6 +20,7 @@ Core Capabilities
   - Generate view, input, specification, and more from DTOs.
   - DTO structure view, visualization, and quick navigation.
   - Automatic import management (export, implements, userProp, etc.).
+  - DTO fragment completion and type-ahead suggestions.
 - Navigation & Discovery
   - Go to related types, properties, and annotations (@OneToOne, @ManyToMany, @IdView, @Formula…).
   - Count and navigate DTO types across the project.
