@@ -54,16 +54,15 @@ class DtoCompletionContributor : CompletionContributor() {
                 .withParents(
                     DtoPsiQualifiedNamePart::class.java,
                     DtoPsiQualifiedName::class.java,
-                    DtoPsiPackageStatement::class.java,
-                    DtoPsiExportPackage::class.java
+                    DtoPsiPackageStatement::class.java
                 ),
-            ExportPackageCompletionProvider
+            PackageCompletionProvider
         )
         extend(
             basic,
             DtoPsiPatterns.psiElement()
                 .withParent(DtoPsiFile::class.java),
-            ImportKeywordCompletionProvider
+            TopLevelKeywordCompletionProvider
         )
         extend(
             basic,

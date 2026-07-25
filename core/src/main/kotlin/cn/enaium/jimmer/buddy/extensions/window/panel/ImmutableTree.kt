@@ -17,9 +17,9 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
 import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
 import cn.enaium.jimmer.buddy.dialog.NewDtoFileDialog
+import cn.enaium.jimmer.buddy.extensions.index.ClassKindIndex
 import cn.enaium.jimmer.buddy.utility.*
 import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.type
 import com.intellij.icons.AllIcons
@@ -33,24 +33,23 @@ import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.indexing.FileBasedIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.idea.core.util.toVirtualFile
+import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.createSmartPointer
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -190,67 +189,47 @@ class ImmutableTree(val project: Project) : JPanel() {
         CoroutineScope(Dispatchers.Default).launch {
             withBackgroundProgress(project, "Loading Immutables") {
                 val results = mutableListOf<ImmutableType>()
-                val projects = project.findProjects()
-                GenerateProject.generate(
-                    projects,
-                    GenerateProject.SourceRootType.JAVA
-                ).forEach { (_, sourceFiles, _) ->
-                    ReadAction.run<Throwable> {
-                        sourceFiles.mapNotNullTo(results) { sourceFile ->
-                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<PsiClass>()
-                                ?.let { psiClass ->
-                                    if (psiClass.isImmutable()) {
-                                        try {
-                                            ImmutableType(psiClass.createSmartPointer()).apply {
-                                                CommonImmutableTypeCache.getInstance(project)
-                                                    .get(psiClass.qualifiedName ?: return@apply)?.props?.forEach {
-                                                    psiClass.methods.find { method -> method.name == it.name }
-                                                        ?.also { method ->
-                                                            add(ImmutableProp(method.createSmartPointer(), it))
-                                                        }
-                                                }
-                                            }
-                                        } catch (e: Throwable) {
-                                            JimmerBuddy.getWorkspace(project).log.error(e)
-                                            null
-                                        }
-                                    } else {
-                                        null
-                                    }
-                                }
-                        }
-                    }
-                }
 
-                GenerateProject.generate(
-                    projects,
-                    listOf(
-                        GenerateProject.SourceRootType.KOTLIN,
-                        GenerateProject.SourceRootType.JAVA_KOTLIN
-                    )
-                ).forEach { (_, sourceFiles, _) ->
-                    ReadAction.run<Throwable> {
-                        sourceFiles.mapNotNullTo(results) { sourceFile ->
-                            sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.let { ktClass ->
-                                if (ktClass.isImmutable()) {
-                                    try {
-                                        ImmutableType(ktClass.createSmartPointer()).apply {
-                                            CommonImmutableTypeCache.getInstance(project)
-                                                .get(ktClass.fqName?.asString() ?: return@apply)?.props?.forEach {
-                                                ktClass.getProperties().find { property -> property.name == it.name }
-                                                    ?.also { property ->
-                                                        add(ImmutableProp(property.createSmartPointer(), it))
-                                                    }
-                                            }
+                ReadAction.run<Throwable> {
+                    val index = FileBasedIndex.getInstance()
+                    val classNames = index
+                        .getAllKeys(JimmerBuddy.Indexes.CLASS_KIND, project)
+                        .filter {
+                            index.getValues(
+                                JimmerBuddy.Indexes.CLASS_KIND,
+                                it,
+                                project.allScope()
+                            ).contains(ClassKindIndex.Kind.IMMUTABLE)
+                        }
+
+                    classNames.forEach { qualifiedName ->
+                        try {
+                            val psiClass = JavaPsiFacade.getInstance(project)
+                                .findClass(qualifiedName, project.allScope()) ?: return@forEach
+                            val immutableType = when (val nav = psiClass.navigationElement) {
+                                is KtClass -> ImmutableType(nav.createSmartPointer()).apply {
+                                    CommonImmutableTypeCache.getInstance(project)
+                                        .get(qualifiedName)?.props?.forEach { prop ->
+                                            nav.getProperties().find { property -> property.name == prop.name }
+                                                ?.also { property ->
+                                                    add(ImmutableProp(property.createSmartPointer(), prop))
+                                                }
                                         }
-                                    } catch (e: Throwable) {
-                                        JimmerBuddy.getWorkspace(project).log.error(e)
-                                        null
-                                    }
-                                } else {
-                                    null
                                 }
+                                is PsiClass -> ImmutableType(nav.createSmartPointer()).apply {
+                                    CommonImmutableTypeCache.getInstance(project)
+                                        .get(qualifiedName)?.props?.forEach { prop ->
+                                            nav.methods.find { method -> method.name == prop.name }
+                                                ?.also { method ->
+                                                    add(ImmutableProp(method.createSmartPointer(), prop))
+                                                }
+                                        }
+                                }
+                                else -> return@forEach
                             }
+                            results.add(immutableType)
+                        } catch (e: Throwable) {
+                            JimmerBuddy.getWorkspace(project).log.error(e)
                         }
                     }
                 }
