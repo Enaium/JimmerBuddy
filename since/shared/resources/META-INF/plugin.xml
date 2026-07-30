@@ -25,6 +25,8 @@
         <notificationGroup displayType="BALLOON" id="JimmerBuddy.NotificationGroup"/>
         <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.ImmutableLineMark"
                                         implementationClass="cn.enaium.jimmer.buddy.extensions.insight.ImmutableLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="UAST" id="JimmerBuddy.ErrorFamilyLineMark"
+                                        implementationClass="cn.enaium.jimmer.buddy.extensions.insight.ErrorFamilyLinkMarkerProvider"/>
         <localInspection
                 displayName="ImmutableAnnotation"
                 shortName="ImmutableAnnotation"

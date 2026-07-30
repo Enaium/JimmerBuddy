@@ -133,6 +133,9 @@ fun PsiClass.asKSClassDeclaration(caches: Cache = mutableMapOf()): KSClassDeclar
         },
         asType = {
             this.asStarProjectedType()
+        },
+        containingFile = {
+            createKSFile(fileName = { containingFile.name })
         }
     ).also {
         caches[this.qualifiedName()!!] = it
@@ -312,6 +315,9 @@ fun KtClass.asKSClassDeclaration(caches: Cache = mutableMapOf()): KSClassDeclara
                     },
                 )
             }
+        },
+        containingFile = {
+            createKSFile(fileName = { containingFile.name })
         }
     ).also {
         caches[this.fqName!!.asString()] = it

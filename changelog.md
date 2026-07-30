@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Add `PropNameReferenceProvider` for prop reference
 - Optimize `ImmutableTree`, `DTOList`, `ErrorFamilyTree` with index-based loading
 - Remove ANTLR grammar, PSI classes, and related indices
+- Error family usages
 
 ## 1.12.x
 
