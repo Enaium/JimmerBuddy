@@ -14,6 +14,8 @@ A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jim
 ### Entity & DDL Support
 - Generate entities from database or DDL, with fine-grained selection of tables and columns.
 - Generate DDL from entities.
+- IntelliJ Database Tools integration: right-click tables in Database Tools tree to generate entities.
+- `@Table(name)` and `@Column(name)` annotation completion from Database Tools data sources.
 - Jimmer Project Wizard for quick project setup.
 
 ### Immutable & DTO Enhancements

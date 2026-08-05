@@ -16,6 +16,8 @@
 
 package cn.enaium.jimmer.buddy.dialog
 
+import cn.enaium.jimmer.buddy.database.provider.IntelliJDatabaseMetadataProvider
+import cn.enaium.jimmer.buddy.database.provider.IntelliJDataSourceInfo
 import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import cn.enaium.jimmer.buddy.storage.DatabaseCache.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.I18n
@@ -28,6 +30,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
+import javax.swing.DefaultComboBoxModel
 import javax.swing.JComponent
 
 /**
@@ -36,6 +39,14 @@ import javax.swing.JComponent
 class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) : DialogWrapper(false) {
     private val databaseModel = DatabaseModel()
 
+    private val intelliJDataSources: List<IntelliJDataSourceInfo> by lazy {
+        if (IntelliJDatabaseMetadataProvider.isDatabasePluginAvailable()) {
+            IntelliJDatabaseMetadataProvider().getDataSources(project)
+        } else {
+            emptyList()
+        }
+    }
+
     init {
         title = I18n.message("dialog.addDatabase.title")
         init()
@@ -43,6 +54,36 @@ class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) 
 
     override fun createCenterPanel(): JComponent {
         return panel {
+            if (intelliJDataSources.isNotEmpty()) {
+                row("IntelliJ Data Source") {
+                    comboBox(
+                        DefaultComboBoxModel(
+                            arrayOf("") + intelliJDataSources.map { "${it.name} (${it.url ?: "No URL"})" }.toTypedArray()
+                        )
+                    ).align(Align.FILL).apply {
+                        component.selectedItem = select?.intellijDataSourceId?.let { id ->
+                            intelliJDataSources.find { it.id == id }?.let { ds ->
+                                "${ds.name} (${ds.url ?: "No URL"})"
+                            }
+                        } ?: ""
+                        component.addActionListener {
+                            val selected = component.selectedItem as? String
+                            if (selected != null && selected.isNotEmpty()) {
+                                val index = component.selectedIndex - 1
+                                if (index >= 0 && index < intelliJDataSources.size) {
+                                    val ds = intelliJDataSources[index]
+                                    databaseModel.uriProperty.set(ds.url ?: "")
+                                    databaseModel.usernameProperty.set(ds.username ?: "")
+                                    databaseModel.driverNameProperty.set(ds.driverClass ?: "")
+                                    databaseModel.intellijDataSourceIdProperty.set(ds.id)
+                                }
+                            } else {
+                                databaseModel.intellijDataSourceIdProperty.set("")
+                            }
+                        }
+                    }
+                }
+            }
             row(I18n.message("dialog.addDatabase.label.uri")) {
                 fileChooserField(databaseModel.uriProperty, "sql", true).align(Align.FILL)
             }
@@ -87,7 +128,8 @@ class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) 
             databaseModel.schemaPattern,
             databaseModel.tableNamePattern,
             databaseModel.driverFile,
-            databaseModel.driverName
+            databaseModel.driverName,
+            databaseModel.intellijDataSourceId
         )
         super.doOKAction()
     }
@@ -102,6 +144,7 @@ class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) 
         val tableNamePatternProperty = graph.property(select?.tableNamePattern ?: "")
         val driverFileProperty = graph.property(select?.driverFile ?: "")
         val driverNameProperty = graph.property(select?.driverName ?: "")
+        val intellijDataSourceIdProperty = graph.property(select?.intellijDataSourceId ?: "")
 
         val uri: String by uriProperty
         val username: String by usernameProperty
@@ -111,5 +154,6 @@ class AddDatabaseDialog(val project: Project, val select: DatabaseItem? = null) 
         val tableNamePattern: String by tableNamePatternProperty
         val driverFile: String by driverFileProperty
         val driverName: String by driverNameProperty
+        val intellijDataSourceId: String by intellijDataSourceIdProperty
     }
 }

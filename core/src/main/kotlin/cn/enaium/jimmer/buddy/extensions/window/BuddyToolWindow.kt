@@ -56,16 +56,27 @@ class BuddyToolWindow : ToolWindowFactory {
                 false
             )
         )
-        toolWindow.contentManager.addContent(
-            toolWindow.contentManager.factory.createContent(
-                DatabaseList(project),
-                I18n.message("toolWindow.buddy.tab.Databases"),
-                false
+        if (!isDatabasePluginAvailable()) {
+            toolWindow.contentManager.addContent(
+                toolWindow.contentManager.factory.createContent(
+                    DatabaseList(project),
+                    I18n.message("toolWindow.buddy.tab.Databases"),
+                    false
+                )
             )
-        )
+        }
     }
 
     override fun shouldBeAvailable(project: Project): Boolean {
         return runBlocking { project.isJimmerProject() }
+    }
+
+    private fun isDatabasePluginAvailable(): Boolean {
+        return try {
+            Class.forName("com.intellij.database.psi.DataSourceManager")
+            true
+        } catch (_: ClassNotFoundException) {
+            false
+        }
     }
 }

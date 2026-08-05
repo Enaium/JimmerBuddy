@@ -1,0 +1,12 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="cn.enaium.jimmer.buddy.database.provider.IntelliJDatabaseMetadataProvider"/>
+        <postStartupActivity implementation="cn.enaium.jimmer.buddy.action.DatabaseActionRegistrar"/>
+    </extensions>
+    <actions>
+        <action id="JimmerBuddy.GenerateFromDbTable"
+                class="cn.enaium.jimmer.buddy.action.GenerateFromDbTableAction"
+                text="Generate Entity"
+                description="Generate Jimmer entity from database table"/>
+    </actions>
+</idea-plugin>

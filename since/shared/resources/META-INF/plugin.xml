@@ -6,6 +6,7 @@
     <depends>com.intellij.java</depends>
     <depends>org.jetbrains.kotlin</depends>
     <depends>com.intellij.gradle</depends>
+    <depends optional="true" config-file="jimmerBuddy-databasePlugin.xml">com.intellij.database</depends>
 
     <xi:include href="${include}"/>
 

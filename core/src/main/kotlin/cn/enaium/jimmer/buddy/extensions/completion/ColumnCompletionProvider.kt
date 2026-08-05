@@ -16,6 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.completion
 
+import cn.enaium.jimmer.buddy.database.provider.IntelliJDatabaseMetadataProvider
 import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import cn.enaium.jimmer.buddy.utility.annotArgName
 import cn.enaium.jimmer.buddy.utility.annotName
@@ -56,7 +57,13 @@ object ColumnCompletionProvider : CompletionProvider<CompletionParameters>() {
 
         val table = uClass.getTableName()
 
-        DatabaseCache.getInstance(position.project).tables.find { it.name == table }?.columns?.forEach {
+        val tables = if (IntelliJDatabaseMetadataProvider.isDatabasePluginAvailable()) {
+            IntelliJDatabaseMetadataProvider().getAllTables(position.project)
+        } else {
+            DatabaseCache.getInstance(position.project).tables
+        }
+
+        tables.find { it.name == table }?.columns?.forEach {
             result.addElement(LookupElementBuilder.create(it.name))
         }
     }

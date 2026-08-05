@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package cn.enaium.jimmer.buddy.utility
+package cn.enaium.jimmer.buddy.database.provider
 
 import cn.enaium.jimmer.buddy.database.model.Table
-import cn.enaium.jimmer.buddy.database.provider.DatabaseMetadataProvider
 import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import com.intellij.openapi.project.Project
 
 /**
  * @author Enaium
- * @deprecated Use [DatabaseMetadataProvider] instead.
  */
-fun DatabaseCache.DatabaseItem.getTables(project: Project): Set<Table> {
-    return DatabaseMetadataProvider.getInstance().getTables(project, this)
+interface DatabaseMetadataProvider {
+    fun getTables(project: Project, item: DatabaseCache.DatabaseItem): Set<Table>
+
+    companion object {
+        fun getInstance(): DatabaseMetadataProvider {
+            return if (IntelliJDatabaseMetadataProvider.isDatabasePluginAvailable()) {
+                IntelliJDatabaseMetadataProvider()
+            } else {
+                JdbcDatabaseMetadataProvider()
+            }
+        }
+    }
 }
