@@ -20,10 +20,12 @@ import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.database.generate.JavaEntityGenerate
 import cn.enaium.jimmer.buddy.database.generate.KotlinEntityGenerate
 import cn.enaium.jimmer.buddy.database.model.GenerateEntityModel
+import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.dialog.panel.TableTreeTable
 import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import cn.enaium.jimmer.buddy.utility.I18n
-import cn.enaium.jimmer.buddy.utility.getTables
+import cn.enaium.jimmer.buddy.database.provider.DatabaseMetadataProvider
+import cn.enaium.jimmer.buddy.storage.GenerateEntityCache
 import cn.enaium.jimmer.buddy.utility.packageChooserField
 import cn.enaium.jimmer.buddy.utility.relativeLocationField
 import com.intellij.openapi.project.Project
@@ -41,13 +43,16 @@ import javax.swing.JComponent
  */
 class GenerateEntityDialog(
     private val project: Project,
-    databaseItem: DatabaseCache.DatabaseItem
+    private val tables: Set<Table>
 ) : DialogWrapper(false) {
 
     private val generateEntityModel = GenerateEntityModel()
-    private val tableTreeTable = TableTreeTable(
+    private val tableTreeTable = TableTreeTable(tables)
+
+    constructor(project: Project, databaseItem: DatabaseCache.DatabaseItem) : this(
+        project,
         try {
-            databaseItem.getTables(project)
+            DatabaseMetadataProvider.getInstance().getTables(project, databaseItem)
         } catch (e: Throwable) {
             Messages.showErrorDialog(
                 I18n.message("dialog.generate.entity.message.connectFail", e.message),
@@ -61,6 +66,11 @@ class GenerateEntityDialog(
     init {
         title = I18n.message("dialog.generate.entity.title")
         setSize(800, 600)
+
+        val cache = GenerateEntityCache.getInstance(project)
+        generateEntityModel.relativePathProperty.set(cache.relativePath)
+        generateEntityModel.packageNameProperty.set(cache.packageName)
+
         init()
     }
 
@@ -151,6 +161,11 @@ class GenerateEntityDialog(
                 result
             )
         )
+
+        val cache = GenerateEntityCache.getInstance(project)
+        cache.relativePath = generateEntityModel.relativePath
+        cache.packageName = generateEntityModel.packageName
+
         super.doOKAction()
     }
 

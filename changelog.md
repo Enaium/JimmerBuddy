@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.14.x
+
+- Integrate with IntelliJ Database Tools plugin (optional dependency)
+- Extract table metadata via com.intellij.database API when Database Tools plugin is active
+- Add right-click "Generate Entity" action in Database Tools tree context menu
+- Add `@Table(name)` and `@Column(name)` annotation completion from Database Tools data sources
+- Hide ToolWindow Database tab when Database Tools plugin is available
+- Persist relative path and package name in Generate Entity dialog
+
+## 1.13.x
+
+- Migrate from ANTLR to BNF-generated PSI
+- Add DTO type index infrastructure
+- Add immutable type cache with circular reference support
+- Support DTO fragment completion
+- Optimize qualified name completion with `ClassKindIndex`
+- Add `ForTypeCompletionProvider` for fragment `FOR` completion
+- Add `QualifiedNamePartReferenceProvider` for import resolution
+- Add `PropNameReferenceProvider` for prop reference
+- Optimize `ImmutableTree`, `DTOList`, `ErrorFamilyTree` with index-based loading
+- Remove ANTLR grammar, PSI classes, and related indices
+- Error family usages
+
 ## 1.12.x
 
 - Add `BaseEntity` switch for generate entity (#187)

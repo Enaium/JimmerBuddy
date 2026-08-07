@@ -43,7 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.babyfish.jimmer.Scalar
 import org.babyfish.jimmer.dto.compiler.DtoFile
-import org.babyfish.jimmer.dto.compiler.OsFile
+import org.babyfish.jimmer.dto.compiler.DtoSource
 import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
@@ -64,7 +64,10 @@ import java.io.Reader
 import java.nio.file.Path
 import java.util.concurrent.Callable
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.io.path.*
+import kotlin.io.path.exists
+import kotlin.io.path.name
+import kotlin.io.path.readText
+import kotlin.io.path.relativeTo
 
 
 /**
@@ -350,9 +353,9 @@ fun Project.findKtClass(name: String): KtClass? {
 
 fun Project.toDtoFile(projectDir: Path, path: Path): DtoFile {
     return DtoFile(
-        object : OsFile {
-            override fun getAbsolutePath(): String {
-                return path.absolutePathString()
+        object : DtoSource {
+            override fun getName(): String {
+                return path.name
             }
 
             override fun openReader(): Reader {

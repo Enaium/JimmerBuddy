@@ -16,7 +16,9 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.lang
 
-import cn.enaium.jimmer.buddy.dto.DtoParser
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiAliasGroup
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoBody
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiEnumBody
 import com.intellij.lang.ASTNode
 import com.intellij.lang.folding.FoldingBuilderEx
 import com.intellij.lang.folding.FoldingDescriptor
@@ -24,8 +26,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
-import com.intellij.psi.util.elementType
-import org.antlr.intellij.adaptor.lexer.RuleIElementType
 
 /**
  * @author Enaium
@@ -39,14 +39,8 @@ class DtoFoldingBuilder : FoldingBuilderEx(), DumbAware {
         val descriptors = mutableListOf<FoldingDescriptor>()
         root.accept(object : PsiRecursiveElementVisitor() {
             override fun visitElement(element: PsiElement) {
-                val elementType = element.elementType
-                if (element.text.isNotBlank() && elementType is RuleIElementType) {
-                    if (elementType.ruleIndex in listOf(
-                            DtoParser.RULE_dtoBody,
-                            DtoParser.RULE_aliasGroupBody,
-                            DtoParser.RULE_enumBody
-                        )
-                    ) {
+                when (element) {
+                    is DtoPsiDtoBody, is DtoPsiAliasGroup, is DtoPsiEnumBody -> {
                         descriptors.add(FoldingDescriptor(element, element.textRange))
                     }
                 }

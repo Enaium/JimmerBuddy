@@ -14,6 +14,8 @@ A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jim
 ### Entity & DDL Support
 - Generate entities from database or DDL, with fine-grained selection of tables and columns.
 - Generate DDL from entities.
+- IntelliJ Database Tools integration: right-click tables in Database Tools tree to generate entities.
+- `@Table(name)` and `@Column(name)` annotation completion from Database Tools data sources.
 - Jimmer Project Wizard for quick project setup.
 
 ### Immutable & DTO Enhancements
@@ -24,6 +26,8 @@ A powerful IntelliJ IDEA plugin that brings first-class support for [Project Jim
 - Structure view and navigation for DTOs and Immutables.
 - Syntax highlighting, checking, and native compiler checks for DTO files.
 - Format and organize DTO source code.
+- DTO fragment completion and type-ahead suggestions.
+- Immutable type cache for improved performance.
 
 ### Navigation & Productivity
 - Navigate to Immutables, DTOs, and properties (e.g., `@OneToOne`, `@ManyToMany`, `@IdView`, `@Formula`).

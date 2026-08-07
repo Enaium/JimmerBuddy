@@ -24,7 +24,7 @@ import cn.enaium.jimmer.buddy.storage.DatabaseCache
 import cn.enaium.jimmer.buddy.storage.DatabaseCache.DatabaseItem
 import cn.enaium.jimmer.buddy.utility.DB
 import cn.enaium.jimmer.buddy.utility.I18n
-import cn.enaium.jimmer.buddy.utility.getTables
+import cn.enaium.jimmer.buddy.database.provider.DatabaseMetadataProvider
 import cn.enaium.jimmer.buddy.utility.invokeLater
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -79,7 +79,7 @@ class DatabaseList(val project: Project) : JPanel() {
                             add(JMenuItem(I18n.message("toolwindow.buddy.menu.cache")).apply {
                                 addActionListener {
                                     DatabaseCache.getInstance(project).tables = try {
-                                        select.getTables(project)
+                                        DatabaseMetadataProvider.getInstance().getTables(project, select)
                                     } catch (e: Throwable) {
                                         Messages.showErrorDialog(
                                             I18n.message("dialog.generate.entity.message.connectFail", e.message),

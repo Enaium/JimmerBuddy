@@ -12,6 +12,8 @@ Core Capabilities
 - Entities & DDL
   - Generate entities from database or DDL (select tables/columns with precision).
   - Generate DDL from entities for round‑trip modeling.
+  - IntelliJ Database Tools integration: right-click tables in Database Tools tree to generate entities.
+  - @Table(name) and @Column(name) annotation completion from Database Tools data sources.
   - Project wizard to bootstrap Jimmer projects quickly.
 - Immutable Model Tooling
   - Auto-generate draft, props, fetcher, and related helpers for Immutables.
@@ -20,6 +22,7 @@ Core Capabilities
   - Generate view, input, specification, and more from DTOs.
   - DTO structure view, visualization, and quick navigation.
   - Automatic import management (export, implements, userProp, etc.).
+  - DTO fragment completion and type-ahead suggestions.
 - Navigation & Discovery
   - Go to related types, properties, and annotations (@OneToOne, @ManyToMany, @IdView, @Formula…).
   - Count and navigate DTO types across the project.

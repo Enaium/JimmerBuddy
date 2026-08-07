@@ -16,28 +16,25 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.inspection
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
-import cn.enaium.jimmer.buddy.utility.findProjectDir
-import cn.enaium.jimmer.buddy.utility.ktClassesToKsp
-import cn.enaium.jimmer.buddy.utility.psiClassesToApt
-import cn.enaium.jimmer.buddy.utility.workspace
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
+import cn.enaium.jimmer.buddy.utility.*
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.editor.Document
 import com.intellij.psi.*
+import com.intellij.psi.util.PsiTreeUtil
 import org.babyfish.jimmer.apt.createContext
 import org.babyfish.jimmer.apt.dto.AptDtoCompiler
 import org.babyfish.jimmer.dto.compiler.DtoAstException
 import org.babyfish.jimmer.dto.compiler.DtoFile
 import org.babyfish.jimmer.dto.compiler.DtoModifier
-import org.babyfish.jimmer.dto.compiler.OsFile
+import org.babyfish.jimmer.dto.compiler.DtoSource
 import org.babyfish.jimmer.ksp.Context
 import org.babyfish.jimmer.ksp.KspDtoCompiler
 import org.jetbrains.kotlin.idea.base.util.allScope
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.io.Reader
 import javax.lang.model.element.TypeElement
 import kotlin.io.path.absolutePathString
@@ -50,8 +47,8 @@ class DtoInspection : LocalInspectionTool() {
                 val project = file.project
                 val document = PsiDocumentManager.getInstance(project).getDocument(file) ?: return
                 val path = file.virtualFile.toNioPath()
-                val typeName =
-                    file.getChildOfType<DtoPsiRoot>()?.qualifiedName() ?: return
+                val exportStatement = PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java) ?: return
+                val typeName = exportStatement.qualifiedName.name()
                 if (project.workspace().isJavaProject) {
                     val typeClass =
                         JavaPsiFacade.getInstance(project).findClass(typeName, project.allScope()) ?: return
@@ -62,8 +59,8 @@ class DtoInspection : LocalInspectionTool() {
                         pe.typeUtils,
                         pe.filer,
                         false,
-                        emptyArray(),
-                        emptyArray(),
+                        null,
+                        null,
                         null,
                         null,
                         null,
@@ -71,9 +68,9 @@ class DtoInspection : LocalInspectionTool() {
                         false
                     )
                     val elements = pe.elementUtils
-                    val dtoFile = DtoFile(object : OsFile {
-                        override fun getAbsolutePath(): String {
-                            return path.absolutePathString()
+                    val dtoFile = DtoFile(object : DtoSource {
+                        override fun getName(): String {
+                            return file.name
                         }
 
                         override fun openReader(): Reader {
@@ -96,9 +93,9 @@ class DtoInspection : LocalInspectionTool() {
                     val (resolver, environment, sources) =
                         project.ktClassesToKsp(setOf(typeClass))
                     val context = Context(resolver, environment)
-                    val dtoFile = DtoFile(object : OsFile {
-                        override fun getAbsolutePath(): String {
-                            return path.absolutePathString()
+                    val dtoFile = DtoFile(object : DtoSource {
+                        override fun getName(): String {
+                            return file.name
                         }
 
                         override fun openReader(): Reader {

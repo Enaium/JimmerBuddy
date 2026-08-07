@@ -18,6 +18,7 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.kotlin")
         bundledPlugin("com.intellij.gradle")
+        bundledPlugin("com.intellij.database")
     }
 }
 

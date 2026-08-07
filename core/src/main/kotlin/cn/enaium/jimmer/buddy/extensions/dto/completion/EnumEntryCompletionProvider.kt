@@ -47,8 +47,9 @@ object EnumEntryCompletionProvider : CompletionProvider<CompletionParameters>() 
     ) {
         val project = parameters.position.project
         val prop = parameters.position.findParentOfType<DtoPsiPositiveProp>() ?: return
+        val propName = prop.propName?.identifier?.text ?: return
         val enumName =
-            findCurrentImmutableType(prop)?.props()?.find { it.name() == prop.prop?.value }?.typeName() ?: return
+            findCurrentImmutableType(prop)?.props?.find { it.name == propName }?.typeName ?: return
 
         val entries = if (project.workspace().isJavaProject) {
             JavaPsiFacade.getInstance(project).findClass(enumName, project.allScope())

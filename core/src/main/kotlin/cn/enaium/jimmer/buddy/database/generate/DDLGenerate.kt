@@ -20,7 +20,7 @@ import cn.enaium.jimmer.buddy.database.model.*
 import cn.enaium.jimmer.buddy.database.model.Column
 import cn.enaium.jimmer.buddy.database.model.Table
 import cn.enaium.jimmer.buddy.utility.*
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.isComputed
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.isComputed
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiEnumConstant
@@ -48,8 +48,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 schema,
                 table,
                 commonImmutableType.psi(project)?.getComment(),
-                commonImmutableType.props().mapNotNull { prop ->
-                    if (!prop.isList() && !prop.isEmbedded() && !prop.isComputed()) {
+                commonImmutableType.props.mapNotNull { prop ->
+                    if (!prop.isList && !prop.isEmbedded && !prop.isComputed()) {
                         prop.toColumn(table)
                     } else {
                         null
@@ -61,8 +61,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                         type: CommonImmutableType,
                         map: MutableMap<String, String> = mutableMapOf()
                     ) {
-                        type.props().forEach { prop ->
-                            if (prop.isEmbedded()) {
+                        type.props.forEach { prop ->
+                            if (prop.isEmbedded) {
                                 prop.psi(project)?.also { psi ->
                                     if (psi is PsiMethod) {
                                         psi.annotations.forEach {
@@ -91,13 +91,13 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                                         }
                                     }
                                 }
-                                prop.targetType()?.also {
+                                prop.targetType?.also {
                                     addEmbeddedProp(it, map)
                                     map.clear()
                                 }
-                            } else if (prop.declaringType().isEmbedded()) {
+                            } else if (prop.declaringType.isEmbedded) {
                                 columns.add(prop.toColumn(table).let { column ->
-                                    map[prop.name()]?.let {
+                                    map[prop.name]?.let {
                                         column.copy(name = it)
                                     } ?: column
                                 })
@@ -109,13 +109,13 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
 
                     columns
                 },
-                commonImmutableType.props().mapNotNull { prop ->
+                commonImmutableType.props.mapNotNull { prop ->
                     prop.toPrimaryKey(table)
                 }.toSet(),
-                commonImmutableType.props().mapNotNull { prop ->
+                commonImmutableType.props.mapNotNull { prop ->
                     prop.toForeignKey(table)
                 }.toMutableSet(),
-                commonImmutableType.props().mapNotNull { prop ->
+                commonImmutableType.props.mapNotNull { prop ->
                     prop.toUniqueKey(table)
                 }.groupBy { it.name to it.tableName }
                     .map { (k, v) -> UniqueKey(k.first, k.second, v.map { it.columns }.flatten().toSet()) }
@@ -123,10 +123,10 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             )
         )
 
-        commonImmutableType.props().filter { it.isList() && it.isManyToMany() }.forEach { prop ->
+        commonImmutableType.props.filter { it.isList && it.isManyToMany }.forEach { prop ->
             val psi = prop.psi(project)
             val (_, selfName) = commonImmutableType.tableName()
-            val (_, inverseName) = prop.targetType()?.tableName() ?: return@forEach
+            val (_, inverseName) = prop.targetType?.tableName() ?: return@forEach
 
             var joinName: String? = null
             var joinColumnName: String? = null
@@ -160,7 +160,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             }
 
             val tableName = joinName ?: "${selfName}_${inverseName}_mapping"
-            val type = commonImmutableType.props().find { it.isId() }?.typeName()?.replace("?", "") ?: return@forEach
+            val type = commonImmutableType.props.find { it.isId }?.typeName?.replace("?", "") ?: return@forEach
             val self = Column(
                 joinColumnName ?: "${selfName}_${generateDDLModel.primaryKeyName}",
                 tableName,
@@ -207,16 +207,16 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         return tables
     }
 
-    fun CommonImmutableType.CommonImmutableProp.toColumn(tableName: String): Column {
+    fun CommonImmutableProp.toColumn(tableName: String): Column {
         val psi = psi(project)
         return Column(
             columnName().let {
-                if (isAssociation(true) && !isList()) {
+                if (isAssociation && !isList) {
                     "${it}_${generateDDLModel.primaryKeyName}"
                 } else {
                     it
                 }
-            }, tableName, typeName().replace("?", ""), psi?.getComment(), when (psi) {
+            }, tableName, typeName.replace("?", ""), psi?.getComment(), when (psi) {
                 is PsiMethod -> {
                     psi.modifierList.findAnnotation(Default::class.qualifiedName!!)?.findAttributeValue("value")
                         ?.toAny(String::class.java)?.toString()
@@ -230,7 +230,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 else -> {
                     null
                 }
-            }, isNullable()
+            }, isNullable
         ).let { column ->
             when (psi) {
                 is PsiMethod -> {
@@ -250,10 +250,10 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         }
     }
 
-    fun CommonImmutableType.CommonImmutableProp.toPrimaryKey(tableName: String): PrimaryKey? {
-        return if (isId()) {
+    fun CommonImmutableProp.toPrimaryKey(tableName: String): PrimaryKey? {
+        return if (isId) {
             PrimaryKey(
-                "pk_${tableName}_${name().camelToSnakeCase()}",
+                "pk_${tableName}_${name.camelToSnakeCase()}",
                 tableName,
                 setOf(toColumn(tableName))
             )
@@ -262,17 +262,17 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         }
     }
 
-    fun CommonImmutableType.CommonImmutableProp.toForeignKey(tableName: String): ForeignKey? {
-        return if (isAssociation(true) && !isList() && !isComputed()) {
+    fun CommonImmutableProp.toForeignKey(tableName: String): ForeignKey? {
+        return if (isAssociation && !isList && !isComputed()) {
             val psi = psi(project)
             ForeignKey(
-                "fk_${tableName}_${name().camelToSnakeCase()}",
+                "fk_${tableName}_${name.camelToSnakeCase()}",
                 tableName,
                 toColumn(tableName),
                 run {
-                    val targetType = targetType() ?: return null
-                    val targetTypeId = targetType.props().find { it.isId() } ?: return null
-                    targetTypeId.toColumn(targetType.name().camelToSnakeCase())
+                    val targetType = targetType ?: return null
+                    val targetTypeId = targetType.props.find { it.isId } ?: return null
+                    targetTypeId.toColumn(targetType.name.camelToSnakeCase())
                 }
             ).let { column ->
                 when (psi) {
@@ -297,8 +297,8 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
         }
     }
 
-    fun CommonImmutableType.CommonImmutableProp.toUniqueKey(tableName: String): UniqueKey? {
-        return if (isKey()) {
+    fun CommonImmutableProp.toUniqueKey(tableName: String): UniqueKey? {
+        return if (isKey) {
             val psi = psi(project)
 
             val group = when (psi) {
@@ -338,7 +338,7 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             }
 
             val typeMapping =
-                when (val psi = commonImmutableType.props().find { it.columnName() == name }?.psi(project)) {
+                when (val psi = commonImmutableType.props.find { it.columnName() == name }?.psi(project)) {
                     is PsiMethod -> {
                         if (generateDDLModel.database in listOf(Database.MYSQL, Database.MARIADB, Database.POSTGRES)) {
                             psi.modifierList.findAnnotation(Serialized::class.qualifiedName!!)?.let { "json" }
@@ -541,11 +541,11 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
                 null to null
             }
         }.let { (schema, table) ->
-            (schema ?: "") to (table ?: name().camelToSnakeCase())
+            (schema ?: "") to (table ?: name.camelToSnakeCase())
         }
     }
 
-    private fun CommonImmutableType.CommonImmutableProp.columnName(): String {
+    private fun CommonImmutableProp.columnName(): String {
         val psi = psi(project)
         return when (psi) {
             is PsiMethod -> {
@@ -561,6 +561,6 @@ abstract class DDLGenerate(val project: Project, val generateDDLModel: GenerateD
             else -> {
                 null
             }
-        } ?: name().camelToSnakeCase()
+        } ?: name.camelToSnakeCase()
     }
 }

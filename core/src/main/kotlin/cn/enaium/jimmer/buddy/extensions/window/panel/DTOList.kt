@@ -17,9 +17,8 @@
 package cn.enaium.jimmer.buddy.extensions.window.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.JimmerBuddy.GenerateProject
+import cn.enaium.jimmer.buddy.extensions.dto.DtoFileType
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
 import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnAction
@@ -32,17 +31,18 @@ import com.intellij.openapi.progress.withBackgroundProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiManager
+import com.intellij.psi.search.FileTypeIndex
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.kotlin.idea.core.util.toVirtualFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -137,21 +137,21 @@ class DTOList(val project: Project) : JPanel() {
         CoroutineScope(Dispatchers.Default).launch {
             withBackgroundProgress(project, "Loading DTOs") {
                 val results = mutableListOf<DtoNode>()
-                val projects = project.findProjects()
-                GenerateProject.generate(
-                    projects,
-                    GenerateProject.SourceRootType.DTO
-                ).forEach { (_, sourceFiles, _) ->
-                    ReadAction.run<Throwable> {
-                        sourceFiles.mapNotNullTo(results) { sourceFile ->
-                            sourceFile.toFile().toVirtualFile()?.findPsiFile(project)?.getChildOfType<DtoPsiRoot>()
-                                ?.let { root ->
-                                    DtoFile(root).apply {
-                                        root.dtoTypes.forEach {
-                                            add(DtoType(it))
-                                        }
-                                    }
+
+                ReadAction.run<Throwable> {
+                    val files = FileTypeIndex.getFiles(
+                        DtoFileType,
+                        GlobalSearchScope.allScope(project)
+                    )
+                    files.forEach { virtualFile ->
+                        val file = PsiManager.getInstance(project).findFile(virtualFile) ?: return@forEach
+                        val dtoTypes = PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoType::class.java)
+                        if (dtoTypes.isNotEmpty()) {
+                            results.add(DtoFile(file).apply {
+                                dtoTypes.forEach {
+                                    add(DtoType(it))
                                 }
+                            })
                         }
                     }
                 }
@@ -216,7 +216,7 @@ class DTOList(val project: Project) : JPanel() {
 
         override fun toString(): String {
             return if (target is DtoPsiDtoType) {
-                target.name?.text ?: "Unknown Name"
+                target.identifier.text
             } else {
                 target.text
             }

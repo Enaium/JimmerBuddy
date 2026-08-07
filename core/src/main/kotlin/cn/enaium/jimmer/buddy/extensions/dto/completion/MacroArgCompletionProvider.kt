@@ -17,12 +17,17 @@
 package cn.enaium.jimmer.buddy.extensions.dto.completion
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoFragment
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiMacro
+import cn.enaium.jimmer.buddy.utility.DTO_FILE
 import cn.enaium.jimmer.buddy.utility.IMMUTABLE
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.findParentOfType
 import com.intellij.util.ProcessingContext
 
 /**
@@ -35,13 +40,29 @@ object MacroArgCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet
     ) {
         val element = parameters.position
-        result.addElement(LookupElementBuilder.create("this"))
-        findCurrentImmutableType(element)?.superTypes()?.forEach {
-            result.addElement(
-                LookupElementBuilder.create(it.name())
-                    .withTailText(" (from ${it.qualifiedName().substringBeforeLast(".")})")
-                    .withIcon(JimmerBuddy.Icons.IMMUTABLE)
-            )
+        when (val name = element.findParentOfType<DtoPsiMacro>()?.directive?.identifier?.text) {
+            "allScalars" -> {
+                result.addElement(LookupElementBuilder.create("this"))
+                findCurrentImmutableType(element)?.superTypes?.forEach {
+                    result.addElement(
+                        LookupElementBuilder.create(it.name)
+                            .withTailText(" (from ${it.qualifiedName.substringBeforeLast(".")})")
+                            .withIcon(JimmerBuddy.Icons.IMMUTABLE)
+                    )
+                }
+            }
+
+            "include" -> {
+                val file = element.containingFile ?: return
+                val fragments = PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoFragment::class.java)
+                fragments.forEach { fragment ->
+                    fragment.identifier.text.let { name ->
+                        result.addElement(
+                            LookupElementBuilder.create(name).withIcon(JimmerBuddy.Icons.DTO_FILE)
+                        )
+                    }
+                }
+            }
         }
     }
 }

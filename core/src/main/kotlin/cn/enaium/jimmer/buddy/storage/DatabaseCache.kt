@@ -65,6 +65,7 @@ class DatabaseCache(val project: Project) : PersistentStateComponent<DatabaseCac
         var tableNamePattern: String,
         var driverFile: String,
         var driverName: String,
+        var intellijDataSourceId: String = "",
     )
 
     private var state = State()

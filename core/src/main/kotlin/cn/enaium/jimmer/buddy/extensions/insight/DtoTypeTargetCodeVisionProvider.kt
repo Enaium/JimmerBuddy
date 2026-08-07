@@ -18,14 +18,15 @@ package cn.enaium.jimmer.buddy.extensions.insight
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiDtoType
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiRoot
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiExportStatement
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiQualifiedName
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.toUElementOfType
 import java.awt.event.MouseEvent
@@ -68,6 +69,13 @@ class DtoTypeTargetCodeVisionProvider : ImmutableCodeVisionProvider() {
         project: Project,
         qualifiedName: String
     ): List<DtoPsiDtoType> = FilenameIndex.getAllFilesByExt(project, "dto")
-        .mapNotNull { it.toPsiFile(project)?.getChildOfType<DtoPsiRoot>() }
-        .find { it.qualifiedName() == qualifiedName }?.dtoTypes ?: emptyList()
+        .mapNotNull { it.toPsiFile(project) }
+        .filter { file ->
+            PsiTreeUtil.findChildOfType(file, DtoPsiExportStatement::class.java)
+                ?.let { PsiTreeUtil.findChildOfType(it, DtoPsiQualifiedName::class.java) }
+                ?.text == qualifiedName
+        }
+        .flatMap { file ->
+            PsiTreeUtil.findChildrenOfType(file, DtoPsiDtoType::class.java)
+        }
 }

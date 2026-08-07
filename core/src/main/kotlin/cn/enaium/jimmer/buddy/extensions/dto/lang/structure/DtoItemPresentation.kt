@@ -31,39 +31,38 @@ class DtoItemPresentation(val element: PsiElement) : ItemPresentation {
     override fun getPresentableText(): String {
         return when (element) {
             is DtoPsiFile -> element.name
-            is DtoPsiDtoType -> element.name?.value ?: "Unknown Name"
+            is DtoPsiDtoType -> element.identifier.text.ifEmpty { "Unknown Name" }
             is DtoPsiExplicitProp -> element.positiveProp?.let { positiveProp ->
-                positiveProp.prop?.value?.let { name ->
-                    positiveProp.alias?.value?.let { alias ->
-                        "$name as $alias"
-                    } ?: name
+                val propName = positiveProp.propName?.identifier?.text
+                val alias = positiveProp.alias?.identifier?.text
+                if (propName != null) {
+                    alias?.let { "$propName as $it" } ?: propName
+                } else {
+                    null
                 }
             } ?: element.negativeProp?.let { negativeProp ->
-                negativeProp.prop?.value?.let {
-                    "$it (Negative)"
-                }
+                negativeProp.propName.identifier.text.let { "$it (Negative)" }
             } ?: element.userProp?.let { userProp ->
-                userProp.prop?.value?.let { name ->
-                    userProp.typeRef?.let { typeRef ->
-                        fun typeRefName(typeRef: DtoPsiTypeRef): String {
-                            return "${typeRef.qualifiedName?.qualifiedNameParts?.qualifiedName?.substringAfterLast(".")}".let {
-                                if (typeRef.genericArguments.isEmpty()) {
-                                    it
-                                } else {
-                                    it + typeRef.genericArguments.joinToString(
-                                        ", ",
-                                        "<",
-                                        ">"
-                                    ) { genericArgument ->
-                                        genericArgument.typeRef?.let { typeRef -> typeRefName(typeRef) } ?: ""
-                                    }
+                val name = userProp.propName.identifier.text
+                userProp.typeRef?.let { typeRef ->
+                    fun typeRefName(typeRef: DtoPsiTypeRef): String {
+                        return "${typeRef.qualifiedName.text.substringAfterLast(".")}".let {
+                            if (typeRef.genericArgumentList.isEmpty()) {
+                                it
+                            } else {
+                                it + typeRef.genericArgumentList.joinToString(
+                                    ", ",
+                                    "<",
+                                    ">"
+                                ) { genericArgument ->
+                                    genericArgument.typeRef?.let { typeRef -> typeRefName(typeRef) } ?: ""
                                 }
                             }
                         }
+                    }
 
-                        "$name: ${typeRefName(typeRef)}"
-                    } ?: name
-                }
+                    "$name: ${typeRefName(typeRef)}"
+                } ?: name
             } ?: "Unknow Name"
 
             else -> "Unknow Name"

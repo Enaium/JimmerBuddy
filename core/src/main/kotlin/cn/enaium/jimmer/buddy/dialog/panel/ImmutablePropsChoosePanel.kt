@@ -63,14 +63,14 @@ class ImmutablePropsChoosePanel(
                         if (node.childCount == 0) {
                             when (node) {
                                 is ImmutableTypeNode -> {
-                                    node.immutableType.props().forEach {
+                                    node.immutableType.props.forEach {
                                         node.add(ImmutablePropNode(it))
                                     }
                                 }
 
                                 is ImmutablePropNode -> {
-                                    thread { runReadOnly { node.immutableProp.targetType() } }?.also {
-                                        it.props().forEach {
+                                    thread { runReadOnly { node.immutableProp.targetType } }?.also {
+                                        it.props.forEach {
                                             node.add(ImmutablePropNode(it))
                                         }
                                     }
@@ -157,21 +157,21 @@ class ImmutablePropsChoosePanel(
 
     private class ImmutableTypeNode(val immutableType: CommonImmutableType) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return immutableType.props().isEmpty()
+            return immutableType.props.isEmpty()
         }
 
         override fun toString(): String {
-            return immutableType.name()
+            return immutableType.name
         }
     }
 
-    private class ImmutablePropNode(val immutableProp: CommonImmutableType.CommonImmutableProp) : ImmutableNode() {
+    private class ImmutablePropNode(val immutableProp: CommonImmutableProp) : ImmutableNode() {
         override fun isLeaf(): Boolean {
-            return thread { runReadOnly { immutableProp.targetType() } }?.props()?.isEmpty() != false
+            return thread { runReadOnly { immutableProp.targetType } }?.props?.isEmpty() != false
         }
 
         override fun toString(): String {
-            return immutableProp.name()
+            return immutableProp.name
         }
     }
 }

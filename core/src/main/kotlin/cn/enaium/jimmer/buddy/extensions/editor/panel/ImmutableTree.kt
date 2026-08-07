@@ -17,7 +17,10 @@
 package cn.enaium.jimmer.buddy.extensions.editor.panel
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.CommonImmutableTypeCache
+import cn.enaium.jimmer.buddy.utility.IMMUTABLE
+import cn.enaium.jimmer.buddy.utility.PROP
+import cn.enaium.jimmer.buddy.utility.runReadOnly
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
@@ -26,11 +29,7 @@ import com.intellij.pom.Navigatable
 import com.intellij.psi.*
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.treeStructure.Tree
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
@@ -108,9 +107,10 @@ class ImmutableTree(
 
     private fun loadJavaProperties(psiClass: PsiClass, classNode: ImmutableType) {
         try {
-            val immutableType = psiClass.toImmutable().toCommonImmutableType()
-            immutableType.props().forEach { prop ->
-                psiClass.methods.find { it.name == prop.name() }?.let { method ->
+            val immutableType =
+                CommonImmutableTypeCache.getInstance(project).get(psiClass.qualifiedName ?: return) ?: return
+            immutableType.props.forEach { prop ->
+                psiClass.methods.find { it.name == prop.name }?.let { method ->
                     classNode.add(ImmutableProp(method.createSmartPointer()))
                 }
             }
@@ -124,9 +124,10 @@ class ImmutableTree(
 
     private fun loadKotlinProperties(ktClass: KtClass, classNode: ImmutableType) {
         try {
-            val immutableType = ktClass.toImmutable().toCommonImmutableType()
-            immutableType.props().forEach { prop ->
-                ktClass.getProperties().find { it.name == prop.name() }?.let { property ->
+            val immutableType =
+                CommonImmutableTypeCache.getInstance(project).get(ktClass.fqName?.asString() ?: return) ?: return
+            immutableType.props.forEach { prop ->
+                ktClass.getProperties().find { it.name == prop.name }?.let { property ->
                     classNode.add(ImmutableProp(property.createSmartPointer()))
                 }
             }

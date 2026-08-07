@@ -104,7 +104,8 @@ class NewDtoFileDialog(
                     addToCenter(
                         ImmutablePropsChoosePanel(
                             project,
-                            thread { runReadOnly { it.toImmutable().toCommonImmutableType() } },
+                            CommonImmutableTypeCache.getInstance(project).get(it.fqName?.asString() ?: return@also)
+                                ?: return@also,
                             properties
                         )
                     )
@@ -114,7 +115,8 @@ class NewDtoFileDialog(
                     addToCenter(
                         ImmutablePropsChoosePanel(
                             project,
-                            it.toImmutable().toCommonImmutableType(),
+                            CommonImmutableTypeCache.getInstance(project).get(it.qualifiedName ?: return@also)
+                                ?: return@also,
                             properties
                         )
                     )

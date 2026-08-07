@@ -17,17 +17,9 @@
 package cn.enaium.jimmer.buddy.extensions.reference
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
-import cn.enaium.jimmer.buddy.utility.PROP
-import cn.enaium.jimmer.buddy.utility.annotArgName
-import cn.enaium.jimmer.buddy.utility.annotName
-import cn.enaium.jimmer.buddy.utility.findSpringBeanTargets
-import cn.enaium.jimmer.buddy.utility.subMiddle
+import cn.enaium.jimmer.buddy.utility.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
-import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.PsiReferenceProvider
+import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
 import org.babyfish.jimmer.sql.Transient
 
@@ -60,7 +52,8 @@ object TransientPsiReferenceProvider : PsiReferenceProvider() {
 
         override fun getVariants(): Array<out Any> {
             return targets.map { target ->
-                LookupElementBuilder.create((target as? PsiNamedElement)?.name ?: beanName).withIcon(JimmerBuddy.Icons.PROP)
+                LookupElementBuilder.create((target as? PsiNamedElement)?.name ?: beanName)
+                    .withIcon(JimmerBuddy.Icons.PROP)
             }.toTypedArray()
         }
     }

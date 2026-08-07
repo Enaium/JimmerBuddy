@@ -16,8 +16,7 @@
 
 package cn.enaium.jimmer.buddy.extensions.dto.insight
 
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiNamedElement
-import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiProp
+import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPropName
 import cn.enaium.jimmer.buddy.utility.endOffset
 import cn.enaium.jimmer.buddy.utility.resolveClass
 import cn.enaium.jimmer.buddy.utility.resolveGenericsClassInType
@@ -66,8 +65,10 @@ class DtoPropTypeInlayHintsProvider : InlayHintsProvider {
                 element: PsiElement,
                 sink: InlayTreeSink
             ) {
-                if (element !is DtoPsiProp && element !is DtoPsiNamedElement) return
-                val reference = (element as DtoPsiNamedElement).reference() ?: return
+                if (element !is DtoPsiPropName) return
+
+                val reference = element.references.firstOrNull()?.resolve() ?: return
+
                 val target = when (reference) {
                     is PsiMethod -> reference.returnType?.resolveGenericsClassInType()?.let { generic ->
                         if (generic.substitutor != PsiSubstitutor.EMPTY) {

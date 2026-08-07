@@ -19,7 +19,7 @@ package cn.enaium.jimmer.buddy.extensions.dto.completion
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiPositiveProp
 import cn.enaium.jimmer.buddy.extensions.dto.psi.DtoPsiTypeBranch
-import cn.enaium.jimmer.buddy.utility.CommonImmutableType.CommonImmutableProp.Companion.type
+import cn.enaium.jimmer.buddy.utility.CommonImmutableProp.Companion.type
 import cn.enaium.jimmer.buddy.utility.PROP
 import cn.enaium.jimmer.buddy.utility.findCurrentImmutableType
 import com.intellij.codeInsight.completion.CompletionParameters
@@ -42,11 +42,11 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
         result: CompletionResultSet
     ) {
         val element = parameters.position
-        findCurrentImmutableType(element)?.props()?.forEach { prop ->
+        findCurrentImmutableType(element)?.props?.forEach { prop ->
             result.addElement(
-                LookupElementBuilder.create(prop.name()).withIcon(JimmerBuddy.Icons.PROP)
-                    .withTailText(" (from ${prop.name()})").withTypeText(prop.type().description).let {
-                        if (prop.isRecursive()) {
+                LookupElementBuilder.create(prop.name).withIcon(JimmerBuddy.Icons.PROP)
+                    .withTailText(" (from ${prop.name})").withTypeText(prop.type().description).let {
+                        if (prop.isRecursive) {
                             it.withInsertHandler { context, _ ->
                                 val project = context.project
                                 val editor = context.editor
@@ -60,7 +60,7 @@ object PropCompletionProvider : CompletionProvider<CompletionParameters>() {
                                     tm.startTemplate(editor, template)
                                 }
                             }
-                        } else if (prop.isAssociation(true)) {
+                        } else if (prop.isAssociation) {
                             it.withInsertHandler { context, _ ->
                                 val project = context.project
                                 val editor = context.editor
@@ -90,9 +90,9 @@ fun getTrace(position: PsiElement?): List<String> {
     var parent: PsiElement? = position?.parent
     while (parent != null) {
         if (parent is DtoPsiPositiveProp) {
-            parent.prop?.value?.also { trace.add(it) }
+            parent.propName?.identifier?.text?.also { trace.add(it) }
         } else if (parent is DtoPsiTypeBranch) {
-            parent.qualifiedName?.qualifiedNameParts?.parts?.lastOrNull()?.also { trace.add(it.text) }
+            parent.qualifiedName.text.split(".").lastOrNull()?.also { trace.add(it) }
         }
         parent = parent.parent
     }

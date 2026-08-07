@@ -18,7 +18,10 @@ package cn.enaium.jimmer.buddy.action
 
 import cn.enaium.jimmer.buddy.JimmerBuddy
 import cn.enaium.jimmer.buddy.dialog.GenerateDDLDialog
-import cn.enaium.jimmer.buddy.utility.*
+import cn.enaium.jimmer.buddy.utility.CommonImmutableTypeCache
+import cn.enaium.jimmer.buddy.utility.isDumb
+import cn.enaium.jimmer.buddy.utility.isImmutable
+import cn.enaium.jimmer.buddy.utility.visibleWithImmutable
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
@@ -54,12 +57,16 @@ class GenerateDDL : AnAction() {
             val commonImmutable = when (sourceFile.extension) {
                 "java" -> {
                     sourceFile.toFile().toPsiFile(project)?.getChildOfType<PsiClass>()
-                        ?.takeIf { it.isImmutable() }?.toImmutable()?.toCommonImmutableType()
+                        ?.takeIf { it.isImmutable() }?.qualifiedName?.let {
+                            CommonImmutableTypeCache.getInstance(project).get(it)
+                        }
                 }
 
                 "kt" -> {
                     sourceFile.toFile().toPsiFile(project)?.getChildOfType<KtClass>()?.takeIf { it.isImmutable() }
-                        ?.let { thread { runReadOnly { it.toImmutable().toCommonImmutableType() } } }
+                        ?.let {
+                            it.fqName?.asString()?.let { qn -> CommonImmutableTypeCache.getInstance(project).get(qn) }
+                        }
                 }
 
                 else -> {
