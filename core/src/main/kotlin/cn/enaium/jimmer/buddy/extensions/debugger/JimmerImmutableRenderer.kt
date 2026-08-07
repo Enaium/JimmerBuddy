@@ -314,7 +314,7 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
             }
             val unloaded = filterNot { it.loaded }
             if (unloaded.isNotEmpty()) {
-                entries += "${"_unloaded".jsonString()}: ${unloaded.map { it.name.jsonString() }.joinToString(prefix = "[", postfix = "]")}" 
+                entries += "${"_unloaded".jsonString()}: ${unloaded.map { it.name.jsonString() }.joinToString(prefix = "[", postfix = "]")}"
             }
             return entries.joinToString(prefix = "{", postfix = "}")
         }
