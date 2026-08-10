@@ -291,6 +291,7 @@ object JimmerBuddy {
 
         fun asyncRefreshSources(sources: Iterable<Pair<Source, Path>>) {
             val newFiles = mutableListOf<Path>()
+            val upToDateFiles = mutableListOf<String>()
             sources.forEach { (source, basePath) ->
                 val path = basePath.resolve(source.packageName.replace(".", "/"))
                     .resolve("${source.fileName}.${source.extensionName}")
@@ -303,17 +304,24 @@ object JimmerBuddy {
                             null
                         }
                     }
-                    if (document != null && document.text != source.content) {
+                    if (document == null) {
+                        return@forEach
+                    } else if (document.text != source.content) {
                         WriteCommandAction.runWriteCommandAction(project) {
                             document.setText(source.content)
                             PsiDocumentManager.getInstance(project).commitDocument(document)
                         }
+                    } else {
+                        upToDateFiles.add(path.fileName.toString())
                     }
                 } else {
                     path.createParentDirectories()
                     path.writeText(source.content)
                     newFiles.add(path)
                 }
+            }
+            if (upToDateFiles.isNotEmpty()) {
+                log.info("Refreshed ${upToDateFiles.joinToString(", ") { "$it (UP-TO-DATE)" }}")
             }
             asyncRefresh(files = newFiles)
         }

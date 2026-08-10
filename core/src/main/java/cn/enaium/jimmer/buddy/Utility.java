@@ -19,6 +19,7 @@ package cn.enaium.jimmer.buddy;
 import org.babyfish.jimmer.Formula;
 import org.babyfish.jimmer.Immutable;
 import org.babyfish.jimmer.Scalar;
+import org.babyfish.jimmer.client.Description;
 import org.babyfish.jimmer.error.ErrorFamily;
 import org.babyfish.jimmer.error.ErrorField;
 import org.babyfish.jimmer.jackson.Converter;
@@ -597,6 +598,21 @@ public class Utility {
             @Override
             public String value() {
                 return null;
+            }
+        };
+    }
+
+    public static Description description() {
+        return new Description() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return null;
+            }
+
+            @Override
+            public String value() {
+                return "";
             }
         };
     }

@@ -30,6 +30,7 @@ import net.bytebuddy.matcher.ElementMatchers.named
 import org.babyfish.jimmer.Formula
 import org.babyfish.jimmer.Immutable
 import org.babyfish.jimmer.Scalar
+import org.babyfish.jimmer.client.Description
 import org.babyfish.jimmer.error.ErrorFamily
 import org.babyfish.jimmer.error.ErrorField
 import org.babyfish.jimmer.jackson.JsonConverter
@@ -189,7 +190,7 @@ fun PsiMethod.asExecutableElement(caches: MutableMap<String, TypeElement>): Exec
         },
         getReturnType = {
             val returnType = returnType ?: throw IllegalStateException("Return type is null")
-            returnType.asExecuteType(caches)
+            returnType.asTypeMirror(caches)
         },
         getAnnotation = { anno ->
             modifierList.annotations.find { it.hasQualifiedName(anno.name) }
@@ -236,11 +237,10 @@ fun PsiTypeParameter.asTypeMirror(caches: MutableMap<String, TypeElement>): Type
     )
 }
 
-fun PsiType.asExecuteType(caches: MutableMap<String, TypeElement>): TypeMirror {
-    val asTypeMirror = this.asTypeMirror(caches)
+fun TypeMirror.asExecuteType(): TypeMirror {
     return createExecuteType(
-        getQualifiedName = { asTypeMirror.toString() },
-        getReturnType = { asTypeMirror },
+        getQualifiedName = { toString() },
+        getReturnType = { this },
         getAnnotationMirrors = { emptyList() }
     )
 }
@@ -696,7 +696,7 @@ fun Project.psiClassesToApt(
                     ): TypeMirror? {
                         return if (containing.typeArguments.isEmpty()) {
                             if (element is ExecutableElement) {
-                                element.returnType
+                                element.returnType.asExecuteType()
                             } else {
                                 throw UnsupportedOperationException("Unsupported the type ${element.javaClass.name}")
                             }
@@ -752,6 +752,7 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
     JsonConverter::class.qualifiedName -> Utility.jsonConverter()
     Inheritance::class.qualifiedName -> Utility.inheritance()
     DiscriminatorValue::class.qualifiedName -> Utility.discriminatorValue()
+    Description::class.qualifiedName -> Utility.description()
     else -> null
 }?.let {
     ByteBuddy()

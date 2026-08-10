@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add `@Table(name)` and `@Column(name)` annotation completion from Database Tools data sources
 - Hide ToolWindow Database tab when Database Tools plugin is available
 - Persist relative path and package name in Generate Entity dialog
+- Add Jimmer immutable debugger renderer (#202)
 
 ## 1.13.x
 
