@@ -208,6 +208,9 @@
                            implementationClass="cn.enaium.jimmer.buddy.extensions.dto.lang.DtoQuoteHandler"/>
         <spellchecker.support language="JimmerBuddy.DTO"
                               implementationClass="cn.enaium.jimmer.buddy.extensions.dto.spellcheck.DtoSpellcheckingStrategy"/>
+        <debugger.compoundRendererProvider
+                implementation="cn.enaium.jimmer.buddy.extensions.debugger.JimmerImmutableRendererProvider"
+                order="first"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="cn.enaium.jimmer.buddy.extensions.insight.DtoTypeTargetCodeVisionProvider"/>
         <codeInsight.daemonBoundCodeVisionProvider
