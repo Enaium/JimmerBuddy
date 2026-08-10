@@ -58,10 +58,10 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
 
     init {
         setIsApplicableChecker { type ->
-            if (type is ReferenceType) {
-                DebuggerUtilsAsync.instanceOf(type, IMMUTABLE_SPI)
-            } else {
-                CompletableFuture.completedFuture(false)
+            when {
+                type !is ReferenceType -> CompletableFuture.completedFuture(false)
+                type.hasJimmerBackingFields() -> CompletableFuture.completedFuture(true)
+                else -> DebuggerUtilsAsync.instanceOf(type, IMMUTABLE_SPI)
             }
         }
     }
@@ -184,9 +184,23 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
         private const val FIELD_PREFIX = "__"
         private const val LOADED_SUFFIX = "Loaded"
         private const val VALUE_SUFFIX = "Value"
+        private const val TYPE_METHOD = "__type"
+        private const val TYPE_METHOD_SIGNATURE = "()Lorg/babyfish/jimmer/meta/ImmutableType;"
         private const val LABEL_VALUE_LIMIT = 6
         private const val JSON_DEPTH_LIMIT = 5
         private const val JSON_ARRAY_LIMIT = 50
+
+        private fun ReferenceType.hasJimmerBackingFields(): Boolean {
+            val hasTypeMethod = methodsByName(TYPE_METHOD, TYPE_METHOD_SIGNATURE).isNotEmpty()
+            if (!hasTypeMethod) {
+                return false
+            }
+            return fields().any { field ->
+                !field.isStatic &&
+                    field.name().startsWith(FIELD_PREFIX) &&
+                    field.name().endsWith(VALUE_SUFFIX)
+            }
+        }
 
         private fun ObjectReference.jimmerProps(): List<JimmerProp> {
             val type = referenceType()
