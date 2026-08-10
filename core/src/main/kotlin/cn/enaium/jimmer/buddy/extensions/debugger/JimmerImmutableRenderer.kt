@@ -79,13 +79,7 @@ class JimmerImmutableRendererProvider : CompoundRendererProvider() {
     }
 
     override fun getIsApplicableChecker(): Function<Type?, CompletableFuture<Boolean>> {
-        return Function { type ->
-            if (type == null) {
-                CompletableFuture.completedFuture(false)
-            } else {
-                renderer.isApplicableAsync(type)
-            }
-        }
+        return Function { type -> JimmerImmutableRenderer.checkApplicability(type) }
     }
 
     override fun isEnabled(): Boolean {
@@ -94,17 +88,6 @@ class JimmerImmutableRendererProvider : CompoundRendererProvider() {
 }
 
 class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), FullValueEvaluatorProvider {
-
-    init {
-        setIsApplicableChecker { type ->
-            when {
-                type !is ReferenceType -> CompletableFuture.completedFuture(false)
-                type.hasJimmerBackingFields() -> CompletableFuture.completedFuture(true)
-                else -> DebuggerUtilsAsync.instanceOf(type, IMMUTABLE_SPI)
-            }
-        }
-    }
-
     override fun getUniqueId(): String {
         return "JimmerImmutableRenderer"
     }
@@ -218,7 +201,7 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
         }
     }
 
-    private companion object {
+    internal companion object {
         private const val IMMUTABLE_SPI = "org.babyfish.jimmer.runtime.ImmutableSpi"
         private const val FIELD_PREFIX = "__"
         private const val LOADED_SUFFIX = "Loaded"
@@ -228,6 +211,14 @@ class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), Full
         private const val LABEL_VALUE_LIMIT = 6
         private const val JSON_DEPTH_LIMIT = 5
         private const val JSON_ARRAY_LIMIT = 50
+
+        internal fun checkApplicability(type: Type?): CompletableFuture<Boolean> {
+            return when {
+                type !is ReferenceType -> CompletableFuture.completedFuture(false)
+                type.hasJimmerBackingFields() -> CompletableFuture.completedFuture(true)
+                else -> DebuggerUtilsAsync.instanceOf(type, IMMUTABLE_SPI)
+            }
+        }
 
         private fun ReferenceType.hasJimmerBackingFields(): Boolean {
             val hasTypeMethod = methodsByName(TYPE_METHOD, TYPE_METHOD_SIGNATURE).isNotEmpty()
