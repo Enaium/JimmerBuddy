@@ -78,8 +78,14 @@ class JimmerImmutableRendererProvider : CompoundRendererProvider() {
         return renderer
     }
 
-    override fun getIsApplicableChecker(): Function<Type, CompletableFuture<Boolean>> {
-        return Function { type -> renderer.isApplicableAsync(type) }
+    override fun getIsApplicableChecker(): Function<Type?, CompletableFuture<Boolean>> {
+        return Function { type ->
+            if (type == null) {
+                CompletableFuture.completedFuture(false)
+            } else {
+                renderer.isApplicableAsync(type)
+            }
+        }
     }
 
     override fun isEnabled(): Boolean {
