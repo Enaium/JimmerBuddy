@@ -27,8 +27,11 @@ import com.intellij.debugger.ui.tree.DebuggerTreeNode
 import com.intellij.debugger.ui.tree.NodeDescriptor
 import com.intellij.debugger.ui.tree.ValueDescriptor
 import com.intellij.debugger.ui.tree.render.ChildrenBuilder
+import com.intellij.debugger.ui.tree.render.ChildrenRenderer
+import com.intellij.debugger.ui.tree.render.CompoundRendererProvider
 import com.intellij.debugger.ui.tree.render.DescriptorLabelListener
 import com.intellij.debugger.ui.tree.render.NodeRendererImpl
+import com.intellij.debugger.ui.tree.render.ValueLabelRenderer
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiExpression
@@ -40,10 +43,12 @@ import com.sun.jdi.ObjectReference
 import com.sun.jdi.PrimitiveValue
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StringReference
+import com.sun.jdi.Type
 import com.sun.jdi.Value
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.concurrent.CompletableFuture
+import java.util.function.Function
 
 /**
  * Renders Jimmer immutable objects by their domain properties instead of generated `__*` backing fields.
@@ -54,6 +59,34 @@ import java.util.concurrent.CompletableFuture
  *
  * @author Enaium
  */
+class JimmerImmutableRendererProvider : CompoundRendererProvider() {
+    private val renderer = JimmerImmutableRenderer()
+
+    override fun getName(): String {
+        return renderer.name
+    }
+
+    override fun getValueLabelRenderer(): ValueLabelRenderer {
+        return renderer
+    }
+
+    override fun getChildrenRenderer(): ChildrenRenderer {
+        return renderer
+    }
+
+    override fun getFullValueEvaluatorProvider(): FullValueEvaluatorProvider {
+        return renderer
+    }
+
+    override fun getIsApplicableChecker(): Function<Type, CompletableFuture<Boolean>> {
+        return Function { type -> renderer.isApplicableAsync(type) }
+    }
+
+    override fun isEnabled(): Boolean {
+        return true
+    }
+}
+
 class JimmerImmutableRenderer : NodeRendererImpl("Jimmer Immutable", true), FullValueEvaluatorProvider {
 
     init {
