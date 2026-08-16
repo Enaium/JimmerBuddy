@@ -654,7 +654,10 @@ object JimmerBuddy {
                                         val classDeclarationByName =
                                             resolver.getClassDeclarationByName(compiler.sourceTypeName)
                                                 ?: return@forEach
-                                        val compile = compiler.compile(option.context.typeOf(classDeclarationByName))
+                                        val immutableType =
+                                            option.context.typeOf(classDeclarationByName)
+                                        option.context.resolve()
+                                        val compile = compiler.compile(immutableType)
                                         compile.forEach { dtoType ->
                                             if (name != null && dtoType.name != name) {
                                                 return@forEach

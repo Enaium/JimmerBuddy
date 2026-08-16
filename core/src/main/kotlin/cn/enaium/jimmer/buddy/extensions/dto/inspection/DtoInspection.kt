@@ -106,8 +106,10 @@ class DtoInspection : LocalInspectionTool() {
                         val compiler = KspDtoCompiler(dtoFile, context, DtoModifier.STATIC)
                         val classDeclarationByName =
                             resolver.getClassDeclarationByName(compiler.sourceTypeName) ?: return
+                        val immutableType = context.typeOf(classDeclarationByName)
+                        context.resolve()
                         registerProblem(file, document, holder) {
-                            compiler.compile(context.typeOf(classDeclarationByName))
+                            compiler.compile(immutableType)
                         }
                     } catch (_: Throwable) {
 
