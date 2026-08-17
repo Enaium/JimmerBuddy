@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.Writer
+import java.lang.reflect.Proxy
 import java.util.*
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -773,6 +774,30 @@ private fun PsiAnnotation.findAnnotation(): Annotation? = when (qualifiedName) {
         }.newInstance() as Annotation
 } ?: run {
     val qualifiedName = qualifiedName?.takeIf { !it.startsWith("java.") } ?: return null
+
+    // Resolve against the plugin classloader, which sees the bundled jimmer jars;
+    // the PsiAnnotation's own loader cannot, and a proxy implementing the genuine
+    // annotation interface is the only thing callers' casts will accept.
+    val realClass = runCatching {
+        Class.forName(qualifiedName, false, Utility::class.java.classLoader)
+    }.getOrNull()?.takeIf { it.isAnnotation }
+    if (realClass != null) {
+        return Proxy.newProxyInstance(Utility::class.java.classLoader, arrayOf(realClass)) { proxy, method, args ->
+            when {
+                method.declaringClass == Any::class.java -> when (method.name) {
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "hashCode" -> qualifiedName.hashCode()
+                    else -> "@$qualifiedName"
+                }
+
+                method.name == "annotationType" -> realClass
+                else -> this@findAnnotation.findAttributeValue(method.name)?.toAny(method.returnType)
+                    ?.arrayWrapper(method.returnType)
+                    ?: method.defaultValue
+            }
+        } as Annotation
+    }
+
     val map = mutableMapOf<String, ByteArray>()
 
     class MyClassLoader : ClassLoader(this.javaClass.classLoader) {
