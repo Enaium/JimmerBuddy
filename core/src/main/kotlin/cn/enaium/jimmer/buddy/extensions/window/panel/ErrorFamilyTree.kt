@@ -58,7 +58,6 @@ import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
-import javax.swing.tree.DefaultTreeModel
 
 /**
  * @author Enaium
@@ -108,6 +107,7 @@ class ErrorFamilyTree(val project: Project) : JPanel() {
                         loadErrorFamilies()
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                add(tree.createSearchField(), BorderLayout.CENTER)
                 add(ActionButton(object : AnAction(AllIcons.Actions.More) {
                     override fun actionPerformed(e: AnActionEvent) {
                         val sourceComponent = (e.inputEvent?.source as? Component) ?: return
@@ -138,6 +138,7 @@ class ErrorFamilyTree(val project: Project) : JPanel() {
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
+        tree.showWaitingForIndexes()
         project.runWhenSmart {
             loadErrorFamilies()
         }
@@ -192,7 +193,8 @@ class ErrorFamilyTree(val project: Project) : JPanel() {
                 withContext(Dispatchers.EDT) {
                     root.removeAllChildren()
                     results.forEach { root.add(it) }
-                    (tree.model as DefaultTreeModel).nodeStructureChanged(root)
+                    tree.nodeStructureChanged(root)
+                    tree.showEmptyState()
                 }
             }
         }
@@ -221,9 +223,14 @@ class ErrorFamilyTree(val project: Project) : JPanel() {
                 } else {
                     setBackground(this@ErrorFamilyNodeCell.getBackground())
                 }
-                add(JLabel(runReadOnly { value.toString() }).apply {
-                    icon = this@ErrorFamilyNodeCell.icon
-                }, BorderLayout.CENTER)
+                add(
+                    tree.searchTextComponent(
+                        runReadOnly { value.toString() },
+                        this@ErrorFamilyNodeCell.icon,
+                        sel
+                    ),
+                    BorderLayout.CENTER
+                )
             }
         }
     }

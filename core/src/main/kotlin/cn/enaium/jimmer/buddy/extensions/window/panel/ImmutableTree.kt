@@ -58,7 +58,6 @@ import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
-import javax.swing.tree.DefaultTreeModel
 
 /**
  * @author Enaium
@@ -149,6 +148,9 @@ class ImmutableTree(val project: Project) : JPanel() {
                         loadImmutables(project)
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                add(tree.createSearchField { node, query ->
+                    node is ImmutableType && node.matchesSearch(query)
+                }, BorderLayout.CENTER)
                 add(ActionButton(object : AnAction(AllIcons.Actions.More) {
                     override fun actionPerformed(e: AnActionEvent) {
                         val sourceComponent = (e.inputEvent?.source as? Component) ?: return
@@ -179,6 +181,7 @@ class ImmutableTree(val project: Project) : JPanel() {
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
+        tree.showWaitingForIndexes()
         project.runWhenSmart {
             loadImmutables(project)
         }
@@ -237,7 +240,8 @@ class ImmutableTree(val project: Project) : JPanel() {
                 withContext(Dispatchers.EDT) {
                     root.removeAllChildren()
                     results.forEach { root.add(it) }
-                    (tree.model as DefaultTreeModel).nodeStructureChanged(root)
+                    tree.nodeStructureChanged(root)
+                    tree.showEmptyState()
                 }
             }
         }
@@ -267,9 +271,10 @@ class ImmutableTree(val project: Project) : JPanel() {
                 } else {
                     setBackground(this@ImmutableNodeCell.getBackground())
                 }
-                add(JLabel(value.toString()).apply {
-                    icon = this@ImmutableNodeCell.icon
-                }, BorderLayout.CENTER)
+                add(
+                    tree.searchTextComponent(value.toString(), this@ImmutableNodeCell.icon, sel),
+                    BorderLayout.CENTER
+                )
             }
         }
     }
@@ -299,6 +304,15 @@ class ImmutableTree(val project: Project) : JPanel() {
 
         override fun toString(): String {
             return qualifiedName.substringAfterLast(".")
+        }
+
+        fun matchesSearch(query: String): Boolean {
+            if (toString().matchesFuzzy(query)) {
+                return true
+            }
+            return children().toList()
+                .filterIsInstance<ImmutableProp>()
+                .any { prop -> prop.prop.isAssociation && prop.prop.name.contains(query, ignoreCase = true) }
         }
     }
 

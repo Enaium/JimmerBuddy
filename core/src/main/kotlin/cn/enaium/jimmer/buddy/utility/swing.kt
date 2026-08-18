@@ -18,7 +18,6 @@ package cn.enaium.jimmer.buddy.utility
 
 import com.intellij.ui.treeStructure.Tree
 import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.MutableTreeNode
 
 /**
@@ -32,7 +31,7 @@ fun Tree.sortByName(root: DefaultMutableTreeNode) {
     for (child in sortedBy) {
         root.add(child as MutableTreeNode)
     }
-    (this.model as DefaultTreeModel).nodeStructureChanged(root)
+    nodeStructureChanged(root)
 }
 
 fun Tree.sortByChildCount(root: DefaultMutableTreeNode) {
@@ -43,5 +42,5 @@ fun Tree.sortByChildCount(root: DefaultMutableTreeNode) {
     for (child in sortedBy) {
         root.add(child as MutableTreeNode)
     }
-    (this.model as DefaultTreeModel).nodeStructureChanged(root)
+    nodeStructureChanged(root)
 }

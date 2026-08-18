@@ -51,7 +51,6 @@ import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
-import javax.swing.tree.DefaultTreeModel
 import kotlin.io.path.nameWithoutExtension
 
 class DTOList(val project: Project) : JPanel() {
@@ -98,6 +97,7 @@ class DTOList(val project: Project) : JPanel() {
                         loadDTOs()
                     }
                 }, null, "Refresh", Dimension(24, 24)), BorderLayout.WEST)
+                add(tree.createSearchField(), BorderLayout.CENTER)
                 add(ActionButton(object : AnAction(AllIcons.Actions.More) {
                     override fun actionPerformed(e: AnActionEvent) {
                         val sourceComponent = (e.inputEvent?.source as? Component) ?: return
@@ -128,6 +128,7 @@ class DTOList(val project: Project) : JPanel() {
             }, BorderLayout.NORTH
         )
         add(JBScrollPane(tree), BorderLayout.CENTER)
+        tree.showWaitingForIndexes()
         project.runWhenSmart {
             loadDTOs()
         }
@@ -159,7 +160,8 @@ class DTOList(val project: Project) : JPanel() {
                 withContext(Dispatchers.EDT) {
                     root.removeAllChildren()
                     results.forEach { root.add(it) }
-                    (tree.model as DefaultTreeModel).nodeStructureChanged(root)
+                    tree.nodeStructureChanged(root)
+                    tree.showEmptyState()
                 }
             }
         }
@@ -188,9 +190,14 @@ class DTOList(val project: Project) : JPanel() {
                 } else {
                     setBackground(this@DtoNodeCell.getBackground())
                 }
-                add(JLabel(runReadOnly { value.toString() }).apply {
-                    icon = this@DtoNodeCell.icon
-                }, BorderLayout.CENTER)
+                add(
+                    tree.searchTextComponent(
+                        runReadOnly { value.toString() },
+                        this@DtoNodeCell.icon,
+                        sel
+                    ),
+                    BorderLayout.CENTER
+                )
             }
         }
     }
