@@ -49,6 +49,14 @@ tasks.processResources {
     }
 }
 
+intellijPlatform {
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
+}
+
 configure<IntelliJPlatformExtension> {
     configure<IntelliJPlatformExtension.PluginConfiguration> {
         description = markdownToHTML(rootProject.file("description.md").readText())
