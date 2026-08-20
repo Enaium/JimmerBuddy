@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
 - Hide ToolWindow Database tab when Database Tools plugin is available
 - Persist relative path and package name in Generate Entity dialog
 - Add Jimmer immutable debugger renderer (#202)
+- Fix debugger: avoid internal applicability API (#206)
+- Fix dto `#allScalars` generating `@IdView` properties (#211)
+- Add filtered tree search to immutable, DTO, and error-family tool windows (#212)
+- Fix ClassCastException caused by annotations not in the whitelist (#214)
 
 ## 1.13.x
 
