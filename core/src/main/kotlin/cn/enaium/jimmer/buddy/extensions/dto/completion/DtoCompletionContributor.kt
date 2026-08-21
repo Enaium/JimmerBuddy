@@ -98,7 +98,22 @@ class DtoCompletionContributor : CompletionContributor() {
                 DtoPsiPatterns.psiElement()
                     .withParents(DtoPsiUserProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java),
                 DtoPsiPatterns.psiElement()
-                    .withParents(DtoPsiFoldProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java)
+                    .withParents(DtoPsiFoldProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java),
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiPropName::class.java,
+                    DtoPsiFuncArguments::class.java,
+                    DtoPsiFunc::class.java,
+                    DtoPsiPositiveProp::class.java,
+                    DtoPsiExplicitProp::class.java,
+                    DtoPsiDtoBody::class.java
+                ),
+                DtoPsiPatterns.psiElement().withParents(
+                    DtoPsiFuncArguments::class.java,
+                    DtoPsiFunc::class.java,
+                    DtoPsiPositiveProp::class.java,
+                    DtoPsiExplicitProp::class.java,
+                    DtoPsiDtoBody::class.java
+                )
             ),
             PropCompletionProvider
         )
@@ -133,7 +148,8 @@ class DtoCompletionContributor : CompletionContributor() {
         extend(
             basic,
             DtoPsiPatterns.psiElement()
-                .inside(DtoPsiDtoBody::class.java),
+                .inside(DtoPsiDtoBody::class.java)
+                .andNot(DtoPsiPatterns.psiElement().inside(DtoPsiFuncArguments::class.java)),
             FuncNameCompletionProvider
         )
         extend(
