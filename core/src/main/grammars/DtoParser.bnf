@@ -157,7 +157,7 @@ typeBranch ::= DOC_COMMENT? annotation*
                dtoBody
 
 foldProp ::= DOC_COMMENT? annotation*
-             FOLD LPAREN IDENTIFIER RPAREN QUES?
+             FOLD LPAREN propName RPAREN QUES?
              DOC_COMMENT? annotation*
              (impl)?
              dtoBody
