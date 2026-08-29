@@ -83,22 +83,8 @@ class DtoCompletionContributor : CompletionContributor() {
         extend(
             basic,
             StandardPatterns.or(
-                DtoPsiPatterns.psiElement().withParents(
-                    DtoPsiPropName::class.java,
-                    DtoPsiPositiveProp::class.java,
-                    DtoPsiExplicitProp::class.java,
-                    DtoPsiDtoBody::class.java
-                ),
-                DtoPsiPatterns.psiElement().withParents(
-                    DtoPsiPropName::class.java,
-                    DtoPsiNegativeProp::class.java,
-                    DtoPsiExplicitProp::class.java,
-                    DtoPsiDtoBody::class.java
-                ),
                 DtoPsiPatterns.psiElement()
-                    .withParents(DtoPsiUserProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java),
-                DtoPsiPatterns.psiElement()
-                    .withParents(DtoPsiFoldProp::class.java, DtoPsiExplicitProp::class.java, DtoPsiDtoBody::class.java)
+                    .inside(DtoPsiDtoBody::class.java)
             ),
             PropCompletionProvider
         )
